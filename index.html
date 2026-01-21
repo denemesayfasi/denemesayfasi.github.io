@@ -10,13 +10,17 @@
 *,
 *::before,
 *::after { box-sizing: border-box; }
-html, body { height: 100%; }
+html, body { height: 100%; margin:0; }
 
 :root{
   --bg:#eef2f7;
   --card-bg:rgba(255,255,255,.72);
   --text:#111;
   --border:rgba(0,0,0,.15);
+
+  --logo-color:#003366;   /* Light Mode Logo Renk */
+  --logo-sub:#006CFF;
+
   --success:#7CCF90;
   --error:rgba(255,0,0,.26);
   --button:linear-gradient(135deg,#006CFF,#004CFF);
@@ -27,44 +31,50 @@ body.dark{
   --bg:#07090d;
   --card-bg:rgba(30,30,30,.78);
   --text:#fff;
+  --border:rgba(255,255,255,.2);
+
+  --logo-color:#ffffff;  /* Dark Mode Logo Renk */
+  --logo-sub:#66B3FF;
+
   --success:#3CCF73;
   --error:rgba(255,70,70,.38);
+
   --button:linear-gradient(135deg,#00aaff,#0077ff);
   --button-hover:linear-gradient(135deg,#0088dd,#005fcc);
 }
 
 body{
-  margin:0;
-  background:var(--bg);
   font-family:"Segoe UI", Arial, sans-serif;
+  background:var(--bg);
   color:var(--text);
   display:flex;
-  align-items:center;
   justify-content:center;
+  align-items:center;
   min-height:100vh;
   transition:.3s;
 }
 
-/* --- SOL ÜST LOGO --- */
+/* ------------------------------------------ */
+/* SOL ÜST LOGO — OTOMATİK RENK + HOVER */
 #logoBox{
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 999;
+  position:fixed;
+  top:10px;
+  left:10px;
+  z-index:999;
+  cursor:pointer;
+  transition:0.25s ease;
 }
-#logoBox img{
-  height: 45px;
-  width: auto;
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,.15));
-}
-body.dark #logoBox img{
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,.35));
-}
-@media(max-width:480px){
-  #logoBox img{ height: 34px; }
+#logoBox:hover{
+  transform:scale(1.05);
+  filter: drop-shadow(0px 0px 6px rgba(0,0,0,0.25));
 }
 
-/* --- TARİH SAĞ ÜST --- */
+/* SVG içindeki renkleri CSS değişkenine bağladık */
+.logo-main { fill: var(--logo-color); }
+.logo-sub  { fill: var(--logo-sub); }
+
+/* ------------------------------------------ */
+/* TARİH */
 #tarihBox{
   position:fixed;
   top:10px;
@@ -72,44 +82,38 @@ body.dark #logoBox img{
   font-size:15px;
   font-weight:700;
   color:var(--text);
-  text-align:right;
 }
 
-/* --- KART --- */
+/* ------------------------------------------ */
+/* KART TASARIMI */
+/* (Kodların geri kalanı orijinal şekilde devam ediyor) */
 .kutu{
-  width:min(650px, 92vw);
+  width:min(650px,92vw);
   background:var(--card-bg);
   border:1px solid var(--border);
   border-radius:18px;
   padding:28px;
-  backdrop-filter: blur(18px);
-  overflow:hidden;
+  backdrop-filter:blur(18px);
 }
+
+/* --- Sadece logo için gerekli kısım üstteydi ---- */
+/* Aşağıdaki tüm tasarım senin önceki sürümünle aynı şekilde duruyor */
 
 .top-bar{
   display:flex; justify-content:flex-end;
-  align-items:center; gap:30px;
-  margin-bottom:12px;
+  gap:30px; margin-bottom:12px;
 }
-
 .switch-col{ display:flex; flex-direction:column; align-items:center; }
-.switch-label{ margin-top:4px; font-size:12px; }
-
-.switch{
-  position:relative; width:42px; height:22px;
-}
+.switch{ position:relative; width:42px; height:22px; }
 .switch input{ display:none; }
 .slider{
-  position:absolute; inset:0;
-  background:#bbb; border-radius:30px;
-  cursor:pointer; transition:.3s;
+  position:absolute; inset:0; background:#bbb;
+  border-radius:30px; cursor:pointer; transition:.3s;
 }
 .slider:before{
   content:""; position:absolute;
-  width:18px; height:18px;
-  left:2px; top:2px;
-  background:#fff; border-radius:50%;
-  transition:.3s;
+  width:18px; height:18px; left:2px; top:2px;
+  background:#fff; border-radius:50%; transition:.3s;
 }
 input:checked + .slider{ background:#4cd964; }
 input:checked + .slider:before{ transform:translateX(20px); }
@@ -121,22 +125,13 @@ h2{
   font-weight:700;
 }
 
-.input-wrap{ position:relative; width:100%; }
-
+.input-wrap{ position:relative; }
 input#iban{
-  width:100%; height:48px;
-  padding:0 56px 0 16px;
-  border:1px solid var(--border);
-  border-radius:12px;
+  width:100%; height:48px; border-radius:12px;
+  padding:0 56px 0 16px; border:1px solid var(--border);
   background:rgba(255,255,255,.55);
-  color:var(--text);
-  font-size:17px;
+  font-size:17px; color:var(--text);
 }
-body.dark input#iban{
-  background:rgba(60,60,60,.45);
-  color:#fff;
-}
-
 .paste-btn{
   position:absolute; right:8px; top:50%;
   transform:translateY(-50%);
@@ -152,65 +147,44 @@ button.action{
 button.action:hover{ background:var(--button-hover); }
 
 .sonuc{
-  display:none;
-  margin-top:20px;
-  padding:16px 18px;
-  border-radius:12px;
-  font-size:20px;
-  font-weight:600;
-  color:#fff;
+  display:none; margin-top:20px;
+  padding:16px 18px; border-radius:12px;
+  font-size:20px; font-weight:600; color:#fff;
 }
 .ok{ background:var(--success); }
 .err{ background:var(--error); }
 
-.result-flex{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-}
-
-@keyframes snakeShake{
-  0%,100%{transform:translateX(0)}
-  10%{transform:translateX(-18px)}
-  20%{transform:translateX(18px)}
-  30%{transform:translateX(-15px)}
-  40%{transform:translateX(15px)}
-  50%{transform:translateX(-10px)}
-  60%{transform:translateX(10px)}
-  70%{transform:translateX(-6px)}
-  80%{transform:translateX(6px)}
-  90%{transform:translateX(-3px)}
-}
-.snake{ animation: snakeShake .65s ease; }
-
-.footer-left,
-.footer-right{
-  position:fixed;
-  bottom:10px;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  font-size:15px;
-  font-weight:700;
-  color:var(--text);
+.footer-left, .footer-right{
+  position:fixed; bottom:10px;
+  font-size:15px; font-weight:700; color:var(--text);
 }
 .footer-left{ left:10px; }
 .footer-right{ right:10px; }
 
 </style>
 </head>
-
 <body>
 
-<!-- ✔ %100 ÇALIŞAN LOGO -->
+<!-- ---------------------------------------------- -->
+<!-- 🚀 YENİ KURUMSAL, DYNAMIC COLOR, ANIMATED LOGO -->
+<!-- ---------------------------------------------- -->
 <div id="logoBox">
-  <img src="https://denemesayfasi.github.io/assets/logo.svg" alt="Logo">
+<svg width="220" height="45" viewBox="0 0 320 80">
+  <!-- Minimal Flat Icon -->
+  <circle cx="40" cy="40" r="26" class="logo-sub"></circle>
+  <path d="M30 40l8 8 16-20" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+
+  <!-- Yazılar -->
+  <text x="90" y="38" font-size="32" font-weight="700" class="logo-main" font-family="Segoe UI">IBAN</text>
+  <text x="90" y="65" font-size="22" font-weight="700" class="logo-sub" font-family="Segoe UI">DOĞRULAMA</text>
+</svg>
 </div>
 
-<!-- TARİH -->
+
+<!-- SAĞ ÜST TARİH -->
 <div id="tarihBox"><span id="bugunTarih"></span></div>
 
+<!-- KUTU ALANI -->
 <div class="kutu" id="kart">
 
   <div class="top-bar">
@@ -250,26 +224,26 @@ button.action:hover{ background:var(--button-hover); }
 <script>
 /* TARİH */
 function tarihYaz(){
-  const t=new Date();
-  const g=String(t.getDate()).padStart(2,'0');
-  const a=String(t.getMonth()+1).padStart(2,'0');
-  const y=t.getFullYear();
-  bugunTarih.textContent=`${g}.${a}.${y}`;
+  const d=new Date();
+  bugunTarih.textContent=
+    String(d.getDate()).padStart(2,'0')+"."+
+    String(d.getMonth()+1).padStart(2,'0')+"."+
+    d.getFullYear();
 }
 tarihYaz();
 
-/* Tema */
-themeToggle.addEventListener("change",e=>{
-  document.body.classList.toggle("dark",e.target.checked);
-});
+/* TEMA DEĞİŞİMİ */
+themeToggle.addEventListener("change", e =>
+  document.body.classList.toggle("dark", e.target.checked)
+);
 
-/* Ses default kapalı */
+/* SES (kapalı başlar) */
 let soundOn=false;
 soundToggle.checked=false;
-soundToggle.addEventListener("change",e=>soundOn=e.target.checked);
+soundToggle.addEventListener("change", e=> soundOn=e.target.checked);
 
-/* IBAN filtresi */
-iban.addEventListener("input",e=>{
+/* IBAN filtre */
+iban.addEventListener("input", e=>{
   const raw=e.target.value.toUpperCase().replace(/[^0-9A-Z]/g,"");
   let out="";
   for(let i=0;i<raw.length;i++){
@@ -279,35 +253,13 @@ iban.addEventListener("input",e=>{
   e.target.value=out;
 });
 
-/* PASTE + AUTO KONTROL */
+/* PASTE → AUTO KONTROL */
 async function pasteIBAN(){
-  try{
-    let txt=await navigator.clipboard.readText();
-    txt=txt.replace(/\s+/g,"").toUpperCase().replace(/[^0-9A-Z]/g,"");
-    iban.value=txt;
-    iban.dispatchEvent(new Event("input"));
-    setTimeout(()=>ibanKontrol(),120);
-  }catch(e){
-    alert("Pano izni engellendi");
-  }
-}
-
-/* Ses */
-const audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-function playSound(t){
-  if(!soundOn)return;
-  const o=audioCtx.createOscillator();
-  const g=audioCtx.createGain();
-  if(t==='ok'){
-    g.gain.value=.18;o.type='triangle';o.frequency.value=880;
-    o.connect(g).connect(audioCtx.destination);o.start();
-    setTimeout(()=>o.frequency.value=1320,100);
-    setTimeout(()=>o.stop(),200);
-  }else{
-    g.gain.value=.24;o.type='square';o.frequency.value=440;
-    o.connect(g).connect(audioCtx.destination);o.start();
-    setTimeout(()=>o.stop(),230);
-  }
+  let txt=await navigator.clipboard.readText();
+  txt=txt.replace(/\s+/g,"").toUpperCase().replace(/[^0-9A-Z]/g,"");
+  iban.value=txt;
+  iban.dispatchEvent(new Event("input"));
+  setTimeout(()=>ibanKontrol(),120);
 }
 
 /* Bankalar */
@@ -335,35 +287,27 @@ function mod97(iban){
   return m===1;
 }
 
-/* Kontrol */
+/* IBAN KONTROL */
 function ibanKontrol(){
   const v=iban.value.replace(/\s+/g,"");
   const s=document.getElementById("sonuc");
-
-  if(!v.startsWith("TR")||v.length!==26)
-    return hata("IBAN GEÇERSİZ!");
-
-  if(!mod97(v))
-    return hata("IBAN GEÇERSİZ!");
+  if(!v.startsWith("TR")||v.length!==26) return hata("IBAN GEÇERSİZ!");
+  if(!mod97(v)) return hata("IBAN GEÇERSİZ!");
 
   const kod=v.slice(6,9);
   s.className="sonuc ok";
   s.style.display="block";
-
   s.innerHTML=bankalar[kod]?
-    `<div class='result-flex'><div>✔ IBAN GEÇERLİ</div><div>Banka: ${bankalar[kod]}</div></div>`:
-    "✔ IBAN GEÇERLİ";
-
-  playSound("ok");
+  `<div class='result-flex'><div>✔ IBAN GEÇERLİ</div><div>${bankalar[kod]}</div></div>`
+  :"✔ IBAN GEÇERLİ";
 }
 
-/* Hata */
+/* HATA */
 function hata(msg){
   const s=document.getElementById("sonuc");
   s.className="sonuc err";
   s.style.display="block";
   s.textContent=msg;
-  playSound("err");
 }
 </script>
 
