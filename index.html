@@ -10,47 +10,49 @@
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; margin:0; }
 
-/* Tema ve ortak değişkenler */
 :root{
   --bg:#eef2f7;
-  --card-bg:rgba(255,255,255,.72);
+  --card-bg:#ffffffcc;
   --text:#111;
   --border:rgba(0,0,0,.15);
 
-  --logo-color: var(--text);     /* IBAN yazısı rengi */
-  --logo-sub:#006CFF;            /* DOĞRULAMA (logo alt metni) */
+  --logo-color:#111;
+  --logo-sub:#006CFF;
+
+  --footer-circle:#006CFF;
+  --footer-text:#111;
+  --footer-sub:#006CFF;
 
   --success:#7CCF90;
   --error:rgba(255,0,0,.26);
 
-  --button:linear-gradient(135deg,#006CFF,#004CFF);
-  --button-hover:linear-gradient(135deg,#0052e6,#003cd9);
+  --button:linear-gradient(135deg,#006CFF,#4A2CFF);
+  --button-hover:linear-gradient(135deg,#0052e6,#3a24d9);
 
-  /* Köşe yerleşimleri tek noktadan kontrol */
-  --pad-x: 10px;  /* logo soldan boşluğu */
-  --pad-y: 10px;  /* logo üstten boşluğu */
+  --switch-bg:#bbb;
+  --switch-knob:#fff;
 
-  /* İstenen değişiklik: tarih/gün + ETÜRK + mail renkleri */
-  --corner-text-color: var(--text);  /* gündüz: siyah */
+  --switch-sun:#f7c235;
+  --switch-moon:#fff;
 }
 
 body.dark{
   --bg:#07090d;
-  --card-bg:rgba(30,30,30,.78);
+  --card-bg:#1e1e1ecc;
   --text:#fff;
-  --border:rgba(255,255,255,.2);
 
-  --logo-color: var(--text);
-  --logo-sub:#66B3FF;            /* Dark mode için logo alt metni */
+  --logo-color:#fff;
+  --logo-sub:#66B3FF;
 
-  --success:#3CCF73;
-  --error:rgba(255,70,70,.38);
+  --footer-circle:#66B3FF;
+  --footer-text:#fff;
+  --footer-sub:#66B3FF;
 
-  --button:linear-gradient(135deg,#00aaff,#0077ff);
-  --button-hover:linear-gradient(135deg,#0088dd,#005fcc);
+  --switch-bg:#444;
+  --switch-knob:#fff;
 
-  /* Gece: beyaz */
-  --corner-text-color: var(--text);
+  --switch-sun:#444;
+  --switch-moon:#fff;
 }
 
 body{
@@ -64,334 +66,305 @@ body{
   transition:.3s;
 }
 
-/* ---------------------------------------------- */
-/* LOGO SOL ÜST */
+/* ============================= */
+/*     iOS STYLE SWITCH          */
+/* ============================= */
+
+#rightTop{
+  position:fixed; top:25px; right:40px;
+}
+
+.switch {
+  width: 54px;
+  height: 30px;
+  position: relative;
+  display: inline-block;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background: var(--switch-bg);
+  border-radius: 30px;
+  transition: .35s;
+  cursor: pointer;
+}
+
+.switch-handle {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  background: var(--switch-knob);
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: .35s cubic-bezier(.4, 0, .2, 1);
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+
+input:checked + .slider {
+  background: #34C759; /* iOS GREEN */
+}
+
+input:checked + .slider .switch-handle {
+  transform: translateX(24px);
+}
+
+.switch-handle svg {
+  width: 15px;
+  height: 15px;
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+}
+
+.switch-handle .sun { stroke: var(--switch-sun); }
+.switch-handle .moon { stroke: var(--switch-moon); display:none; }
+
+body.dark .switch-handle .sun { display:none; }
+body.dark .switch-handle .moon { display:block; }
+
+/* ============================= */
+/*        LOGO LEFT TOP          */
+/* ============================= */
+
 #logoBox{
   position:fixed;
-  top:var(--pad-y);
-  left:var(--pad-x);
-  z-index:999;
+  top:25px; left:25px;
   cursor:pointer;
-  transition:.25s ease;
+  transition:.2s;
 }
-#logoBox:hover{
-  transform:scale(1.05);
-  filter: drop-shadow(0px 0px 6px rgba(0,0,0,0.25));
-}
+#logoBox:hover{ transform:scale(1.05); }
+
 .logo-main{ fill:var(--logo-color); }
-.logo-sub { fill:var(--logo-sub); }
+.logo-sub{ fill:var(--logo-sub); }
 
-/* ---------------------------------------------- */
-/* TARİH SAĞ ÜST */
-#tarihBox{
-  position:fixed;
-  top:var(--pad-y);
-  right:var(--pad-x);
-  text-align:right;
-  font-weight:700;
-  color:var(--corner-text-color); /* Gündüz siyah, gece beyaz */
-}
-#bugunTarih{
-  display:block;
-  font-size:15px;
-}
-#bugunGun{
-  display:block;
-  font-size:12px;
-  opacity:.85;
-  margin-top:2px;
-}
+/* ============================= */
+/*             KART              */
+/* ============================= */
 
-/* ---------------------------------------------- */
-/* CARD */
 .kutu{
   width:min(650px,92vw);
   background:var(--card-bg);
   border:1px solid var(--border);
   border-radius:18px;
-  padding:28px;
+  padding:35px;
+  margin-top:40px;
   backdrop-filter:blur(18px);
 }
 
-/* ---------------------------------------------- */
-/* Switch Bar */
-.top-bar{
-  display:flex; justify-content:flex-end;
-  gap:30px; margin-bottom:12px;
-}
-
-.switch-col{ display:flex; flex-direction:column; align-items:center; }
-.switch-label{
-  margin-top:4px;
-  font-size:10px;
-  opacity:.75;
-  font-weight:600;
-}
-
-/* Switch animasyonları */
-.switch{ position:relative; width:42px; height:22px; }
-.switch input{ display:none; }
-.slider{
-  position:absolute; inset:0;
-  background:#bbb;
-  border-radius:30px;
-  cursor:pointer;
-  transition: background .25s ease;
-}
-.slider:before{
-  content:""; position:absolute;
-  width:18px; height:18px; left:2px; top:2px;
-  background:#fff; border-radius:50%;
-  transition: transform .25s cubic-bezier(.4,0,.2,1);
-}
-input:checked + .slider{ background:#4cd964; }
-input:checked + .slider:before{ transform:translateX(20px); }
-.switch:hover .slider:before{ transform:scale(1.15); }
-
-/* ---------------------------------------------- */
-/* Input alanı */
+/* INPUT */
 .input-wrap{ position:relative; width:100%; }
-input#iban{
-  width:100%; height:48px;
-  padding:0 56px 0 16px;
+
+#iban{
+  width:100%; height:52px;
+  padding:0 56px 0 18px;
   border:1px solid var(--border);
   border-radius:12px;
-  background:rgba(255,255,255,.55);
-  font-size:17px;
+  font-size:18px;
+  background:#fff8;
+  color:var(--text);
 }
-body.dark input#iban{
-  background:rgba(60,60,60,.45);
-  color:#fff;
-}
+body.dark #iban{ background:#333a; color:#fff; }
 
 .paste-btn{
-  position:absolute; right:8px; top:50%;
+  position:absolute;
+  right:12px; top:50%;
   transform:translateY(-50%);
-  font-size:22px;
-  cursor:pointer;
+  font-size:22px; cursor:pointer;
 }
 
-/* ---------------------------------------------- */
-/* DOĞRULA BUTTON */
+/* BUTTON */
 button.action{
-  width:100%; height:54px; margin-top:20px;
-  border:none; border-radius:14px;
+  width:100%; height:58px;
+  border:none;
+  margin-top:25px;
   background:var(--button);
   color:#fff;
-  font-size:19px; font-weight:600;
-  transition:.25s ease;
+  border-radius:16px;
+  font-size:20px;
+  font-weight:700;
 }
 button.action:hover{
-  background:var(--button-hover);
   transform:scale(1.03);
-  box-shadow:0 4px 12px rgba(0,0,0,.18);
+  background:var(--button-hover);
 }
 
-/* ---------------------------------------------- */
 /* SONUÇ */
 .sonuc{
   display:none;
   margin-top:20px;
-  padding:16px 18px;
+  padding:16px 22px;
   border-radius:12px;
-  font-size:20px; font-weight:600; color:#fff;
+  font-size:20px;
+  font-weight:600;
+  color:white;
 }
-.ok { background:var(--success); }
+.ok{ background:var(--success); }
 .err{ background:var(--error); }
 
 .result-flex{
-  display:flex; justify-content:space-between;
-  align-items:center; gap:12px;
+  display:flex;
+  justify-content:space-between;
 }
 
-@keyframes snakeShake{
-  0%,100%{transform:translateX(0)}
-  10%{transform:translateX(-18px)}
-  20%{transform:translateX(18px)}
-  30%{transform:translateX(-15px)}
-  40%{transform:translateX(15px)}
-  50%{transform:translateX(-10px)}
-  60%{transform:translateX(10px)}
-  70%{transform:translateX(-6px)}
-  80%{transform:translateX(6px)}
-  90%{transform:translateX(-3px)}
-}
-.snake{ animation: snakeShake .65s ease; }
-
-/* ---------------------------------------------- */
-/* FOOTER SAĞ ALT */
+/* FOOTER */
 #altFooter{
-  position:fixed;
-  bottom:var(--pad-y);
-  right:var(--pad-x);
-  text-align:right;
-  font-weight:700;
-  line-height:1.2;
-}
-#footerEturk{
-  font-size:15px;
-  color:var(--corner-text-color);   /* Gündüz siyah, gece beyaz */
-}
-#footerMail{
-  font-size:12px;
-  color:var(--corner-text-color);   /* Gündüz siyah, gece beyaz */
+  position:fixed; bottom:25px; right:25px;
 }
 
-/* Küçük ekranlar için ufak dokunuş (opsiyonel) */
-@media (max-width: 420px){
-  #logoBox svg{ width:180px; height:auto; }
+#footerLogo{
+  display:flex; align-items:center;
+  gap:10px;
+}
+
+.footer-circle{
+  fill:var(--footer-circle);
+}
+
+.footer-name{
+  font-size:15px; font-weight:700;
+  color:var(--footer-text);
+}
+.footer-mail{
+  font-size:12px; font-weight:600;
+  color:var(--footer-sub);
 }
 </style>
 </head>
+
 <body>
 
 <!-- LOGO -->
-<div id="logoBox" title="Tema değiştir (tıkla)">
-<svg width="220" height="45" viewBox="0 0 320 80" aria-hidden="true">
-  <circle cx="40" cy="40" r="26" class="logo-sub"></circle>
-  <path d="M30 40l8 8 16-20"
-        stroke="white" stroke-width="6"
-        fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<div id="logoBox" onclick="location.reload()">
+<svg width="230" height="60" viewBox="0 0 330 90">
+  <circle cx="45" cy="45" r="28" class="logo-sub"></circle>
+  <path d="M34 45l10 10 18-24"
+    stroke="white" stroke-width="7"
+    fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
 
-  <text x="90" y="38" font-size="32" font-weight="700"
-        font-family="Segoe UI" class="logo-main">IBAN</text>
-
-  <text x="90" y="65" font-size="22" font-weight="700"
-        font-family="Segoe UI" class="logo-sub">DOĞRULAMA</text>
+  <text x="95" y="43" font-size="36" font-weight="700" class="logo-main">IBAN</text>
+  <text x="95" y="72" font-size="24" font-weight="700" class="logo-sub">DOĞRULAMA</text>
 </svg>
 </div>
 
-<!-- TARİH -->
-<div id="tarihBox" aria-live="polite">
-  <span id="bugunTarih"></span>
-  <span id="bugunGun"></span>
+<!-- iOS SWITCH -->
+<div id="rightTop">
+  <label class="switch">
+    <input type="checkbox" id="themeToggle">
+    <span class="slider">
+      <div class="switch-handle">
+
+        <svg class="sun" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="4"></circle>
+          <line x1="12" y1="1" x2="12" y2="4"></line>
+          <line x1="12" y1="20" x2="12" y2="23"></line>
+          <line x1="1" y1="12" x2="4" y2="12"></line>
+          <line x1="20" y1="12" x2="23" y2="12"></line>
+          <line x1="4" y1="4" x2="6" y2="6"></line>
+          <line x1="18" y1="18" x2="20" y2="20"></line>
+          <line x1="4" y1="20" x2="6" y2="18"></line>
+          <line x1="18" y1="6" x2="20" y2="4"></line>
+        </svg>
+
+        <svg class="moon" viewBox="0 0 24 24">
+          <path d="M21 12.79A9 9 0 0 1 12.21 3 7 7 0 1 0 21 12.79z"></path>
+        </svg>
+
+      </div>
+    </span>
+  </label>
 </div>
 
 <!-- KART -->
-<div class="kutu" id="kart">
-
-  <div class="top-bar">
-
-    <div class="switch-col">
-      <label class="switch" title="Gündüz/Gece">
-        <input type="checkbox" id="themeToggle">
-        <span class="slider"></span>
-      </label>
-      <span class="switch-label">Gündüz/Gece</span>
-    </div>
-
-    <div class="switch-col">
-      <label class="switch" title="Ses Aç/Kapat">
-        <input type="checkbox" id="soundToggle">
-        <span class="slider"></span>
-      </label>
-      <span class="switch-label">Ses Aç/Kapat</span>
-    </div>
-
-  </div>
+<div class="kutu" id="mainCard">
 
   <div class="input-wrap">
-    <input id="iban" placeholder="TR11 1111 1111 1111 1111 1111 11" autocomplete="off" inputmode="latin-prose" />
-    <span class="paste-btn" aria-label="Panodan yapıştır" role="button" onclick="pasteIBAN()">📋</span>
+    <input id="iban" placeholder="TR11 1111 1111 1111 1111 1111 11">
+    <span class="paste-btn" onclick="pasteIBAN()">📋</span>
   </div>
 
   <button class="action" onclick="ibanKontrol()">DOĞRULA ‣</button>
 
-  <div id="sonuc" class="sonuc" role="status" aria-live="polite"></div>
-
+  <div id="sonuc" class="sonuc"></div>
 </div>
 
-<!-- FOOTER SAĞ ALT -->
+<!-- FOOTER -->
 <div id="altFooter">
-  <div id="footerEturk">🖌️ ETÜRK</div>
-  <div id="footerMail">✉️ e.turk@palen.com.tr</div>
+  <div id="footerLogo">
+    <svg width="46" height="46" viewBox="0 0 80 80">
+      <circle cx="40" cy="40" r="28" class="footer-circle"></circle>
+      <text x="40" y="48" text-anchor="middle"
+        font-family="Segoe UI" font-size="28" font-weight="700"
+        fill="white">ET</text>
+    </svg>
+
+    <div>
+      <div class="footer-name">ETÜRK</div>
+      <div class="footer-mail">e.turk@palen.com.tr</div>
+    </div>
+  </div>
 </div>
 
 <script>
-/* Tarih + Gün */
-function tarihVeGunYaz(){
-  const d = new Date();
-  const gunler = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
-  document.getElementById("bugunTarih").textContent =
-    `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
-  document.getElementById("bugunGun").textContent = gunler[d.getDay()];
-}
-tarihVeGunYaz();
-setInterval(tarihVeGunYaz, 60*60*1000);
+/* TEMA */
+themeToggle.onchange = () => {
+  document.body.classList.toggle("dark", themeToggle.checked);
+};
 
-/* Logo tıklanınca da tema değişsin (kolay erişim) */
-document.getElementById('logoBox').addEventListener('click', () => {
-  const toggler = document.getElementById('themeToggle');
-  toggler.checked = !toggler.checked;
-  document.body.classList.toggle("dark", toggler.checked);
-});
-
-/* Tema switch */
-const themeToggle = document.getElementById('themeToggle');
-themeToggle.addEventListener("change", e =>
-  document.body.classList.toggle("dark", e.target.checked)
-);
-
-/* Ses */
-let soundOn=false;
-const soundToggle = document.getElementById('soundToggle');
-soundToggle.checked=false;
-soundToggle.addEventListener("change", e=> soundOn=e.target.checked);
-
-/* IBAN input filtre */
-const iban = document.getElementById('iban');
+/* IBAN formatlama */
 iban.addEventListener("input", e=>{
   const raw=e.target.value.toUpperCase().replace(/[^0-9A-Z]/g,"");
-  let out="";
+  let o="";
   for(let i=0;i<raw.length;i++){
-    if(i>0 && i%4===0) out+=" ";
-    out+=raw[i];
+    if(i>0 && i%4===0) o+=" ";
+    o+=raw[i];
   }
-  e.target.value=out;
+  e.target.value=o;
 });
 
-/* Paste → auto kontrol */
+/* Paste */
 async function pasteIBAN(){
   try{
-    let txt=await navigator.clipboard.readText();
-    txt=txt.replace(/\s+/g,"").toUpperCase().replace(/[^0-9A-Z]/g,"");
-    iban.value=txt;
+    let t=await navigator.clipboard.readText();
+    t=t.replace(/\s+/g,"").toUpperCase();
+    iban.value=t;
     iban.dispatchEvent(new Event("input"));
-    setTimeout(()=>ibanKontrol(),120);
-  }catch(err){
-    // izin yoksa sessiz geç
-  }
+  }catch{}
 }
 
 /* Bankalar */
 const bankalar={
 "001":"Merkez Bankası","010":"Ziraat Bankası","012":"Halkbank","015":"Vakıfbank",
-"014":"TSKB","016":"Eximbank","017":"Türkiye Kalkınma Bankası","029":"Birleşik Fon Bankası",
-"032":"TEB","034":"Aktif Yatırım Bankası","046":"Akbank","048":"HSBC",
-"058":"Sınai Yatırım Bankası","059":"Şekerbank","062":"Garanti BBVA","064":"İş Bankası",
-"067":"Yapı Kredi","134":"Denizbank A.Ş.","091":"Arap Türk Bankası","092":"Citibank",
-"099":"ING","103":"Fiba Bank","106":"Portigon AG","107":"BNP-Ak-Dresdner",
-"108":"Turkland Bank","109":"Tekstil Bankası","111":"Finansbank","115":"Deutsche Bank",
+"014":"TSKB","016":"Eximbank","017":"Türkiye Kalkınma Bankası",
+"029":"Birleşik Fon Bankası","032":"TEB","034":"Aktif Yatırım Bankası",
+"046":"Akbank","048":"HSBC","058":"Sınai Yatırım Bankası","059":"Şekerbank",
+"062":"Garanti BBVA","064":"İş Bankası","067":"Yapı Kredi",
+"134":"Denizbank A.Ş.","091":"Arap Türk Bankası","092":"Citibank","099":"ING",
+"103":"Fiba Bank","106":"Portigon AG","107":"BNP-Ak-Dresdner","108":"Turkland Bank",
+"109":"Tekstil Bankası","111":"Finansbank","115":"Deutsche Bank",
 "125":"Burganbank","133":"ING Bank","135":"Anadolubank","157":"EnPara",
-"203":"Albaraka Türk","205":"Kuveyt Türk","206":"Türkiye Finans","208":"Asya Katılım",
-"210":"Vakıf Katılım","223":"Albaraka Türk Katılım"
+"203":"Albaraka Türk","205":"Kuveyt Türk","206":"Türkiye Finans",
+"208":"Asya Katılım","210":"Vakıf Katılım","223":"Albaraka Türk Katılım"
 };
 
-/* MOD97 */
-function mod97(iban){
-  const r=iban.slice(4)+iban.slice(0,4);
+function mod97(i){
+  const r=i.slice(4)+i.slice(0,4);
   const c=r.replace(/[A-Z]/g,ch=>ch.charCodeAt(0)-55);
   let m=0;
   for(let i=0;i<c.length;i++) m=(m*10+Number(c[i]))%97;
   return m===1;
 }
 
-/* IBAN Kontrol */
 function ibanKontrol(){
   const v=iban.value.replace(/\s+/g,"");
   const s=document.getElementById("sonuc");
 
-  if(!v.startsWith("TR")||v.length!==26)
+  if(!v.startsWith("TR") || v.length!==26)
     return hata("IBAN GEÇERSİZ!");
   if(!mod97(v))
     return hata("IBAN GEÇERSİZ!");
@@ -400,18 +373,23 @@ function ibanKontrol(){
 
   s.className="sonuc ok";
   s.style.display="block";
-
-  s.innerHTML = bankalar[kod]
-    ? `<div class='result-flex'><div>✔ IBAN GEÇERLİ</div><div>${bankalar[kod]}</div></div>`
-    : "✔ IBAN GEÇERLİ";
+  s.innerHTML = `
+    <div class="result-flex">
+      <div>✔ IBAN GEÇERLİ</div>
+      <div>${bankalar[kod] ?? ""}</div>
+    </div>`;
 }
 
-/* Hata */
 function hata(msg){
   const s=document.getElementById("sonuc");
+  const card=document.getElementById("mainCard");
+
   s.className="sonuc err";
   s.style.display="block";
   s.textContent=msg;
+
+  card.classList.add("snake");
+  setTimeout(()=> card.classList.remove("snake"),650);
 }
 </script>
 
