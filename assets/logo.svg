@@ -1,0 +1,21 @@
+
+<svg width="320" height="80" viewBox="0 0 320 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="320" height="80" fill="none"/>
+  <g>
+    <!-- Konuşma balonu + tik -->
+    <path d="M20 12h42c6.6 0 12 5.4 12 12v22c0 6.6-5.4 12-12 12H38l-10 10v-10H20c-6.6 0-12-5.4-12-12V24c0-6.6 5.4-12 12-12z" 
+          stroke="#0A4D9C" stroke-width="3" fill="none" stroke-linejoin="round"/>
+    <path d="M28 35l8 8 16-18" 
+          stroke="#00AEEF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- IBAN -->
+    <text x="90" y="35" fill="#0A4D9C" font-family="Segoe UI, Arial" font-weight="700" font-size="30">
+      IBAN
+    </text>
+    
+    <!-- DOĞRULAMA -->
+    <text x="90" y="60" fill="#003366" font-family="Segoe UI, Arial" font-weight="700" font-size="22">
+      DOĞRULAMA
+    </text>
+  </g>
+</svg>
