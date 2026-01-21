@@ -66,7 +66,6 @@ body{
   transition:.3s;
 }
 
-/* =============== IBAN INPUT TITREME =============== */
 @keyframes shake {
   0% { transform: translateX(0); }
   20% { transform: translateX(-4px); }
@@ -80,14 +79,10 @@ body{
   animation: shake .35s ease;
 }
 
-/* ============================= */
-/*     iOS STYLE SWITCH          */
-/* ============================= */
 #rightTop{
   position:fixed; top:25px; right:40px;
 }
 
-/* Sabit güneş & ay ikonları (switch yanında) */
 #rightTop .sun-fixed,
 #rightTop .moon-fixed {
   position: absolute;
@@ -98,7 +93,6 @@ body{
   transition: opacity .25s;
 }
 
-/* Güneş solda görünür (gündüz) */
 #rightTop .sun-fixed { 
   left: -28px; 
   opacity: 1; 
@@ -106,7 +100,6 @@ body{
   fill: none;
 }
 
-/* Ay solda, başlangıçta gizli (gece olduğunda görünür) */
 #rightTop .moon-fixed { 
   left: -28px; 
   opacity: 0; 
@@ -114,7 +107,6 @@ body{
   fill: none;
 }
 
-/* Dark mode: Ay görünür, Güneş gizli */
 body.dark #rightTop .sun-fixed { opacity: 0; }
 body.dark #rightTop .moon-fixed { opacity: 1; }
 
@@ -151,16 +143,13 @@ body.dark #rightTop .moon-fixed { opacity: 1; }
 }
 
 input:checked + .slider {
-  background: #34C759; /* iOS yeşil */
+  background: #34C759;
 }
 
 input:checked + .slider .switch-handle {
   transform: translateX(24px);
 }
 
-/* ============================= */
-/*        LOGO LEFT TOP          */
-/* ============================= */
 #logoBox{
   position:fixed;
   top:25px; left:25px;
@@ -172,9 +161,6 @@ input:checked + .slider .switch-handle {
 .logo-main{ fill:var(--logo-color); }
 .logo-sub{ fill:var(--logo-sub); }
 
-/* ============================= */
-/*             KART              */
-/* ============================= */
 .kutu{
   width:min(650px,92vw);
   background:var(--card-bg);
@@ -185,7 +171,6 @@ input:checked + .slider .switch-handle {
   backdrop-filter:blur(18px);
 }
 
-/* INPUT */
 .input-wrap{ position:relative; width:100%; }
 
 #iban{
@@ -206,7 +191,6 @@ body.dark #iban{ background:#333a; color:#fff; }
   font-size:22px; cursor:pointer;
 }
 
-/* BUTTON */
 button.action{
   width:100%; height:58px;
   border:none;
@@ -222,7 +206,6 @@ button.action:hover{
   background:var(--button-hover);
 }
 
-/* SONUÇ */
 .sonuc{
   display:none;
   margin-top:20px;
@@ -240,7 +223,6 @@ button.action:hover{
   justify-content:space-between;
 }
 
-/* FOOTER */
 #altFooter{
   position:fixed; bottom:25px; right:25px;
 }
@@ -280,9 +262,8 @@ button.action:hover{
   </svg>
 </div>
 
-<!-- iOS SWITCH (sabit ikonlar ile) -->
+<!-- iOS SWITCH -->
 <div id="rightTop">
-  <!-- SABİT GÜNEŞ -->
   <svg class="sun-fixed" viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="4"></circle>
     <line x1="12" y1="1" x2="12" y2="4"></line>
@@ -295,7 +276,6 @@ button.action:hover{
     <line x1="18" y1="6" x2="20" y2="4"></line>
   </svg>
 
-  <!-- SABİT AY -->
   <svg class="moon-fixed" viewBox="0 0 24 24">
     <path d="M21 12.79A9 9 0 0 1 12.21 3 7 7 0 1 0 21 12.79z"></path>
   </svg>
@@ -310,6 +290,12 @@ button.action:hover{
 
 <!-- KART -->
 <div class="kutu" id="mainCard">
+
+  <!-- ORTALANMIŞ AÇIKLAMA -->
+  <p style="font-size:16px; margin-bottom:12px; font-weight:600; text-align:center;">
+    Bir IBAN numarasını doğrulayın
+  </p>
+
   <div class="input-wrap">
     <input id="iban" placeholder="TR11 1111 1111 1111 1111 1111 11">
     <span class="paste-btn" onclick="pasteIBAN()">📋</span>
@@ -338,12 +324,10 @@ button.action:hover{
 </div>
 
 <script>
-/* TEMA */
 themeToggle.onchange = () => {
   document.body.classList.toggle("dark", themeToggle.checked);
 };
 
-/* IBAN formatlama */
 iban.addEventListener("input", e=>{
   const raw=e.target.value.toUpperCase().replace(/[^0-9A-Z]/g,"");
   let o="";
@@ -354,7 +338,6 @@ iban.addEventListener("input", e=>{
   e.target.value=o;
 });
 
-/* Paste */
 async function pasteIBAN(){
   try{
     let t=await navigator.clipboard.readText();
@@ -364,7 +347,6 @@ async function pasteIBAN(){
   }catch{}
 }
 
-/* Bankalar */
 const bankalar={
 "001":"Merkez Bankası","010":"Ziraat Bankası","012":"Halkbank","015":"Vakıfbank",
 "014":"TSKB","016":"Eximbank","017":"Türkiye Kalkınma Bankası",
@@ -415,7 +397,6 @@ function hata(msg){
   s.style.display="block";
   s.textContent=msg;
 
-  /* IBAN INPUT TITRESIN (kırmızı titreme) */
   iban.classList.add("input-error");
   setTimeout(()=> iban.classList.remove("input-error"), 500);
 
