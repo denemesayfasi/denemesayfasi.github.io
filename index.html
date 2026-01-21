@@ -66,13 +66,57 @@ body{
   transition:.3s;
 }
 
+/* =============== IBAN INPUT TITREME =============== */
+@keyframes shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+.input-error {
+  border-color: red !important;
+  animation: shake .35s ease;
+}
+
 /* ============================= */
 /*     iOS STYLE SWITCH          */
 /* ============================= */
-
 #rightTop{
   position:fixed; top:25px; right:40px;
 }
+
+/* Sabit güneş & ay ikonları (switch yanında) */
+#rightTop .sun-fixed,
+#rightTop .moon-fixed {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: opacity .25s;
+}
+
+/* Güneş solda görünür (gündüz) */
+#rightTop .sun-fixed { 
+  left: -28px; 
+  opacity: 1; 
+  stroke: var(--switch-sun); 
+  fill: none;
+}
+
+/* Ay solda, başlangıçta gizli (gece olduğunda görünür) */
+#rightTop .moon-fixed { 
+  left: -28px; 
+  opacity: 0; 
+  stroke: var(--switch-moon); 
+  fill: none;
+}
+
+/* Dark mode: Ay görünür, Güneş gizli */
+body.dark #rightTop .sun-fixed { opacity: 0; }
+body.dark #rightTop .moon-fixed { opacity: 1; }
 
 .switch {
   width: 54px;
@@ -107,31 +151,16 @@ body{
 }
 
 input:checked + .slider {
-  background: #34C759; /* iOS GREEN */
+  background: #34C759; /* iOS yeşil */
 }
 
 input:checked + .slider .switch-handle {
   transform: translateX(24px);
 }
 
-.switch-handle svg {
-  width: 15px;
-  height: 15px;
-  position:absolute;
-  top:50%; left:50%;
-  transform:translate(-50%,-50%);
-}
-
-.switch-handle .sun { stroke: var(--switch-sun); }
-.switch-handle .moon { stroke: var(--switch-moon); display:none; }
-
-body.dark .switch-handle .sun { display:none; }
-body.dark .switch-handle .moon { display:block; }
-
 /* ============================= */
 /*        LOGO LEFT TOP          */
 /* ============================= */
-
 #logoBox{
   position:fixed;
   top:25px; left:25px;
@@ -146,7 +175,6 @@ body.dark .switch-handle .moon { display:block; }
 /* ============================= */
 /*             KART              */
 /* ============================= */
-
 .kutu{
   width:min(650px,92vw);
   background:var(--card-bg);
@@ -241,48 +269,47 @@ button.action:hover{
 
 <!-- LOGO -->
 <div id="logoBox" onclick="location.reload()">
-<svg width="230" height="60" viewBox="0 0 330 90">
-  <circle cx="45" cy="45" r="28" class="logo-sub"></circle>
-  <path d="M34 45l10 10 18-24"
-    stroke="white" stroke-width="7"
-    fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+  <svg width="230" height="60" viewBox="0 0 330 90">
+    <circle cx="45" cy="45" r="28" class="logo-sub"></circle>
+    <path d="M34 45l10 10 18-24"
+      stroke="white" stroke-width="7"
+      fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
 
-  <text x="95" y="43" font-size="36" font-weight="700" class="logo-main">IBAN</text>
-  <text x="95" y="72" font-size="24" font-weight="700" class="logo-sub">DOĞRULAMA</text>
-</svg>
+    <text x="95" y="43" font-size="36" font-weight="700" class="logo-main">IBAN</text>
+    <text x="95" y="72" font-size="24" font-weight="700" class="logo-sub">DOĞRULAMA</text>
+  </svg>
 </div>
 
-<!-- iOS SWITCH -->
+<!-- iOS SWITCH (sabit ikonlar ile) -->
 <div id="rightTop">
+  <!-- SABİT GÜNEŞ -->
+  <svg class="sun-fixed" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="4"></circle>
+    <line x1="12" y1="1" x2="12" y2="4"></line>
+    <line x1="12" y1="20" x2="12" y2="23"></line>
+    <line x1="1" y1="12" x2="4" y2="12"></line>
+    <line x1="20" y1="12" x2="23" y2="12"></line>
+    <line x1="4" y1="4" x2="6" y2="6"></line>
+    <line x1="18" y1="18" x2="20" y2="20"></line>
+    <line x1="4" y1="20" x2="6" y2="18"></line>
+    <line x1="18" y1="6" x2="20" y2="4"></line>
+  </svg>
+
+  <!-- SABİT AY -->
+  <svg class="moon-fixed" viewBox="0 0 24 24">
+    <path d="M21 12.79A9 9 0 0 1 12.21 3 7 7 0 1 0 21 12.79z"></path>
+  </svg>
+
   <label class="switch">
     <input type="checkbox" id="themeToggle">
     <span class="slider">
-      <div class="switch-handle">
-
-        <svg class="sun" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="4"></circle>
-          <line x1="12" y1="1" x2="12" y2="4"></line>
-          <line x1="12" y1="20" x2="12" y2="23"></line>
-          <line x1="1" y1="12" x2="4" y2="12"></line>
-          <line x1="20" y1="12" x2="23" y2="12"></line>
-          <line x1="4" y1="4" x2="6" y2="6"></line>
-          <line x1="18" y1="18" x2="20" y2="20"></line>
-          <line x1="4" y1="20" x2="6" y2="18"></line>
-          <line x1="18" y1="6" x2="20" y2="4"></line>
-        </svg>
-
-        <svg class="moon" viewBox="0 0 24 24">
-          <path d="M21 12.79A9 9 0 0 1 12.21 3 7 7 0 1 0 21 12.79z"></path>
-        </svg>
-
-      </div>
+      <div class="switch-handle"></div>
     </span>
   </label>
 </div>
 
 <!-- KART -->
 <div class="kutu" id="mainCard">
-
   <div class="input-wrap">
     <input id="iban" placeholder="TR11 1111 1111 1111 1111 1111 11">
     <span class="paste-btn" onclick="pasteIBAN()">📋</span>
@@ -387,6 +414,10 @@ function hata(msg){
   s.className="sonuc err";
   s.style.display="block";
   s.textContent=msg;
+
+  /* IBAN INPUT TITRESIN (kırmızı titreme) */
+  iban.classList.add("input-error");
+  setTimeout(()=> iban.classList.remove("input-error"), 500);
 
   card.classList.add("snake");
   setTimeout(()=> card.classList.remove("snake"),650);
