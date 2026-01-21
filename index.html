@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>IBAN DOĞRULAMA v1</title>
+<title>IBAN DOĞRULAMA</title>
 
 <style>
 *,
@@ -18,11 +18,12 @@ html, body { height: 100%; margin:0; }
   --text:#111;
   --border:rgba(0,0,0,.15);
 
-  --logo-color:#003366;   /* Light Mode Logo Renk */
+  --logo-color:#003366;
   --logo-sub:#006CFF;
 
   --success:#7CCF90;
   --error:rgba(255,0,0,.26);
+
   --button:linear-gradient(135deg,#006CFF,#004CFF);
   --button-hover:linear-gradient(135deg,#0052e6,#003cd9);
 }
@@ -33,7 +34,7 @@ body.dark{
   --text:#fff;
   --border:rgba(255,255,255,.2);
 
-  --logo-color:#ffffff;  /* Dark Mode Logo Renk */
+  --logo-color:#ffffff;
   --logo-sub:#66B3FF;
 
   --success:#3CCF73;
@@ -54,26 +55,24 @@ body{
   transition:.3s;
 }
 
-/* ------------------------------------------ */
-/* SOL ÜST LOGO — OTOMATİK RENK + HOVER */
+/* ---------------------------------------------- */
+/* SOL ÜST LOGO */
 #logoBox{
   position:fixed;
   top:10px;
   left:10px;
   z-index:999;
   cursor:pointer;
-  transition:0.25s ease;
+  transition:.25s ease;
 }
 #logoBox:hover{
   transform:scale(1.05);
   filter: drop-shadow(0px 0px 6px rgba(0,0,0,0.25));
 }
+.logo-main{ fill:var(--logo-color); }
+.logo-sub{ fill:var(--logo-sub); }
 
-/* SVG içindeki renkleri CSS değişkenine bağladık */
-.logo-main { fill: var(--logo-color); }
-.logo-sub  { fill: var(--logo-sub); }
-
-/* ------------------------------------------ */
+/* ---------------------------------------------- */
 /* TARİH */
 #tarihBox{
   position:fixed;
@@ -84,9 +83,8 @@ body{
   color:var(--text);
 }
 
-/* ------------------------------------------ */
-/* KART TASARIMI */
-/* (Kodların geri kalanı orijinal şekilde devam ediyor) */
+/* ---------------------------------------------- */
+/* CARD */
 .kutu{
   width:min(650px,92vw);
   background:var(--card-bg);
@@ -96,48 +94,77 @@ body{
   backdrop-filter:blur(18px);
 }
 
-/* --- Sadece logo için gerekli kısım üstteydi ---- */
-/* Aşağıdaki tüm tasarım senin önceki sürümünle aynı şekilde duruyor */
-
+/* ---------------------------------------------- */
+/* Switch Bar */
 .top-bar{
   display:flex; justify-content:flex-end;
   gap:30px; margin-bottom:12px;
 }
-.switch-col{ display:flex; flex-direction:column; align-items:center; }
-.switch{ position:relative; width:42px; height:22px; }
+
+.switch-col{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+/* ✔✔ Yazı boyutları küçültüldü */
+.switch-label{
+  margin-top:4px;
+  font-size:10px;    /* 12px → 10px */
+  opacity:0.75;      /* daha zarif */
+  font-weight:600;
+}
+
+.switch{
+  position:relative;
+  width:42px; height:22px;
+}
 .switch input{ display:none; }
+
 .slider{
-  position:absolute; inset:0; background:#bbb;
-  border-radius:30px; cursor:pointer; transition:.3s;
+  position:absolute; inset:0;
+  background:#bbb; border-radius:30px;
+  cursor:pointer; transition:.3s;
 }
 .slider:before{
   content:""; position:absolute;
-  width:18px; height:18px; left:2px; top:2px;
-  background:#fff; border-radius:50%; transition:.3s;
+  width:18px; height:18px;
+  left:2px; top:2px;
+  background:#fff; border-radius:50%;
+  transition:.3s;
 }
-input:checked + .slider{ background:#4cd964; }
-input:checked + .slider:before{ transform:translateX(20px); }
-
-h2{
-  margin:10px 0 20px 0;
-  text-align:center;
-  font-size:24px;
-  font-weight:700;
+input:checked + .slider{
+  background:#4cd964;
+}
+input:checked + .slider:before{
+  transform:translateX(20px);
 }
 
-.input-wrap{ position:relative; }
+/* ---------------------------------------------- */
+/* Input */
+.input-wrap{ position:relative; width:100%; }
+
 input#iban{
-  width:100%; height:48px; border-radius:12px;
-  padding:0 56px 0 16px; border:1px solid var(--border);
+  width:100%; height:48px;
+  padding:0 56px 0 16px;
+  border:1px solid var(--border);
+  border-radius:12px;
   background:rgba(255,255,255,.55);
   font-size:17px; color:var(--text);
 }
+body.dark input#iban{
+  background:rgba(60,60,60,.45);
+  color:#fff;
+}
+
 .paste-btn{
   position:absolute; right:8px; top:50%;
   transform:translateY(-50%);
   font-size:22px; cursor:pointer;
 }
 
+/* ---------------------------------------------- */
+/* Button */
 button.action{
   width:100%; height:54px; margin-top:20px;
   border:none; border-radius:14px;
@@ -146,17 +173,46 @@ button.action{
 }
 button.action:hover{ background:var(--button-hover); }
 
+/* ---------------------------------------------- */
+/* Results */
 .sonuc{
-  display:none; margin-top:20px;
-  padding:16px 18px; border-radius:12px;
-  font-size:20px; font-weight:600; color:#fff;
+  display:none;
+  margin-top:20px;
+  padding:16px 18px;
+  border-radius:12px;
+  font-size:20px;
+  font-weight:600; color:#fff;
 }
 .ok{ background:var(--success); }
 .err{ background:var(--error); }
 
+.result-flex{
+  display:flex; justify-content:space-between;
+  align-items:center; gap:12px;
+}
+
+/* Snake animation */
+@keyframes snakeShake{
+  0%,100%{transform:translateX(0)}
+  10%{transform:translateX(-18px)}
+  20%{transform:translateX(18px)}
+  30%{transform:translateX(-15px)}
+  40%{transform:translateX(15px)}
+  50%{transform:translateX(-10px)}
+  60%{transform:translateX(10px)}
+  70%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)}
+  90%{transform:translateX(-3px)}
+}
+.snake{ animation: snakeShake .65s ease; }
+
+/* Footer */
 .footer-left, .footer-right{
-  position:fixed; bottom:10px;
-  font-size:15px; font-weight:700; color:var(--text);
+  position:fixed;
+  bottom:10px;
+  font-size:15px;
+  font-weight:700;
+  color:var(--text);
 }
 .footer-left{ left:10px; }
 .footer-right{ right:10px; }
@@ -165,26 +221,26 @@ button.action:hover{ background:var(--button-hover); }
 </head>
 <body>
 
-<!-- ---------------------------------------------- -->
-<!-- 🚀 YENİ KURUMSAL, DYNAMIC COLOR, ANIMATED LOGO -->
-<!-- ---------------------------------------------- -->
+<!-- ------------------------------------------------ -->
+<!-- LIGHT/DARK ADAPTİF, KURUMSAL VE ANİMASYONLU LOGO -->
+<!-- ------------------------------------------------ -->
 <div id="logoBox">
 <svg width="220" height="45" viewBox="0 0 320 80">
-  <!-- Minimal Flat Icon -->
   <circle cx="40" cy="40" r="26" class="logo-sub"></circle>
-  <path d="M30 40l8 8 16-20" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+  <path d="M30 40l8 8 16-20" stroke="white" stroke-width="6"
+        fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
 
-  <!-- Yazılar -->
-  <text x="90" y="38" font-size="32" font-weight="700" class="logo-main" font-family="Segoe UI">IBAN</text>
-  <text x="90" y="65" font-size="22" font-weight="700" class="logo-sub" font-family="Segoe UI">DOĞRULAMA</text>
+  <text x="90" y="38" font-size="32" font-weight="700" class="logo-main"
+        font-family="Segoe UI">IBAN</text>
+
+  <text x="90" y="65" font-size="22" font-weight="700" class="logo-sub"
+        font-family="Segoe UI">DOĞRULAMA</text>
 </svg>
 </div>
 
-
-<!-- SAĞ ÜST TARİH -->
+<!-- TARİH -->
 <div id="tarihBox"><span id="bugunTarih"></span></div>
 
-<!-- KUTU ALANI -->
 <div class="kutu" id="kart">
 
   <div class="top-bar">
@@ -205,8 +261,6 @@ button.action:hover{ background:var(--button-hover); }
     </div>
   </div>
 
-  <h2>🏦 IBAN DOĞRULAMA v1</h2>
-
   <div class="input-wrap">
     <input id="iban" placeholder="TR11 1111 1111 1111 1111 1111 11">
     <span class="paste-btn" onclick="pasteIBAN()">📋</span>
@@ -218,11 +272,12 @@ button.action:hover{ background:var(--button-hover); }
 
 </div>
 
+<!-- Footer -->
 <div class="footer-left">🖌️ETÜRK</div>
 <div class="footer-right">✉️ e.turk@palen.com.tr</div>
 
 <script>
-/* TARİH */
+/* Tarih */
 function tarihYaz(){
   const d=new Date();
   bugunTarih.textContent=
@@ -232,12 +287,12 @@ function tarihYaz(){
 }
 tarihYaz();
 
-/* TEMA DEĞİŞİMİ */
+/* Tema */
 themeToggle.addEventListener("change", e =>
   document.body.classList.toggle("dark", e.target.checked)
 );
 
-/* SES (kapalı başlar) */
+/* Ses */
 let soundOn=false;
 soundToggle.checked=false;
 soundToggle.addEventListener("change", e=> soundOn=e.target.checked);
@@ -253,7 +308,7 @@ iban.addEventListener("input", e=>{
   e.target.value=out;
 });
 
-/* PASTE → AUTO KONTROL */
+/* PASTE → Auto check */
 async function pasteIBAN(){
   let txt=await navigator.clipboard.readText();
   txt=txt.replace(/\s+/g,"").toUpperCase().replace(/[^0-9A-Z]/g,"");
@@ -281,25 +336,27 @@ function mod97(iban){
   const r=iban.slice(4)+iban.slice(0,4);
   const c=r.replace(/[A-Z]/g,ch=>ch.charCodeAt(0)-55);
   let m=0;
-  for(let i=0;i<c.length;i++){
-    m=(m*10+Number(c[i]))%97;
-  }
+  for(let i=0;i<c.length;i++) m=(m*10+Number(c[i]))%97;
   return m===1;
 }
 
-/* IBAN KONTROL */
+/* Kontrol */
 function ibanKontrol(){
   const v=iban.value.replace(/\s+/g,"");
   const s=document.getElementById("sonuc");
-  if(!v.startsWith("TR")||v.length!==26) return hata("IBAN GEÇERSİZ!");
-  if(!mod97(v)) return hata("IBAN GEÇERSİZ!");
+
+  if(!v.startsWith("TR")||v.length!==26)
+    return hata("IBAN GEÇERSİZ!");
+  if(!mod97(v))
+    return hata("IBAN GEÇERSİZ!");
 
   const kod=v.slice(6,9);
   s.className="sonuc ok";
   s.style.display="block";
-  s.innerHTML=bankalar[kod]?
-  `<div class='result-flex'><div>✔ IBAN GEÇERLİ</div><div>${bankalar[kod]}</div></div>`
-  :"✔ IBAN GEÇERLİ";
+
+  s.innerHTML=bankalar[kod] 
+    ? `<div class='result-flex'><div>✔ IBAN GEÇERLİ</div><div>${bankalar[kod]}</div></div>`
+    : "✔ IBAN GEÇERLİ";
 }
 
 /* HATA */
