@@ -304,7 +304,12 @@ themeToggle.onchange = () =>
   document.body.classList.toggle("dark", themeToggle.checked);
 
 iban.addEventListener("input", e=>{
-  const raw=e.target.value.toUpperCase().replace(/[^0-9A-Z]/g,"");
+  // Girişi normalize et, başına TR’yi otomatik getir ve 4’lü gruplandır
+  const cleaned = e.target.value.toUpperCase().replace(/[^0-9A-Z]/g,"");
+  const country = cleaned.slice(0,2);
+  const rest = (country === "TR") ? cleaned.slice(2) : cleaned;
+  const raw = "TR" + rest;
+
   let o="";
   for(let i=0;i<raw.length;i++){
     if(i>0 && i%4===0) o+=" ";
@@ -317,6 +322,11 @@ async function pasteIBAN(){
   try{
     let t=await navigator.clipboard.readText();
     t=t.replace(/\s+/g,"").toUpperCase();
+    // Panodan yapıştırmada da TR’yi garanti et
+    const country = t.slice(0,2);
+    const rest = (country === "TR") ? t.slice(2) : t;
+    t = "TR" + rest;
+
     iban.value=t;
     iban.dispatchEvent(new Event("input"));
   }catch{}
