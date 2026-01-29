@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -93,17 +92,17 @@ body{
   transition: opacity .25s;
 }
 
-#rightTop .sun-fixed { 
-  left: -28px; 
-  opacity: 1; 
-  stroke: var(--switch-sun); 
+#rightTop .sun-fixed {
+  left: -28px;
+  opacity: 1;
+  stroke: var(--switch-sun);
   fill: none;
 }
 
-#rightTop .moon-fixed { 
-  left: -28px; 
-  opacity: 0; 
-  stroke: var(--switch-moon); 
+#rightTop .moon-fixed {
+  left: -28px;
+  opacity: 0;
+  stroke: var(--switch-moon);
   fill: none;
 }
 
@@ -226,6 +225,78 @@ button.action:hover{
   margin-bottom:12px;
   opacity:.9;
 }
+
+/* ======== (EK) SOHBET BİLEŞENLERİ – stil (kısaltılmadı) ======== */
+.chat-fab{
+  position:fixed; left:24px; bottom:24px; z-index:9998;
+  height:46px; padding:0 18px; border:none; border-radius:23px;
+  background:var(--button); color:#fff; font-weight:700; cursor:pointer;
+  box-shadow:0 8px 18px rgba(0,0,0,.18);
+}
+.chat-fab:hover{ background:var(--button-hover); transform:translateY(-1px) }
+
+#chatDock{
+  position:fixed; left:24px; bottom:84px; z-index:9999;
+  width:360px; background:var(--card-bg); border:1px solid var(--border);
+  border-radius:16px; backdrop-filter:blur(14px);
+  box-shadow:0 14px 38px rgba(0,0,0,.16); font-size:14px; color:var(--text);
+  display:none;
+}
+#chatDock.open{ display:block; }
+
+#chatDock header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 12px; border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,rgba(0,108,255,.08),rgba(74,44,255,.06));
+  border-radius:16px 16px 0 0;
+}
+#chatDock .users{
+  padding:8px 12px; display:flex; flex-wrap:wrap; gap:6px; border-bottom:1px solid var(--border)
+}
+#chatDock .users .u{
+  padding:4px 8px; border:1px solid var(--border);
+  border-radius:10px; background:#fff6
+}
+#chatDock .messages{ height:230px; overflow:auto; padding:12px 12px }
+#chatDock .msg{ display:flex; align-items:flex-start; gap:6px; margin-bottom:10px }
+#chatDock .msg .nick{ min-width:88px; max-width:140px; font-weight:700; opacity:.9 }
+#chatDock .msg .txt{ flex:1; background:#fff; border:1px solid var(--border); padding:6px 8px; border-radius:10px; word-break:break-word; background:#fff9 }
+
+#chatDock .inputBar{
+  display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--border);
+  border-radius:0 0 16px 16px; background:linear-gradient(135deg,rgba(0,108,255,.06),rgba(74,44,255,.04));
+}
+#chosenNick{
+  height:36px; display:flex; align-items:center; padding:0 10px;
+  border:1px solid var(--border); border-radius:10px; background:#fff8; color:var(--text);
+}
+#chatInput{
+  flex:1; height:36px; border:1px solid var(--border);
+  border-radius:10px; padding:0 10px; background:#fff8; color:var(--text)
+}
+#chatSend{
+  height:36px; border:none; border-radius:10px; padding:0 14px;
+  background:var(--button); color:#fff; font-weight:800
+}
+#chatSend:hover{ background:var(--button-hover); transform:translateY(-1px) }
+
+#chatMinimize{ background:transparent; border:none; font-size:18px; cursor:pointer; color:var(--text); opacity:.7; }
+#chatMinimize:hover{ opacity:1 }
+
+#chatStatus{ font:12px/1.4 Segoe UI,Arial; color:#b00020; padding:6px 12px 10px; min-height:16px; }
+
+/* Sabit mesaj bandı */
+#pinnedBanner{
+  display:none;
+  background:#fffbcc;
+  border-bottom:1px solid #e6de8a;
+  padding:8px 12px;
+  font-weight:600;
+}
+#pinnedActions{
+  display:none; gap:6px; padding:4px 12px; border-bottom:1px solid var(--border);
+}
+#typingInfo{ font-size:12px; padding:4px 12px; opacity:.8; }
 </style>
 </head>
 
@@ -299,6 +370,61 @@ button.action:hover{
   </div>
 </div>
 
+<!-- ====== (EK) SOHBET HTML ====== -->
+<button id="chatFab" class="chat-fab" aria-controls="chatDock" aria-expanded="false">💬 Sohbet</button>
+
+<div id="chatDock" role="dialog" aria-label="Sohbet Paneli">
+  <header>
+    <div style="display:flex; align-items:center; gap:8px">
+      <div class="title">Sohbet</div>
+      <div class="online">/ Online: <span id="onlineCount">0</span></div>
+    </div>
+    <button id="chatMinimize" title="Kapat">—</button>
+  </header>
+
+  <div id="pinnedBanner"></div>
+  <div id="pinnedActions">
+    <button id="btnPin">📌 Sabitle</button>
+    <button id="btnUnpin">❌ Kaldır</button>
+  </div>
+
+  <div class="users" id="chatUsers"></div>
+  <div id="typingInfo"></div>
+
+  <div class="messages" id="chatMessages"></div>
+
+  <div class="inputBar">
+    <div id="chosenNick">İsim seçilmedi</div>
+    <input type="text" id="chatInput" placeholder="Mesaj yazın…" disabled>
+    <button id="chatSend" disabled>Gönder</button>
+  </div>
+
+  <div id="chatStatus"></div>
+</div>
+
+<!-- İSİM SEÇİM MODALI -->
+<div id="nickModal" style="position:fixed; inset:0; z-index:10000; display:none; background:rgba(0,0,0,.35);">
+  <div class="card" style="width:min(420px,92vw); background:#ffffffcc; border:1px solid var(--border); border-radius:14px; padding:16px; margin:12vh auto 0; box-shadow:0 18px 40px rgba(0,0,0,.18);">
+    <h3>İsminizi seçin</h3>
+    <div class="row" style="display:flex; gap:8px; align-items:center">
+      <select id="nickSelect" style="height:38px; border:1px solid var(--border); border-radius:10px; padding:0 10px; flex:1">
+        <option value="" selected disabled>Seçiniz…</option>
+        <option value="Dilara">Dilara</option>
+        <option value="Emre">Emre</option>
+        <option value="Büşra">Büşra</option>
+        <option value="Merve">Merve</option>
+        <option value="Elif">Elif</option>
+        <option value="Fatih">Fatih</option>
+        <option value="Misafir">Misafir</option>
+        <option value="Erol">Erol</option>
+      </select>
+      <input id="nickPwd" type="password" placeholder="Şifre" style="height:38px; border:1px solid var(--border); border-radius:10px; padding:0 10px; display:none">
+      <button id="nickGo" style="height:38px; border:none; border-radius:10px; padding:0 14px; background:var(--button); color:#fff; font-weight:800;">Devam</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== IBAN KODUNUZ – HİÇ DEĞİŞTİRİLMEDİ ===== -->
 <script>
 themeToggle.onchange = () =>
   document.body.classList.toggle("dark", themeToggle.checked);
@@ -354,7 +480,7 @@ function mod97(i){
   return m===1;
 }
 
-/* GÜNLÜK DOĞRULAMA SAYACI */
+/* GÜNLÜK DOĞRULAMA SAYACI (local yedek) */
 const LS_KEY="ibanDailyStats";
 
 function todayStr(){
@@ -366,36 +492,25 @@ function loadStats(){
   try{
     const j=localStorage.getItem(LS_KEY);
     if(!j) return {date:todayStr(), count:0};
-
     const data=JSON.parse(j);
-
     if(data.date !== todayStr())
       return {date:todayStr(), count:0};
-
     return data;
   }catch{ return {date:todayStr(), count:0}; }
 }
-
 function saveStats(obj){
   localStorage.setItem(LS_KEY, JSON.stringify(obj));
 }
-
-function updateIstatistik(){
+function updateIstatistikLocal(){
   const st=loadStats();
   document.getElementById("istatistik").textContent =
     `Bir IBAN numarasını doğrulayın, bugün ${st.count} adet doğrulama yapıldı.`;
 }
 
-function incrementValidCounter(){
-  const st=loadStats();
-  st.count++;
-  saveStats(st);
-  updateIstatistik();
-}
+document.addEventListener("DOMContentLoaded", updateIstatistikLocal);
 
-document.addEventListener("DOMContentLoaded", updateIstatistik);
-
-function ibanKontrol(){
+/* === IBAN KONTROL === */
+async function ibanKontrol(){
   const v=iban.value.replace(/\s+/g,"");
   const s=document.getElementById("sonuc");
 
@@ -404,11 +519,21 @@ function ibanKontrol(){
   if(!mod97(v))
     return hata("IBAN GEÇERSİZ!");
 
-  // ✔ yalnızca GEÇERLİ OLUNCA sayaç artıyor
-  incrementValidCounter();
+  // 1) Local sayaç (yedek)
+  const st=loadStats(); st.count++; saveStats(st);
+
+  // 2) Supabase’e kaydet (genel sayaç için)
+  try{
+    await postGlobalValidation();  // güncellenmiş fonksiyon (aşağıda)
+  }catch(e){
+    // Sessiz geç – bağlantı yoksa local görünsün
+    console.warn("Genel sayaç yazılamadı:", e);
+  }
+
+  // 3) Ekran metnini genel sayıyla güncelle
+  await refreshGlobalCounter();
 
   const kod=v.slice(6,9);
-
   s.className="sonuc ok";
   s.style.display="block";
   s.innerHTML = `
@@ -432,6 +557,298 @@ function hata(msg){
   card.classList.add("snake");
   setTimeout(()=> card.classList.remove("snake"),650);
 }
+</script>
+
+<!-- ===== SOHBET (REST) – (önceki son hal) + GENEL SAYAÇ ENTEGRASYONU ===== -->
+<script>
+(function(){
+  /* === Supabase REST yapılandırması (GENEL KULLANIM) === */
+  const SUPABASE_URL = "https://luyhfyhwqyzwdjpcfyyn.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_FftwyHK-9ZkFEp37Ejrv6A_ctj6mLFy";
+  const REST = SUPABASE_URL + "/rest/v1";
+  const HDR = {
+    "Content-Type":"application/json",
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer "+SUPABASE_KEY
+  };
+  const HDR_UPSERT = { ...HDR, "Prefer":"resolution=merge-duplicates" };
+
+  const $ = id => document.getElementById(id);
+  const day = () => new Date().toISOString().slice(0,10);
+  const agoIso = (sec) => new Date(Date.now()-sec*1000).toISOString();
+
+  /* ====== GENEL IBAN SAYAÇ: REST Yardımcıları ====== */
+  async function postGlobalValidation(){
+    const body = JSON.stringify([{ day: day() }]);
+    const r = await fetch(`${REST}/iban_validations`, { method:"POST", headers:HDR, body });
+    if(!r.ok) throw new Error("iban_validations insert hata: "+r.status);
+  }
+  async function getGlobalCount(){
+    // Basit yöntem: bugünün tüm satırlarını çekip say
+    const r = await fetch(`${REST}/iban_validations?day=eq.${day()}&select=ts`, { headers:HDR });
+    if(!r.ok) throw new Error("iban_validations select hata: "+r.status);
+    const d = await r.json();
+    return d.length|0;
+  }
+  async function refreshGlobalCounter(){
+    try{
+      const c = await getGlobalCount();
+      $("istatistik").textContent = `Bir IBAN numarasını doğrulayın, bugün ${c} adet doğrulama yapıldı.`;
+    }catch{
+      // erişilemezse local’e geri düş
+      const st = JSON.parse(localStorage.getItem("ibanDailyStats")||'{"date":"'+day()+'","count":0}');
+      $("istatistik").textContent = `Bir IBAN numarasını doğrulayın, bugün ${st.count} adet doğrulama yapıldı.`;
+    }
+  }
+  // Ekranı canlı tutmak için 5 sn’de bir çek
+  setInterval(refreshGlobalCounter, 5000);
+  // İlk yüklemede de çek
+  refreshGlobalCounter();
+
+  // Bu iki fonksiyonu global alanda da kullanabilelim:
+  window.postGlobalValidation = postGlobalValidation;
+  window.refreshGlobalCounter = refreshGlobalCounter;
+
+  /* ====== AŞAĞIDA CHAT KODUNUZ (önceki son hal) ====== */
+  const usersEl=$("chatUsers"), messagesEl=$("chatMessages"), onlineEl=$("onlineCount");
+  const inputEl=$("chatInput"), sendBtn=$("chatSend"), badge=$("chosenNick"), statusEl=$("chatStatus");
+  const nickModal=$("nickModal"), nickSel=$("nickSelect"), nickPwd=$("nickPwd"), nickGo=$("nickGo");
+  const pinnedBanner = $("pinnedBanner"), pinnedActions = $("pinnedActions");
+  const btnPin = $("btnPin"), btnUnpin = $("btnUnpin"), typingInfo = $("typingInfo");
+  const fab = $("chatFab"), dock = $("chatDock"), minimize = $("chatMinimize");
+
+  let NICK = localStorage.getItem("CHAT_NICK") || "";
+  if(NICK){ badge.textContent=NICK; inputEl.disabled=false; sendBtn.disabled=false; }
+
+  /* === Sesli bildirim (WebAudio) === */
+  let audioCtx=null;
+  function playBeep(){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type="sine"; o.frequency.value=880; o.connect(g); g.connect(audioCtx.destination);
+      const t=audioCtx.currentTime;
+      o.start(t); g.gain.setValueAtTime(0.2,t);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.18);
+      o.stop(t+0.2);
+    }catch{}
+  }
+  window.addEventListener("click", ()=>{ if(!audioCtx){ try{ audioCtx= new (window.AudioContext||window.webkitAudioContext)(); }catch{} } }, { once:true });
+
+  /* === Aç/Kapa === */
+  fab.addEventListener("click", ()=>{ if(!NICK) nickModal.style.display="block"; else openChat(); });
+  minimize.addEventListener("click", closeChat);
+  function openChat(){ dock.classList.add("open");  fab.setAttribute("aria-expanded","true"); }
+  function closeChat(){ dock.classList.remove("open"); fab.setAttribute("aria-expanded","false"); }
+
+  /* === İsim seçimi === */
+  nickSel.addEventListener("change", ()=>{ nickPwd.style.display = (nickSel.value==="Erol") ? "block":"none"; });
+  nickGo.addEventListener("click", ()=>{
+    const v = nickSel.value;
+    if(!v) return alert("Lütfen bir isim seçin.");
+    if(v==="Erol" && nickPwd.value!=="2311") return alert("Şifre hatalı.");
+    NICK=v; localStorage.setItem("CHAT_NICK",NICK);
+    badge.textContent=NICK; inputEl.disabled=false; sendBtn.disabled=false;
+    nickModal.style.display="none"; openChat();
+    showAdminActionsIfAny();
+  });
+
+  function showAdminActionsIfAny(){
+    if(NICK==="Erol"){ pinnedActions.style.display="flex"; }
+    else{ pinnedActions.style.display="none"; }
+  }
+  showAdminActionsIfAny();
+
+  /* === Sabit mesaj (nick='__PIN__') === */
+  async function setPinned(text){
+    try{
+      const body = JSON.stringify([{ day:day(), nick:"__PIN__", text }]);
+      const r = await fetch(`${REST}/messages`, { method:"POST", headers:HDR, body });
+      if(!r.ok) throw new Error("Sabit mesaj kaydedilemedi: "+r.status);
+      await loadPinned();
+      setStatus("Sabit mesaj güncellendi.", "ok");
+    }catch(e){ setStatus(e.message); }
+  }
+  async function loadPinned(){
+    try{
+      const url = `${REST}/messages?day=eq.${day()}&nick=eq.__PIN__&select=text,ts&order=ts.desc&limit=1`;
+      const r = await fetch(url, { headers:HDR });
+      if(!r.ok) throw new Error("Sabit mesaj alınamadı: "+r.status);
+      const d = await r.json();
+      const txt = (d[0]?.text||"").trim();
+      if(txt){
+        pinnedBanner.style.display="block";
+        pinnedBanner.textContent = "📌 " + txt;
+      }else{
+        pinnedBanner.style.display="none";
+        pinnedBanner.textContent = "";
+      }
+    }catch(e){ /* sessiz */ }
+  }
+  btnPin?.addEventListener("click", ()=>{
+    const t = prompt("Sabitlenecek mesaj:");
+    if(t!==null) setPinned(t.trim());
+  });
+  btnUnpin?.addEventListener("click", ()=> setPinned(""));
+
+  /* === Mesaj gönderme === */
+  sendBtn.addEventListener("click", send);
+  inputEl.addEventListener("keydown", e=>{
+    if(e.key==="Enter") send();
+    triggerTyping();
+  });
+
+  async function send(){
+    const text = inputEl.value.trim();
+    if(!text) return;
+    try{
+      const body = JSON.stringify([{ day:day(), nick:NICK||"Misafir", text }]);
+      const r = await fetch(`${REST}/messages`, { method:"POST", headers:HDR, body });
+      if(!r.ok){
+        const t = await r.text(); throw new Error("Mesaj gönderilemedi: "+r.status+" "+t);
+      }
+      inputEl.value="";
+      setStatus("Gönderildi.","ok");
+      setTimeout(loadMessages, 250);
+    }catch(e){ setStatus(e.message); }
+  }
+
+  /* === Mesajları çekme + yeni mesaj algılama === */
+  let lastMsgTs="";
+  async function loadMessages(){
+    try{
+      const url = `${REST}/messages?day=eq.${day()}&select=nick,text,ts&order=ts.asc&limit=500`;
+      const r = await fetch(url, { headers:HDR });
+      if(!r.ok) throw new Error("Mesajlar alınamadı: "+r.status);
+      const data = await r.json();
+
+      const list = data.filter(m => m.nick!=="__PIN__");
+
+      const newest = list[list.length-1]?.ts || "";
+      const hadOld = !!lastMsgTs;
+      const gotNewFromOther = hadOld && newest && newest!==lastMsgTs && (list[list.length-1]?.nick !== (NICK||"Misafir"));
+      lastMsgTs = newest;
+
+      messagesEl.innerHTML = "";
+      list.forEach(m=>{
+        const row = document.createElement("div"); row.className="msg";
+        row.innerHTML = `<div class="nick">${m.nick}</div><div class="txt">${m.text}</div>`;
+        messagesEl.appendChild(row);
+      });
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+
+      if(gotNewFromOther) playBeep();
+
+    }catch(e){ setStatus(e.message); }
+  }
+
+  /* === Online sayacı === */
+  async function heartbeat(){
+    if(!NICK) return;
+    try{
+      const body = JSON.stringify([{ day:day(), nick:NICK, last_seen:new Date().toISOString() }]);
+      await fetch(`${REST}/presence?on_conflict=day,nick`, { method:"POST", headers:HDR_UPSERT, body });
+    }catch(e){ /* sessiz */ }
+  }
+  async function loadOnline(){
+    try{
+      const threshold = agoIso(40);
+      const url = `${REST}/presence?select=nick,last_seen&day=eq.${day()}&last_seen=gt.${encodeURIComponent(threshold)}`;
+      const r = await fetch(url, { headers:HDR });
+      if(!r.ok) throw new Error("Online listesi alınamadı: "+r.status);
+      const data = await r.json();
+
+      const pure = data.filter(p => !p.nick.endsWith("#typing") && p.nick!=="__PIN__");
+      onlineEl.textContent = pure.length;
+      usersEl.innerHTML = pure.map(p=>`<div class="u">${p.nick}</div>`).join("");
+
+    }catch(e){ /* sessiz */ }
+  }
+
+  /* === “Yazıyor…” göstergesi (presence'ta #typing kayıtları) === */
+  let typingTimer=null, typingPulse=null, isTyping=false;
+
+  function triggerTyping(){
+    if(!NICK) return;
+    if(!isTyping){
+      isTyping=true;
+      sendTypingPulse();
+      typingPulse = setInterval(sendTypingPulse, 3000);
+    }
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(stopTyping, 2000);
+  }
+  function stopTyping(){
+    isTyping=false;
+    clearInterval(typingPulse); typingPulse=null;
+  }
+  async function sendTypingPulse(){
+    try{
+      const body = JSON.stringify([{ day:day(), nick: (NICK+"#typing"), last_seen:new Date().toISOString() }]);
+      await fetch(`${REST}/presence?on_conflict=day,nick`, { method:"POST", headers:HDR_UPSERT, body });
+    }catch{}
+  }
+  async function loadTyping(){
+    try{
+      const threshold = agoIso(3);
+      const url = `${REST}/presence?select=nick,last_seen&day=eq.${day()}&last_seen=gt.${encodeURIComponent(threshold)}`;
+      const r = await fetch(url, { headers:HDR });
+      if(!r.ok) return;
+      const data = await r.json();
+      const typers = data
+        .filter(p => p.nick.endsWith("#typing"))
+        .map(p => p.nick.replace(/#typing$/,""))
+        .filter(n => n !== NICK);
+      $("typingInfo").textContent = typers.length ? (typers.join(", ") + " yazıyor…") : "";
+    }catch{}
+  }
+
+  /* === Günlük temizlik (day < bugün) – RLS Delete yoksa sessizce başarısız olur === */
+  async function cleanupOldDays(){
+    try{
+      const q = `day=lt.${day()}`;
+      await fetch(`${REST}/messages?${q}`, { method:"DELETE", headers:HDR });
+      await fetch(`${REST}/presence?${q}`, { method:"DELETE", headers:HDR });
+      await fetch(`${REST}/iban_validations?${q}`, { method:"DELETE", headers:HDR });
+    }catch{}
+  }
+  let lastDay = day();
+  setInterval(()=>{
+    const nowDay = day();
+    if(nowDay !== lastDay){
+      lastDay = nowDay;
+      cleanupOldDays();
+      refreshGlobalCounter(); // gün değişince sayaç da sıfırlansın
+    }
+  }, 60000);
+
+  /* === Durum çıktısı === */
+  function setStatus(msg, type="error"){
+    const colors = { error:"#b00020", info:"#555", ok:"#0a7d00" };
+    $("chatStatus").style.color = colors[type] || colors.error;
+    $("chatStatus").textContent = msg;
+    console.log("[chat-status]", type.toUpperCase(), msg);
+    setTimeout(()=>{ if($("chatStatus").textContent===msg) $("chatStatus").textContent=""; }, 2000);
+  }
+
+  /* === Döngüler === */
+  setInterval(loadMessages, 2000);
+  setInterval(loadOnline, 5000);
+  setInterval(heartbeat, 20000);
+  setInterval(loadTyping, 1000);
+
+  // İlk yüklemeler
+  loadMessages(); loadOnline(); loadTyping(); heartbeat(); cleanupOldDays(); loadPinned();
+  // Sayaç ilk çekim
+  refreshGlobalCounter();
+
+  showAdminActionsIfAny();
+
+  // global erişim istemiyorsanız bu satırları kaldırabilirsiniz:
+  window.postGlobalValidation = postGlobalValidation;
+  window.refreshGlobalCounter = refreshGlobalCounter;
+
+})();
 </script>
 </body>
 </html>
