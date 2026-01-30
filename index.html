@@ -297,6 +297,34 @@ button.action:hover{
   display:none; gap:6px; padding:4px 12px; border-bottom:1px solid var(--border);
 }
 #typingInfo{ font-size:12px; padding:4px 12px; opacity:.8; }
+
+/* === (EK) Masaüstü Bildirim İzin Paneli (çakışmasın diye sağ altta) === */
+#ntfHelper{
+  position: fixed;
+  right: 24px;
+  bottom: 100px; /* footer üstünde */
+  z-index: 2147483647;
+  background: var(--button);
+  color: #fff;
+  font: 13px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  padding: 10px 12px;
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.25);
+  display: none;
+  max-width: 340px;
+}
+#ntfHelper.show { display:block; }
+#ntfHelper h3 { margin: 0 0 6px 0; font-size: 14px; font-weight: 700; }
+#ntfHelper p { margin: 0 0 10px 0; opacity: .95; }
+#ntfHelper .row { display:flex; gap:8px; flex-wrap:wrap; }
+#ntfHelper button {
+  appearance: none; border: none; border-radius: 8px;
+  padding: 8px 12px; font-weight: 700; cursor: pointer;
+  background: #fff; color: #0b5cff;
+}
+#ntfHelper button.secondary {
+  background: rgba(255,255,255,.15); color: #fff;
+}
 </style>
 </head>
 
@@ -559,6 +587,160 @@ function hata(msg){
 }
 </script>
 
+<!-- ===== (EK) MASAÜSTÜ BİLDİRİM MODÜLÜ – SOHBET ===== -->
+<div id="ntfHelper" role="region" aria-live="polite" aria-label="Bildirim izni">
+  <h3>Sohbet Bildirimleri</h3>
+  <p>Yeni mesajlar için masaüstü bildirimi gösterebilmemiz adına lütfen izin verin.</p>
+  <div class="row">
+    <button id="ntfGrant" type="button">İzin Ver</button>
+    <button id="ntfHide" type="button" class="secondary">Gizle</button>
+  </div>
+</div>
+
+<script>
+/* Bu modül mevcut kodu BOZMADAN çalışır.
+   Dış API: window.notifyNewMessage({from, text, url?, tag?, force?})
+   Opsiyon: window.setNotificationOptions({...})
+*/
+(function(){
+  const defaults = {
+    appName: 'Sohbet',
+    icon: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#0ea5e9"/>
+            <stop offset="1" stop-color="#22c55e"/>
+          </linearGradient>
+        </defs>
+        <g fill="url(#g)">
+          <path d="M4 5.5A3.5 3.5 0 0 1 7.5 2h9A3.5 3.5 0 0 1 20 5.5v6A3.5 3.5 0 0 1 16.5 15H10l-3.6 2.7A1 1 0 0 1 5 16.9V15.5A3.5 3.5 0 0 1 4 11.5v-6Z"/>
+          <circle cx="9" cy="9" r="1.25"/>
+          <circle cx="12.5" cy="9" r="1.25"/>
+          <circle cx="16" cy="9" r="1.25"/>
+        </g>
+      </svg>
+    `),
+    badge: undefined,
+    requireInteraction: false,
+    silent: false,
+    durationMs: 8000,
+    clickBehavior: 'focus',   // 'focus' | 'open' | 'none'
+    clickUrl: null,
+    showWhenFocused: false
+  };
+
+  const state = { options: { ...defaults }, queue: [] };
+  const $ = (id) => document.getElementById(id);
+
+  function canNotify(){ return 'Notification' in window; }
+  function isFocused(){ return document.visibilityState === 'visible' && document.hasFocus(); }
+
+  function showHelper(){ $('ntfHelper')?.classList.add('show'); }
+  function hideHelper(){ $('ntfHelper')?.classList.remove('show'); }
+
+  async function ensurePermission(){
+    if(!canNotify()) return false;
+    if(Notification.permission === 'granted') return true;
+    if(Notification.permission === 'denied'){ showHelper(); return false; }
+    try{
+      const res = await Notification.requestPermission();
+      if(res === 'granted') return true;
+      showHelper(); return false;
+    }catch{ showHelper(); return false; }
+  }
+
+  async function showNotification({ title, body, icon, badge, tag, data, clickUrl, requireInteraction, silent, durationMs }){
+    if(!await ensurePermission()) return;
+    let n;
+    try{
+      n = new Notification(title || state.options.appName, {
+        body: body || '',
+        icon: icon ?? state.options.icon,
+        badge: badge ?? state.options.badge,
+        tag,
+        data,
+        requireInteraction: requireInteraction ?? state.options.requireInteraction,
+        silent: silent ?? state.options.silent
+      });
+    }catch{ return; }
+
+    n.onclick = (ev) => {
+      try{ ev.preventDefault?.(); }catch{}
+      try{
+        const behavior = state.options.clickBehavior;
+        if(behavior === 'focus'){ window.focus(); }
+        else if(behavior === 'open'){
+          const url = clickUrl ?? state.options.clickUrl;
+          if(url) window.open(url, '_blank', 'noopener,noreferrer');
+        }
+      }catch{}
+      try{ n.close(); }catch{}
+    };
+
+    const timeout = (durationMs ?? state.options.durationMs);
+    if(!n.requireInteraction && Number.isFinite(timeout) && timeout > 0){
+      setTimeout(()=>{ try{ n.close(); }catch{} }, timeout);
+    }
+  }
+
+  function shouldShow(force){
+    if(force === true) return true;
+    return !isFocused() || state.options.showWhenFocused === true;
+  }
+
+  async function handleIncomingMessage(msg){
+    // msg: { from, text, title?, url?, tag?, force? }
+    const { from, text, title, url, tag, force } = msg || {};
+    if(!shouldShow(force)) return;
+    const finalTitle = title || `${state.options.appName}${from ? ' • ' + from : ''}`;
+    const body = (text ?? '').toString().slice(0, 500);
+    await showNotification({ title: finalTitle, body, tag, clickUrl: url });
+  }
+
+  // Dış API
+  window.notifyNewMessage = function(payload){
+    // İzin henüz 'default' ise kuyrukla
+    if(canNotify() && Notification.permission === 'default'){
+      state.queue.push(payload);
+      ensurePermission().then(granted=>{
+        if(granted){
+          const q = state.queue.slice();
+          state.queue.length = 0;
+          q.forEach(item => handleIncomingMessage(item));
+        }
+      });
+      showHelper();
+      return;
+    }
+    handleIncomingMessage(payload);
+  };
+
+  window.setNotificationOptions = function(opts = {}){
+    state.options = { ...state.options, ...opts };
+  };
+
+  // Panel butonları
+  $('ntfGrant')?.addEventListener('click', async ()=>{
+    await ensurePermission(); hideHelper();
+    if(state.queue.length){
+      const q = state.queue.slice();
+      state.queue.length = 0;
+      q.forEach(item => handleIncomingMessage(item));
+    }
+  });
+  $('ntfHide')?.addEventListener('click', hideHelper);
+
+  // Yüklemede sessiz izin denemesi
+  (async ()=>{
+    if(canNotify() && Notification.permission === 'default'){
+      try{ await Notification.requestPermission(); }catch{}
+    }
+    if(canNotify() && Notification.permission === 'denied') showHelper();
+  })();
+})();
+</script>
+
 <!-- ===== SOHBET (REST) – (önceki son hal) + GENEL SAYAÇ ENTEGRASYONU ===== -->
 <script>
 (function(){
@@ -723,10 +905,10 @@ function hata(msg){
       const data = await r.json();
 
       const list = data.filter(m => m.nick!=="__PIN__");
-
-      const newest = list[list.length-1]?.ts || "";
+      const newestMsg = list[list.length-1] || null;
+      const newest = newestMsg?.ts || "";
       const hadOld = !!lastMsgTs;
-      const gotNewFromOther = hadOld && newest && newest!==lastMsgTs && (list[list.length-1]?.nick !== (NICK||"Misafir"));
+      const gotNewFromOther = hadOld && newest && newest!==lastMsgTs && (newestMsg?.nick !== (NICK||"Misafir"));
       lastMsgTs = newest;
 
       messagesEl.innerHTML = "";
@@ -737,7 +919,19 @@ function hata(msg){
       });
       messagesEl.scrollTop = messagesEl.scrollHeight;
 
-      if(gotNewFromOther) playBeep();
+      if(gotNewFromOther){
+        // Mevcut sesli uyarı + MASAÜSTÜ BİLDİRİM (EKLENDİ)
+        playBeep();
+        if (window.notifyNewMessage) {
+          window.notifyNewMessage({
+            from: newestMsg.nick,
+            text: newestMsg.text,
+            tag: "chat-" + (newestMsg.ts || ""),
+            // İsterseniz sohbet URL'si verin; boş bırakalım:
+            url: null
+          });
+        }
+      }
 
     }catch(e){ setStatus(e.message); }
   }
@@ -852,4 +1046,3 @@ function hata(msg){
 </script>
 </body>
 </html>
-
