@@ -328,6 +328,32 @@ button.action:hover{
 #ntfHelper button.secondary {
   background: rgba(255,255,255,.15); color: #fff;
 }
+
+#miniBot{position:absolute;right:10px;top:-80px;width:120px;height:120px;pointer-events:none;z-index:60}
+#miniBot .bot{width:120px;height:120px}
+#miniBot .st{stroke:var(--logo-sub);stroke-width:4;stroke-linecap:round}
+#miniBot .accent{fill:var(--logo-sub)}
+#miniBot .bezel{fill:transparent;stroke:var(--logo-sub);stroke-width:6}
+#miniBot .screen{fill:#0e0f12}
+#miniBot .eye{fill:#aee6ff;transform-origin:center;transform-box:fill-box;animation: blink 4s infinite;}
+@keyframes blink{0%,92%,100%{transform:scaleY(1);}95%{transform:scaleY(.1);}}
+#miniBot .mouth{fill:none;stroke-width:6;stroke-linecap:round;opacity:0;transition:.2s}
+#miniBot .mouth.smile{stroke:#2ecc71}
+#miniBot .mouth.sad{stroke:#e74c3c}
+#miniBot.happy .mouth.smile{opacity:1}
+#miniBot.sad .mouth.sad{opacity:1}
+#miniBot .toe{fill:var(--card-bg);stroke:var(--border);stroke-width:3}
+
+</style>
+
+<style>
+@keyframes botSway {0%{transform:translateX(0);}50%{transform:translateX(3px);}100%{transform:translateX(0);}}
+#miniBot{animation:botSway 6s infinite ease-in-out;}
+@keyframes eyeLook {
+ 0%{transform:translateX(0);} 50%{transform:translateX(2px);}100%{transform:translateX(0);} }
+#miniBot .eye{fill:#aee6ff;transform-origin:center;transform-box:fill-box;animation: blink 4s infinite;}
+@keyframes pulseEye {0%{transform:scale(1);}50%{transform:scale(1.08);}100%{transform:scale(1);} }
+#miniBot .eye{fill:#aee6ff;transform-origin:center;transform-box:fill-box;animation: blink 4s infinite;}
 </style>
 </head>
 
@@ -372,6 +398,21 @@ button.action:hover{
 
 <!-- ANA KART -->
 <div class="kutu" id="mainCard">
+<!-- MINIBOT CLEAN v3 -->
+<div id="miniBot">
+<svg class="bot" viewBox="0 0 120 120">
+  <line x1="60" y1="6" x2="60" y2="18" class="st"/>
+  <circle cx="60" cy="4" r="3" class="accent"/>
+  <rect x="26" y="20" rx="22" ry="22" width="68" height="58" class="bezel"/>
+  <rect x="34" y="28" rx="18" ry="18" width="52" height="44" class="screen"/>
+  <ellipse cx="48" cy="52" rx="6" ry="8" class="eye"/>
+  <ellipse cx="72" cy="52" rx="6" ry="8" class="eye"/>
+  <path d="M44 66 Q60 76 76 66" class="mouth smile"/>
+  <path d="M44 70 Q60 64 76 70" class="mouth sad"/>
+  <circle cx="48" cy="92" r="10" class="toe"/>
+  <circle cx="72" cy="92" r="10" class="toe"/>
+</svg>
+</div>
 
   <!-- METİN HALİNDE AÇIKLAMA + SAYI -->
   <div id="istatistik">Bir IBAN numarasını doğrulayın, bugün 0 adet doğrulama yapıldı.</div>
@@ -565,6 +606,7 @@ async function ibanKontrol(){
   await refreshGlobalCounter();
 
   const kod=v.slice(6,9);
+try{document.getElementById("miniBot").className="happy";}catch{}
   s.className="sonuc ok";
   s.style.display="block";
   s.innerHTML = `
@@ -574,7 +616,7 @@ async function ibanKontrol(){
     </div>`;
 }
 
-function hata(msg){
+function hata(msg){try{document.getElementById("miniBot").className="sad";}catch{}
   const s=document.getElementById("sonuc");
   const card=document.getElementById("mainCard");
 
