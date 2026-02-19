@@ -217,42 +217,133 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    /* ===== SPLASH + TTS (Yalnızca 1 kez) ===== */
+    /* ===== SPLASH + TTS (Mobil uyumlu, tek sefer) ===== */
     (function initSplash(){
       const splash = document.getElementById("splash");
       let hidden = false;
       let alreadySpoken = false;
+      let unlocked = false;
+      let resumeTimer = null;
 
       const safeHide = () => {
         if (!hidden) { hidden = true; splash.classList.add("hide"); }
       };
 
+      function clearResumeTimer(){
+        if(resumeTimer){ clearInterval(resumeTimer); resumeTimer = null; }
+      }
+
+      function unlockAudio(){
+        if (unlocked) return;
+        try{ speechSynthesis.resume(); }catch{}
+        unlocked = true;
+      }
+
       function speakOnce(){
-        if(alreadySpoken) return;
+        if (alreadySpoken) return;
         alreadySpoken = true;
+
         try{
+          try{ speechSynthesis.cancel(); }catch{}
+          try{ speechSynthesis.resume(); }catch{}
+
+          clearResumeTimer();
+          resumeTimer = setInterval(() => {
+            try{ speechSynthesis.resume(); }catch{}
+          }, 200);
+
           const u = new SpeechSynthesisUtterance("ErolGo’ya hoş geldiniz.");
           u.lang = "tr-TR";
-          u.onend = safeHide;
-          window.speechSynthesis.speak(u);
-          setTimeout(safeHide, 3000); // güvenlik fallback
+          u.rate = 1;
+          u.pitch = 1;
+          u.volume = 1;
+
+          u.onend = () => {
+            clearResumeTimer();
+            safeHide();
+          };
+          u.onerror = () => {
+            clearResumeTimer();
+            setTimeout(() => {
+              try{
+                speechSynthesis.cancel();
+                speechSynthesis.resume();
+                const u2 = new SpeechSynthesisUtterance("ErolGo’ya hoş geldiniz.");
+                u2.lang = "tr-TR";
+                u2.onend = safeHide;
+                speechSynthesis.speak(u2);
+                setTimeout(safeHide, 3000);
+              }catch{
+                setTimeout(safeHide, 1200);
+              }
+            }, 200);
+          };
+
+          const voicesReady = () => {
+            try{
+              const vs = speechSynthesis.getVoices() || [];
+              const tr = vs.find(v => /tr[-_]?TR/i.test(v.lang));
+              if (tr) u.voice = tr;
+            }catch{}
+            try{
+              speechSynthesis.speak(u);
+            }catch{
+              setTimeout(safeHide, 1200);
+            }
+            setTimeout(safeHide, 3000);
+          };
+
+          const v = speechSynthesis.getVoices();
+          if (v && v.length){
+            voicesReady();
+          } else {
+            speechSynthesis.addEventListener("voiceschanged", voicesReady, { once: true });
+            setTimeout(voicesReady, 900);
+          }
         }catch{
           setTimeout(safeHide, 1200);
         }
       }
 
-      function start(){
-        if(!("speechSynthesis" in window)){ setTimeout(safeHide, 1200); return; }
+      function tryAutoStart(){
+        if (!("speechSynthesis" in window)){
+          setTimeout(safeHide, 1200);
+          return;
+        }
         const v = speechSynthesis.getVoices();
-        if(v && v.length){
-          speakOnce();
-        }else{
-          speechSynthesis.addEventListener("voiceschanged", speakOnce, {once:true});
-          setTimeout(speakOnce, 900);
+        if (v && v.length){
+          try{ speakOnce(); }catch{}
+          setTimeout(safeHide, 3000);
+        } else {
+          speechSynthesis.addEventListener("voiceschanged", () => {
+            if (!alreadySpoken) speakOnce();
+          }, { once: true });
+          setTimeout(() => { if (!alreadySpoken) speakOnce(); }, 1200);
         }
       }
 
-      start();
+      const userInteract = () => {
+        unlockAudio();
+        if (!alreadySpoken) speakOnce();
+        window.removeEventListener("pointerdown", userInteract, { capture:true });
+        window.removeEventListener("touchstart", userInteract, { capture:true });
+        window.removeEventListener("click", userInteract, { capture:true });
+        document.removeEventListener("visibilitychange", onVisibility, { capture:true });
+      };
+      function onVisibility(){
+        if (document.visibilityState === "visible"){
+          unlockAudio();
+          if (!alreadySpoken) speakOnce();
+        }
+      }
+
+      window.addEventListener("pointerdown", userInteract, { passive:true, capture:true });
+      window.addEventListener("touchstart", userInteract, { passive:true, capture:true });
+      window.addEventListener("click", userInteract, { capture:true });
+      document.addEventListener("visibilitychange", onVisibility, { capture:true });
+
+      tryAutoStart();
+      setTimeout(safeHide, 4000);
     })();
 
     /* ===== Supabase ===== */
