@@ -41,30 +41,11 @@
     <footer>WebRTC ses uçtan uca şifrelenir (DTLS‑SRTP). HTTPS gereklidir.</footer>
   </div>
 
-  <!-- Supabase JS (UMD) -->
+  <!-- Supabase JS (UMD) – DOĞRU KULLANIM -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
   <script>
-    // ========= Proje Ayarları (sizin Supabase) =========
-    const SUPABASE_URL = "https://luyhfyhwqyzwdjpcfyyn.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_FftwyHK-9ZkFEp37Ejrv6A_ctj6mLFy";
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // ========= Global Hat (oda/kullanıcı yok) =========
-    const ROOM = "global";
-    const FLOOR_TTL_MS = 7000;     // 7 sn konuşmacı TTL
-    const SIGNAL_POLL_MS = 400;    // HTTP sinyal polling (hızlı açılış)
-    const PRESENCE_BEAT_MS = 2000; // presence heartbeat
-    const PRESENCE_POLL_MS = 1000; // presence polling
-    const PRESENCE_TTL_MS = 12000; // aktif kabul eşiği
-
-    // ICE (TURN gerekirse buraya ekleyin)
-    const ICE_SERVERS = [
-      { urls: "stun:stun.l.google.com:19302" },
-      // { urls: "turn:your.turn.server:3478", username: "user", credential: "pass" }
-    ];
-
-    // ========= UI Yardımcıları =========
+    // ====== Yardımcılar / UI ======
     const elPTT = document.getElementById("pttButton");
     const elInfo = document.getElementById("info");
     const elFloor = document.getElementById("floorStatus");
@@ -73,12 +54,30 @@
     const info = (msg)=> elInfo.textContent = msg || "";
     const showErr = (msg)=>{ console.error(msg); uiError.textContent = msg; uiError.style.display='block'; };
 
-    // ========= Kimlik =========
+    // ====== Supabase ======
+    const SUPABASE_URL = "https://luyhfyhwqyzwdjpcfyyn.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_FftwyHK-9ZkFEp37Ejrv6A_ctj6mLFy";
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ====== Global ======
+    const ROOM = "global";
+    const FLOOR_TTL_MS = 7000;
+    const SIGNAL_POLL_MS = 400;
+    const PRESENCE_BEAT_MS = 2000;
+    const PRESENCE_POLL_MS = 1000;
+    const PRESENCE_TTL_MS = 12000;
+
+    // ICE (TURN eklemek istersen buraya)
+    const ICE_SERVERS = [
+      { urls: "stun:stun.l.google.com:19302" },
+      // { urls: "turn:turn.senin-domenin.com:3478", username: "user", credential: "pass" }
+    ];
+
     const meId = crypto.randomUUID();
 
-    // ========= Presence (HTTP) =========
+    // ====== Presence (HTTP) ======
     let presenceTimer=null, presencePollTimer=null;
-    let activePeers = new Set();   // diğer katılımcılar (user_id)
+    let activePeers = new Set(); // diğer user_id'ler
 
     async function presenceBeat(){
       try {
@@ -99,15 +98,15 @@
         if (error){ console.error('pollPresence', error); return; }
 
         const nextActive = new Set((data||[]).map(r=>r.user_id));
-        nextActive.delete(meId); // kendim hariç
+        nextActive.delete(meId);
 
-        // Yeni görülenler: deterministik arayan ben olayım (glare önleme)
+        // yeni görülenlere deterministik offer (glare önleme için küçük ID başlatır)
         for (const pid of nextActive){
           if (!activePeers.has(pid) && meId < pid){
             try { await makeOffer(pid); } catch(e){ console.error('makeOffer', e); }
           }
         }
-        // Ayrılanları temizle
+        // ayrılanları temizle
         for (const old of [...activePeers]){
           if (!nextActive.has(old)){
             const st = peers.get(old);
@@ -118,12 +117,11 @@
       } catch(e){ console.error(e); }
     }
 
-    // ========= Sinyaller (HTTP) =========
+    // ====== Signals (HTTP) ======
     let signalCursorId = 0;
     async function sendSignalHTTP({ to, from, type, payload }){
-      try {
-        await sb.from('ptt_signals').insert({ room: ROOM, to, from, type, payload });
-      } catch(e){ console.error('sendSignalHTTP error', e); }
+      try { await sb.from('ptt_signals').insert({ room: ROOM, to, from, type, payload }); }
+      catch(e){ console.error('sendSignalHTTP', e); }
     }
     async function pollSignals(){
       try {
@@ -144,14 +142,15 @@
           else if (type === 'answer')  await handleAnswer(from, payload?.sdp);
           else if (type === 'candidate') await handleCandidate(from, payload?.candidate);
         }
-        // İstersen işlenenleri sil:
+        // istersen işlendi sil:
         // if (signalCursorId) await sb.from('ptt_signals').delete().lte('id', signalCursorId).eq('to', meId).eq('room', ROOM);
       } catch(e){ console.error(e); }
     }
 
-    // ========= WebRTC =========
-    const peers = new Map(); // peerId -> { pc, audioEl, senders: [], negotiating, iAmCaller }
+    // ====== WebRTC ======
+    const peers = new Map(); // peerId -> { pc, audioEl, sender, negotiating, iAmCaller }
     let localStream = null;
+    let localTrack = null;   // tek audio track (mic)
     let holding = false;
     let heartbeatTimer = null;
 
@@ -159,32 +158,38 @@
       if (localStream) return;
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
-        // PTT dışında kapalı
-        localStream.getAudioTracks().forEach(t=> t.enabled = false);
-        // Halihazırdaki PC'lere ekle
+        localTrack = localStream.getAudioTracks()[0] || null;
+        if (localTrack) { localTrack.enabled = false; }
+        // var olan peer'ların transceiver sender'ına tak
         peers.forEach(st=>{
-          localStream.getTracks().forEach(track=>{
-            const sender = st.pc.addTrack(track, localStream);
-            st.senders.push(sender);
-          });
+          if (st.sender){
+            st.sender.replaceTrack(localTrack).catch(()=>{});
+          }
         });
       } catch(e){
         console.error(e);
         showErr("Mikrofon izni gerekli veya HTTPS değil. Tarayıcı izinlerini kontrol edin.");
       }
     }
-    function setLocalMute(muted){
-      if (!localStream) return;
-      localStream.getAudioTracks().forEach(t=> t.enabled = !muted);
-    }
 
     function ensurePeer(peerId){
       if (peers.has(peerId)) return peers.get(peerId);
 
       const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-      const state = { pc, audioEl: null, senders: [], negotiating: false, iAmCaller: (meId < peerId) };
+      const state = { pc, audioEl: null, sender: null, negotiating: false, iAmCaller: (meId < peerId) };
 
-      // 🔁 Renegotiation: sadece 'caller' yeni offer üretir (glare önleme)
+      // 🔁 ÖNEMLİ: Tek bir audio m‑line için baştan transceiver aç (sendrecv)
+      const tr = pc.addTransceiver('audio', { direction: 'sendrecv' });
+      state.sender = tr.sender;
+
+      // Eğer mic hazırsa sender'a tak (renegotiation tetikler)
+      if (localTrack){
+        state.sender.replaceTrack(localTrack).catch(()=>{});
+      } else {
+        state.sender.replaceTrack(null).catch(()=>{});
+      }
+
+      // Renegotiation: sadece 'caller' offer üretir
       pc.onnegotiationneeded = async () => {
         if (!state.iAmCaller) return;
         if (state.negotiating) return;
@@ -208,22 +213,16 @@
 
       pc.ontrack = (ev)=>{
         if (!state.audioEl){
-          const a = new Audio();
+          const a = document.createElement('audio');
           a.autoplay = true; a.playsInline = true;
           a.srcObject = ev.streams[0];
           state.audioEl = a;
-          a.play().catch(()=>{ /* iOS/Safari'de ilk kullanıcı etkileşimi gerekir; PTT basışı bunu sağlar */ });
-          document.body.appendChild(Object.assign(document.createElement("div"),{style:"display:none"})).appendChild(a);
+          a.play().catch(()=>{ /* iOS/Safari - ilk kullanıcı etkileşimi gerekir; PTT basışı yeter */ });
+          // görünmez bir yere ekle
+          const hidden = document.createElement('div'); hidden.style.display='none'; hidden.appendChild(a);
+          document.body.appendChild(hidden);
         }
       };
-
-      // Yerel mic varsa ekle (bu ekleme negotiationneeded tetikler → caller offer yollar)
-      if (localStream){
-        localStream.getTracks().forEach(track=>{
-          const sender = pc.addTrack(track, localStream);
-          state.senders.push(sender);
-        });
-      }
 
       peers.set(peerId, state);
       return state;
@@ -231,15 +230,15 @@
 
     async function makeOffer(peerId){
       const { pc } = ensurePeer(peerId);
-      // İlk teklifi başlat (bazı tarayıcılarda onnegotiationneeded beklemeden hızlı eşleşme için)
-      const offer = await pc.createOffer({ offerToReceiveAudio:true, offerToReceiveVideo:false });
+      // hızlı başlatma (bazı tarayıcılarda negotiationneeded'i beklemeden)
+      const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       await sendSignalHTTP({ to: peerId, from: meId, type:"offer", payload:{ sdp: offer.sdp } });
     }
     async function handleOffer(fromId, sdp){
       const { pc } = ensurePeer(fromId);
       await pc.setRemoteDescription({ type:"offer", sdp });
-      await initMic();
+      await initMic(); // mic hazırla ve sender'a tak
       const ans = await pc.createAnswer();
       await pc.setLocalDescription(ans);
       await sendSignalHTTP({ to: fromId, from: meId, type:"answer", payload:{ sdp: ans.sdp } });
@@ -253,7 +252,7 @@
       try { await st.pc.addIceCandidate(candidate); } catch(e){ console.warn(e); }
     }
 
-    // ========= Floor (tek konuşmacı kilidi) =========
+    // ====== Floor (tek konuşmacı) ======
     async function acquireFloor(){
       try {
         const { data, error } = await sb.rpc('acquire_floor', { p_room: ROOM, p_me_id: meId, p_ttl_ms: FLOOR_TTL_MS });
@@ -267,6 +266,7 @@
     async function touchFloor(){
       try { await sb.rpc('touch_floor', { p_room: ROOM, p_me_id: meId }); } catch(e){}
     }
+
     async function refreshFloorUI(){
       try {
         // Süresi geçmişse DB tarafında bırak
@@ -276,7 +276,7 @@
         const val = data;
         if (!val || !val.holder_id){
           setStatus("green", "Müsait: Konuşmaya hazır");
-          if (!holding){ elPTT.disabled = false; setLocalMute(true); }
+          if (!holding){ elPTT.disabled = false; }
         } else if (val.holder_id === meId){
           setStatus("yellow", "Konuşuyorsunuz");
           elPTT.disabled = false;
@@ -284,7 +284,7 @@
           setStatus("red", "Meşgul: Başkası konuşuyor");
           if (!holding) elPTT.disabled = true;
 
-          // İhtiyaten local TTL kontrolü (gecikme varsa 0.5 sn sonra yeniden dener)
+          // local TTL kontrolü (gecikme varsa bir tur daha temizlemeyi dene)
           if (val.heartbeat){
             const expiredLocal = (Date.now() - new Date(val.heartbeat).getTime()) > (FLOOR_TTL_MS + 1500);
             if (expiredLocal){
@@ -300,15 +300,25 @@
     }
     function stopHeartbeat(){ if (heartbeatTimer) clearInterval(heartbeatTimer); heartbeatTimer=null; }
 
-    // ========= PTT UI =========
+    // ====== PTT UI ======
     async function pressDown(){
       if (holding) return;
       await initMic();
+
+      // Konuşma hakkını al
       const ok = await acquireFloor();
       if (!ok){ info("Başkası konuşuyor. Lütfen bekleyin…"); refreshFloorUI(); return; }
+
+      // Tüm peer'ların sender'ına mic'i tak (varsa) ve renegotiation'a güven
+      peers.forEach(st=>{
+        if (st.sender){
+          st.sender.replaceTrack(localTrack).catch(()=>{});
+        }
+      });
+
       holding = true;
       elPTT.classList.add("holding");
-      setLocalMute(false);     // Mikrofon aç
+      if (localTrack) localTrack.enabled = true;  // track açık
       startHeartbeat();
       info("Konuşuyorsunuz… Bırakmak için elinizi çekin.");
       refreshFloorUI();
@@ -317,7 +327,15 @@
       if (!holding) return;
       holding = false;
       elPTT.classList.remove("holding");
-      setLocalMute(true);      // Mikrofon kapat
+
+      // track'i çıkar (karşı tarafa sessizlik yerine gerçekten gönderimi durdur)
+      peers.forEach(st=>{
+        if (st.sender){
+          st.sender.replaceTrack(null).catch(()=>{});
+        }
+      });
+      if (localTrack) localTrack.enabled = false;
+
       stopHeartbeat();
       await releaseFloor();
       info("");
@@ -333,13 +351,12 @@
     document.addEventListener("keyup",(e)=>{ if(e.code==="Space"&&keyHolding){ e.preventDefault(); keyHolding=false; pressUp(); }});
 
     window.addEventListener("beforeunload", async ()=>{
-      try { setLocalMute(true); } catch {}
       try { stopHeartbeat(); } catch {}
       try { await releaseFloor(); } catch {}
       try { await sb.from('ptt_presence').delete().eq('room', ROOM).eq('user_id', meId); } catch {}
     });
 
-    // ========= Başlat =========
+    // ====== Başlat ======
     (async function boot(){
       setStatus("yellow","Bağlanılıyor… (HTTP)");
       info("Mikrofon izni ilk basışta istenebilir. WebSocket engellense bile bu sürüm çalışır.");
@@ -352,11 +369,9 @@
       // Signaling
       setInterval(pollSignals, SIGNAL_POLL_MS);
 
-      // UI
       elPTT.disabled = false;
       refreshFloorUI();
     })();
   </script>
 </body>
 </html>
-``
