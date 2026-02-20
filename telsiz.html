@@ -41,50 +41,116 @@
     <footer>WebRTC ses uçtan uca şifrelenir (DTLS‑SRTP). HTTPS gereklidir.</footer>
   </div>
 
-  <!-- Supabase JS -->
+  <!-- Supabase JS (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
   <script>
-    // ====== Ayarlar (senin proje) ======
+    // ========= Proje Ayarları (sizin Supabase) =========
     const SUPABASE_URL = "https://luyhfyhwqyzwdjpcfyyn.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_FftwyHK-9ZkFEp37Ejrv6A_ctj6mLFy";
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ====== Global hat ======
+    // ========= Global Hat (oda/kullanıcı yok) =========
     const ROOM = "global";
-    const FLOOR_TTL_MS = 7000;            // 7 sn
-    const PRESENCE_TTL_MS = 12000;        // 12 sn aktif say
-    const PRESENCE_BEAT_MS = 2000;        // presence heartbeat
-    const PRESENCE_POLL_MS = 1500;        // presence polling
-    const SIGNAL_POLL_MS = 700;           // signal polling
+    const FLOOR_TTL_MS = 7000;     // 7 sn konuşmacı TTL
+    const SIGNAL_POLL_MS = 400;    // HTTP sinyal polling (hızlı açılış)
+    const PRESENCE_BEAT_MS = 2000; // presence heartbeat
+    const PRESENCE_POLL_MS = 1000; // presence polling
+    const PRESENCE_TTL_MS = 12000; // aktif kabul eşiği
 
-    // ICE (TURN gerekirse ekleyin)
+    // ICE (TURN gerekirse buraya ekleyin)
     const ICE_SERVERS = [
       { urls: "stun:stun.l.google.com:19302" },
       // { urls: "turn:your.turn.server:3478", username: "user", credential: "pass" }
     ];
 
-    // UI yardımcıları
+    // ========= UI Yardımcıları =========
     const elPTT = document.getElementById("pttButton");
     const elInfo = document.getElementById("info");
     const elFloor = document.getElementById("floorStatus");
     const uiError = document.getElementById("uiError");
-    const setStatus = (color, text) => { const dot=elFloor.querySelector(".dot"); const span=elFloor.querySelector("span"); dot.className="dot "+color; span.textContent=text; };
-    const info = (msg) => elInfo.textContent = msg || "";
-    const showErr = (msg) => { console.error(msg); uiError.textContent = msg; uiError.style.display='block'; };
+    const setStatus = (color, text)=>{ const dot=elFloor.querySelector(".dot"); const span=elFloor.querySelector("span"); dot.className="dot "+color; span.textContent=text; };
+    const info = (msg)=> elInfo.textContent = msg || "";
+    const showErr = (msg)=>{ console.error(msg); uiError.textContent = msg; uiError.style.display='block'; };
 
-    // Kimlik (anon)
+    // ========= Kimlik =========
     const meId = crypto.randomUUID();
 
-    // Presence (HTTP)
+    // ========= Presence (HTTP) =========
     let presenceTimer=null, presencePollTimer=null;
-    let activePeers = new Set();
+    let activePeers = new Set();   // diğer katılımcılar (user_id)
 
-    // Signals (HTTP)
+    async function presenceBeat(){
+      try {
+        await sb.from('ptt_presence').upsert(
+          { room: ROOM, user_id: meId, last_seen: new Date().toISOString() },
+          { onConflict: 'room,user_id' }
+        );
+      } catch(e){ console.error('presenceBeat', e); }
+    }
+    async function pollPresence(){
+      try {
+        const cutoff = new Date(Date.now() - PRESENCE_TTL_MS).toISOString();
+        const { data, error } = await sb
+          .from('ptt_presence')
+          .select('user_id,last_seen')
+          .eq('room', ROOM)
+          .gt('last_seen', cutoff);
+        if (error){ console.error('pollPresence', error); return; }
+
+        const nextActive = new Set((data||[]).map(r=>r.user_id));
+        nextActive.delete(meId); // kendim hariç
+
+        // Yeni görülenler: deterministik arayan ben olayım (glare önleme)
+        for (const pid of nextActive){
+          if (!activePeers.has(pid) && meId < pid){
+            try { await makeOffer(pid); } catch(e){ console.error('makeOffer', e); }
+          }
+        }
+        // Ayrılanları temizle
+        for (const old of [...activePeers]){
+          if (!nextActive.has(old)){
+            const st = peers.get(old);
+            if (st){ try { st.pc.close(); } catch{}; peers.delete(old); }
+          }
+        }
+        activePeers = nextActive;
+      } catch(e){ console.error(e); }
+    }
+
+    // ========= Sinyaller (HTTP) =========
     let signalCursorId = 0;
+    async function sendSignalHTTP({ to, from, type, payload }){
+      try {
+        await sb.from('ptt_signals').insert({ room: ROOM, to, from, type, payload });
+      } catch(e){ console.error('sendSignalHTTP error', e); }
+    }
+    async function pollSignals(){
+      try {
+        const { data, error } = await sb
+          .from('ptt_signals')
+          .select('*')
+          .eq('room', ROOM)
+          .eq('to', meId)
+          .gt('id', signalCursorId)
+          .order('id', { ascending: true })
+          .limit(100);
+        if (error){ console.error('pollSignals', error); return; }
 
-    // WebRTC
-    const peers = new Map(); // peerId -> { pc, audioEl, senders: [] }
+        for (const row of data || []){
+          signalCursorId = Math.max(signalCursorId, row.id);
+          const { from, type, payload } = row;
+          if (type === 'offer')        await handleOffer(from, payload?.sdp);
+          else if (type === 'answer')  await handleAnswer(from, payload?.sdp);
+          else if (type === 'candidate') await handleCandidate(from, payload?.candidate);
+        }
+        // İstersen işlenenleri sil:
+        // if (signalCursorId) await sb.from('ptt_signals').delete().lte('id', signalCursorId).eq('to', meId).eq('room', ROOM);
+      } catch(e){ console.error(e); }
+    }
+
+    // ========= WebRTC =========
+    const peers = new Map(); // peerId -> { pc, audioEl, senders: [], negotiating, iAmCaller }
     let localStream = null;
     let holding = false;
     let heartbeatTimer = null;
@@ -93,8 +159,9 @@
       if (localStream) return;
       try {
         localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video:false });
+        // PTT dışında kapalı
         localStream.getAudioTracks().forEach(t=> t.enabled = false);
-        // var olan pc'lere track ekle
+        // Halihazırdaki PC'lere ekle
         peers.forEach(st=>{
           localStream.getTracks().forEach(track=>{
             const sender = st.pc.addTrack(track, localStream);
@@ -106,31 +173,51 @@
         showErr("Mikrofon izni gerekli veya HTTPS değil. Tarayıcı izinlerini kontrol edin.");
       }
     }
-    function setLocalMute(muted){ if (!localStream) return; localStream.getAudioTracks().forEach(t=> t.enabled = !muted); }
+    function setLocalMute(muted){
+      if (!localStream) return;
+      localStream.getAudioTracks().forEach(t=> t.enabled = !muted);
+    }
 
     function ensurePeer(peerId){
       if (peers.has(peerId)) return peers.get(peerId);
+
       const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-      const state = { pc, audioEl: null, senders: [] };
+      const state = { pc, audioEl: null, senders: [], negotiating: false, iAmCaller: (meId < peerId) };
+
+      // 🔁 Renegotiation: sadece 'caller' yeni offer üretir (glare önleme)
+      pc.onnegotiationneeded = async () => {
+        if (!state.iAmCaller) return;
+        if (state.negotiating) return;
+        state.negotiating = true;
+        try {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          await sendSignalHTTP({ to: peerId, from: meId, type:"offer", payload:{ sdp: offer.sdp } });
+        } catch (e) {
+          console.warn("onnegotiationneeded error", e);
+        } finally {
+          state.negotiating = false;
+        }
+      };
 
       pc.onicecandidate = (ev)=>{
         if (ev.candidate) sendSignalHTTP({ to: peerId, from: meId, type:"candidate", payload:{ candidate: ev.candidate.toJSON() } });
       };
+      pc.oniceconnectionstatechange = ()=> console.log('ICE', peerId, pc.iceConnectionState);
+      pc.onconnectionstatechange   = ()=> console.log('PC', peerId, pc.connectionState);
+
       pc.ontrack = (ev)=>{
         if (!state.audioEl){
-          const a = new Audio(); a.autoplay = true; a.playsInline = true; a.srcObject = ev.streams[0];
+          const a = new Audio();
+          a.autoplay = true; a.playsInline = true;
+          a.srcObject = ev.streams[0];
           state.audioEl = a;
+          a.play().catch(()=>{ /* iOS/Safari'de ilk kullanıcı etkileşimi gerekir; PTT basışı bunu sağlar */ });
           document.body.appendChild(Object.assign(document.createElement("div"),{style:"display:none"})).appendChild(a);
         }
       };
-      pc.onconnectionstatechange = ()=>{
-        if (pc.connectionState === "failed" || pc.connectionState === "closed" || pc.connectionState === "disconnected"){
-          // temizle
-          try { pc.close(); } catch {}
-          peers.delete(peerId);
-        }
-      };
 
+      // Yerel mic varsa ekle (bu ekleme negotiationneeded tetikler → caller offer yollar)
       if (localStream){
         localStream.getTracks().forEach(track=>{
           const sender = pc.addTrack(track, localStream);
@@ -144,6 +231,7 @@
 
     async function makeOffer(peerId){
       const { pc } = ensurePeer(peerId);
+      // İlk teklifi başlat (bazı tarayıcılarda onnegotiationneeded beklemeden hızlı eşleşme için)
       const offer = await pc.createOffer({ offerToReceiveAudio:true, offerToReceiveVideo:false });
       await pc.setLocalDescription(offer);
       await sendSignalHTTP({ to: peerId, from: meId, type:"offer", payload:{ sdp: offer.sdp } });
@@ -165,75 +253,7 @@
       try { await st.pc.addIceCandidate(candidate); } catch(e){ console.warn(e); }
     }
 
-    // ---------- HTTP Sinyalleşme ----------
-    async function sendSignalHTTP({ to, from, type, payload }){
-      try { await sb.from('ptt_signals').insert({ room: ROOM, to, from, type, payload }); }
-      catch(e){ console.error('sendSignalHTTP error', e); }
-    }
-
-    async function pollSignals(){
-      try {
-        const { data, error } = await sb
-          .from('ptt_signals')
-          .select('*')
-          .eq('room', ROOM)
-          .eq('to', meId)
-          .gt('id', signalCursorId)
-          .order('id', { ascending: true })
-          .limit(100);
-        if (error){ console.error('pollSignals', error); return; }
-
-        for (const row of data || []){
-          signalCursorId = Math.max(signalCursorId, row.id);
-          const { from, type, payload } = row;
-          if (type === 'offer')      await handleOffer(from, payload?.sdp);
-          else if (type === 'answer') await handleAnswer(from, payload?.sdp);
-          else if (type === 'candidate') await handleCandidate(from, payload?.candidate);
-        }
-
-        // İsteğe bağlı temizlik: (aşağıdaki satırı açarsan "bana gelen" sinyalleri siler)
-        // if (signalCursorId) await sb.from('ptt_signals').delete().lte('id', signalCursorId).eq('to', meId).eq('room', ROOM);
-      } catch(e){ console.error(e); }
-    }
-
-    // ---------- Presence (HTTP) ----------
-    async function presenceBeat(){
-      try {
-        await sb.from('ptt_presence').upsert({ room: ROOM, user_id: meId, last_seen: new Date().toISOString() }, { onConflict: 'room,user_id' });
-      } catch(e){ console.error('presenceBeat', e); }
-    }
-
-    async function pollPresence(){
-      try {
-        const cutoff = new Date(Date.now() - PRESENCE_TTL_MS).toISOString();
-        const { data, error } = await sb
-          .from('ptt_presence')
-          .select('user_id,last_seen')
-          .eq('room', ROOM)
-          .gt('last_seen', cutoff);
-        if (error){ console.error('pollPresence', error); return; }
-
-        const nextActive = new Set((data || []).map(r => r.user_id));
-        nextActive.delete(meId); // kendim hariç
-
-        // Yeni gelen peer'lara deterministik offer: küçük ID arar
-        for (const pid of nextActive){
-          if (!activePeers.has(pid) && meId < pid){
-            try { await makeOffer(pid); } catch(e){ console.error('makeOffer', e); }
-          }
-        }
-        // Ayrılanları temizle
-        for (const old of [...activePeers]){
-          if (!nextActive.has(old)){
-            const st = peers.get(old);
-            if (st){ try { st.pc.close(); } catch{}; peers.delete(old); }
-          }
-        }
-        activePeers = nextActive;
-      } catch(e){ console.error(e); }
-    }
-
-    // ---------- Floor (PTT kilidi) ----------
+    // ========= Floor (tek konuşmacı kilidi) =========
     async function acquireFloor(){
       try {
         const { data, error } = await sb.rpc('acquire_floor', { p_room: ROOM, p_me_id: meId, p_ttl_ms: FLOOR_TTL_MS });
@@ -247,16 +267,13 @@
     async function touchFloor(){
       try { await sb.rpc('touch_floor', { p_room: ROOM, p_me_id: meId }); } catch(e){}
     }
-
     async function refreshFloorUI(){
       try {
-        // 1) Süresi geçmişse DB tarafında otomatik serbest bırak
+        // Süresi geçmişse DB tarafında bırak
         await sb.rpc('release_if_expired', { p_room: ROOM, p_ttl_ms: FLOOR_TTL_MS });
 
-        // 2) Güncel durum
         const { data } = await sb.from('ptt_floor').select('*').eq('room', ROOM).maybeSingle();
         const val = data;
-
         if (!val || !val.holder_id){
           setStatus("green", "Müsait: Konuşmaya hazır");
           if (!holding){ elPTT.disabled = false; setLocalMute(true); }
@@ -267,7 +284,7 @@
           setStatus("red", "Meşgul: Başkası konuşuyor");
           if (!holding) elPTT.disabled = true;
 
-          // İhtiyaten local TTL kontrolü -> gecikme varsa 0.5 sn sonra tekrar dener
+          // İhtiyaten local TTL kontrolü (gecikme varsa 0.5 sn sonra yeniden dener)
           if (val.heartbeat){
             const expiredLocal = (Date.now() - new Date(val.heartbeat).getTime()) > (FLOOR_TTL_MS + 1500);
             if (expiredLocal){
@@ -277,14 +294,13 @@
         }
       } catch(e){ console.error(e); }
     }
-
     function startHeartbeat(){
       stopHeartbeat();
       heartbeatTimer = setInterval(()=>{ touchFloor(); refreshFloorUI(); }, 2000);
     }
     function stopHeartbeat(){ if (heartbeatTimer) clearInterval(heartbeatTimer); heartbeatTimer=null; }
 
-    // ---------- UI olayları ----------
+    // ========= PTT UI =========
     async function pressDown(){
       if (holding) return;
       await initMic();
@@ -292,7 +308,7 @@
       if (!ok){ info("Başkası konuşuyor. Lütfen bekleyin…"); refreshFloorUI(); return; }
       holding = true;
       elPTT.classList.add("holding");
-      setLocalMute(false);
+      setLocalMute(false);     // Mikrofon aç
       startHeartbeat();
       info("Konuşuyorsunuz… Bırakmak için elinizi çekin.");
       refreshFloorUI();
@@ -301,7 +317,7 @@
       if (!holding) return;
       holding = false;
       elPTT.classList.remove("holding");
-      setLocalMute(true);
+      setLocalMute(true);      // Mikrofon kapat
       stopHeartbeat();
       await releaseFloor();
       info("");
@@ -323,24 +339,24 @@
       try { await sb.from('ptt_presence').delete().eq('room', ROOM).eq('user_id', meId); } catch {}
     });
 
-    // ---------- Başlat ----------
+    // ========= Başlat =========
     (async function boot(){
       setStatus("yellow","Bağlanılıyor… (HTTP)");
-      info("Mikrofon izni ilk basışta istenebilir. WebSocket engelli ise de bu sürüm çalışır.");
+      info("Mikrofon izni ilk basışta istenebilir. WebSocket engellense bile bu sürüm çalışır.");
 
-      // Presence heartbeat & polling
+      // Presence
       await presenceBeat();
       presenceTimer = setInterval(presenceBeat, PRESENCE_BEAT_MS);
       presencePollTimer = setInterval(pollPresence, PRESENCE_POLL_MS);
 
-      // Signal polling
+      // Signaling
       setInterval(pollSignals, SIGNAL_POLL_MS);
 
-      // UI aktif
+      // UI
       elPTT.disabled = false;
-      // İlk UI tazeleme
       refreshFloorUI();
     })();
   </script>
 </body>
 </html>
+``
