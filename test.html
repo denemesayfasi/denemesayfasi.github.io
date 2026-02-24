@@ -1,0 +1,2632 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>🐤 Civciv Oyunu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            background: #000;
+            overscroll-behavior: none;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        .top-hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 130px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9), rgba(0,0,0,0.7), rgba(0,0,0,0));
+            backdrop-filter: blur(10px);
+            padding: 12px 15px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-bottom: 2px solid #FFD700;
+        }
+
+        .status-row {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chick-title {
+            color: #FFD700;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .score-display {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+
+        .gold-display {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            background: rgba(255, 215, 0, 0.1);
+            padding: 5px 12px;
+            border-radius: 8px;
+            border: 1px solid #FFD700;
+        }
+
+        .stat-mini {
+            flex: 1;
+            min-width: 70px;
+        }
+
+        .stat-mini-label {
+            font-size: 0.7em;
+            color: #fff;
+            opacity: 0.8;
+            margin-bottom: 2px;
+        }
+
+        .stat-mini-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .stat-mini-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.2s ease;
+        }
+
+        .hunger-fill { background: linear-gradient(90deg, #FF6B6B, #FF8E72); }
+        .happiness-fill { background: linear-gradient(90deg, #FFD700, #FFA500); }
+        .health-fill { background: linear-gradient(90deg, #4ECDC4, #44AF69); }
+        .dirty-fill { background: linear-gradient(90deg, #795548, #A1887F); }
+        .vaccine-fill { background: linear-gradient(90deg, #00BCD4, #009688); }
+
+        .shop-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .shop-overlay.active {
+            display: flex;
+        }
+
+        .shop-panel {
+            background: linear-gradient(135deg, #1e1e1e, #2d2d2d);
+            border: 2px solid #FFD700;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+        }
+
+        .shop-title {
+            color: #FFD700;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .shop-items {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .shop-item {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .shop-item:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .shop-item-emoji {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .shop-item-name {
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.95em;
+            margin-bottom: 5px;
+        }
+
+        .shop-item-price {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .floating-shop-number {
+            position: absolute;
+            font-weight: bold;
+            font-size: 1.8em;
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            pointer-events: none;
+            animation: shopFloat 1s ease-out forwards;
+        }
+
+        @keyframes shopFloat {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(0, -80px) scale(1.5); }
+        }
+
+        .shop-close-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .shop-close-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .bottom-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: auto;
+            background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.8), rgba(0,0,0,0.95));
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            z-index: 100;
+            border-top: 2px solid #FFD700;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        .control-btn {
+            padding: 12px 8px;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.75em;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            position: relative;
+        }
+
+        .control-btn span {
+            font-size: 1.2em;
+        }
+
+        .item-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #333;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 2px solid #333;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+        }
+
+        .btn-seed {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #333;
+        }
+
+        .btn-corn {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E72);
+        }
+
+        .btn-worm {
+            background: linear-gradient(135deg, #8B4513, #A0522D);
+        }
+
+        .btn-vaccine {
+            background: linear-gradient(135deg, #00BCD4, #009688);
+        }
+
+        .btn-clean {
+            background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+        }
+
+        .btn-shop {
+            background: linear-gradient(135deg, #4CAF50, #388E3C);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .control-btn.active {
+            border-color: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        .popup-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 215, 0, 0.95);
+            color: #333;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.3em;
+            animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 200;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .warning-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 100, 100, 0.95);
+            color: #fff;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.5em;
+            animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 200;
+            box-shadow: 0 12px 40px rgba(255, 0, 0, 0.5);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .floating-number {
+            position: fixed;
+            font-weight: bold;
+            font-size: 1.5em;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            z-index: 150;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(0, -60px) scale(1.2);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-hud">
+        <div class="status-row">
+            <div class="chick-title">🐤 Civciv</div>
+            <div class="gold-display">💰 <span id="gold">100</span></div>
+            <div class="score-display">⭐ <span id="score">0</span></div>
+        </div>
+        <div class="status-row">
+            <div class="stat-mini">
+                <div class="stat-mini-label">🍖 Açlık</div>
+                <div class="stat-mini-bar">
+                    <div id="hunger-bar" class="stat-mini-fill hunger-fill" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-label">😊 Mutlu</div>
+                <div class="stat-mini-bar">
+                    <div id="happiness-bar" class="stat-mini-fill happiness-fill" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-label">❤️ Sağlık</div>
+                <div class="stat-mini-bar">
+                    <div id="health-bar" class="stat-mini-fill health-fill" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-label">🚽 Temizlik</div>
+                <div class="stat-mini-bar">
+                    <div id="dirty-bar" class="stat-mini-fill dirty-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-label">💉 Aşı</div>
+                <div class="stat-mini-bar">
+                    <div id="vaccine-bar" class="stat-mini-fill vaccine-fill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="shop-overlay" id="shopOverlay">
+        <div class="shop-panel">
+            <div class="shop-title">🛒 Mağaza</div>
+            <div class="shop-items">
+                <div class="shop-item" id="shop-seed" onclick="buyItem('seed')">
+                    <div class="shop-item-emoji">🌾</div>
+                    <div class="shop-item-name">Tohum</div>
+                    <div class="shop-item-price">1 💰</div>
+                </div>
+                <div class="shop-item" id="shop-corn" onclick="buyItem('corn')">
+                    <div class="shop-item-emoji">🌽</div>
+                    <div class="shop-item-name">Mısır</div>
+                    <div class="shop-item-price">2 💰</div>
+                </div>
+                <div class="shop-item" id="shop-worm" onclick="buyItem('worm')">
+                    <div class="shop-item-emoji">🪱</div>
+                    <div class="shop-item-name">Solucan</div>
+                    <div class="shop-item-price">3 💰</div>
+                </div>
+                <div class="shop-item" id="shop-vaccine" onclick="buyItem('vaccine')">
+                    <div class="shop-item-emoji">💉</div>
+                    <div class="shop-item-name">Aşı</div>
+                    <div class="shop-item-price">5 💰</div>
+                </div>
+            </div>
+            <button class="shop-close-btn" onclick="closeShop()">Kapat</button>
+        </div>
+    </div>
+
+    <div class="bottom-controls">
+        <button class="control-btn btn-seed" id="btn-seed" onclick="selectFood('seed')">
+            <span>🌾</span>
+            <span class="item-badge" id="seed-badge" style="display:none;">0</span>
+            Tohum
+        </button>
+        <button class="control-btn btn-corn" id="btn-corn" onclick="selectFood('corn')">
+            <span>🌽</span>
+            <span class="item-badge" id="corn-badge" style="display:none;">0</span>
+            Mısır
+        </button>
+        <button class="control-btn btn-worm" id="btn-worm" onclick="selectFood('worm')">
+            <span>🪱</span>
+            <span class="item-badge" id="worm-badge" style="display:none;">0</span>
+            Solucan
+        </button>
+        <button class="control-btn btn-vaccine" id="btn-vaccine" onclick="selectFood('vaccine')">
+            <span>💉</span>
+            <span class="item-badge" id="vaccine-badge" style="display:none;">0</span>
+            Aşı
+        </button>
+        <button class="control-btn btn-clean" id="btn-clean" onclick="selectFood('clean')">
+            <span>🧹</span>
+            Temizle
+        </button>
+        <button class="control-btn btn-shop" onclick="openShop()">
+            <span>🛒</span>
+            Mağaza
+        </button>
+        <button class="control-btn btn-reset" onclick="resetGame()">
+            <span>🔄</span>
+            Yeni
+        </button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const CHICK_MAX_X = 10;
+        const CHICK_MAX_Z = 10;
+
+        let selectedFoodType = null;
+        let lastClickPos = { x: 0, y: 0 };
+        let warningCount = 0;
+
+        let gameState = {
+            hunger: 100,
+            happiness: 100,
+            health: 100,
+            dirtiness: 0,
+            vaccinated: 0,
+            score: 0,
+            gold: 100,
+            inventory: { seed: 0, corn: 0, worm: 0, vaccine: 0 },
+            foods: [],
+            deltaTime: 0,
+            isGameOver: false,
+            lastHealthDamageTime: 0
+        };
+
+        function updateBadges() {
+            const badges = {
+                seed: document.getElementById('seed-badge'),
+                corn: document.getElementById('corn-badge'),
+                worm: document.getElementById('worm-badge'),
+                vaccine: document.getElementById('vaccine-badge')
+            };
+
+            Object.keys(badges).forEach(type => {
+                if (gameState.inventory[type] > 0) {
+                    badges[type].textContent = gameState.inventory[type];
+                    badges[type].style.display = 'flex';
+                } else {
+                    badges[type].style.display = 'none';
+                }
+            });
+        }
+
+        function selectFood(type) {
+            if (type === 'vaccine' || type === 'clean') {
+                selectedFoodType = type;
+                document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+                if (type === 'vaccine') document.getElementById('btn-vaccine').classList.add('active');
+                if (type === 'clean') document.getElementById('btn-clean').classList.add('active');
+                return;
+            }
+
+            if (gameState.inventory[type] <= 0) {
+                warningCount++;
+                showWarning(warningCount);
+                return;
+            }
+
+            if (type === 'seed' && gameState.inventory.seed > 0) {
+                gameState.inventory.seed--;
+                selectedFoodType = 'seed';
+            } else if (type === 'corn' && gameState.inventory.corn > 0) {
+                gameState.inventory.corn--;
+                selectedFoodType = 'corn';
+            } else if (type === 'worm' && gameState.inventory.worm > 0) {
+                gameState.inventory.worm--;
+                selectedFoodType = 'worm';
+            }
+
+            warningCount = 0;
+            updateBadges();
+            updateUI();
+           
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+            if (type === 'seed') document.getElementById('btn-seed').classList.add('active');
+            else if (type === 'corn') document.getElementById('btn-corn').classList.add('active');
+            else if (type === 'worm') document.getElementById('btn-worm').classList.add('active');
+        }
+
+        function openShop() {
+            document.getElementById('shopOverlay').classList.add('active');
+        }
+
+        function closeShop() {
+            document.getElementById('shopOverlay').classList.remove('active');
+        }
+
+        function buyItem(type) {
+            const prices = { seed: 1, corn: 2, worm: 3, vaccine: 5 };
+            const emojis = { seed: '🌾', corn: '🌽', worm: '🪱', vaccine: '💉' };
+            const shopIds = { seed: 'shop-seed', corn: 'shop-corn', worm: 'shop-worm', vaccine: 'shop-vaccine' };
+            const price = prices[type];
+
+            if (gameState.gold >= price) {
+                gameState.gold -= price;
+                gameState.inventory[type]++;
+               
+                updateUI();
+                updateBadges();
+               
+                // Mağaza ekranında +1 animasyonu
+                const shopItem = document.getElementById(shopIds[type]);
+                const rect = shopItem.getBoundingClientRect();
+                const floater = document.createElement('div');
+                floater.className = 'floating-shop-number';
+                floater.textContent = '+1';
+                floater.style.left = (rect.left + rect.width / 2) + 'px';
+                floater.style.top = (rect.top + rect.height / 2) + 'px';
+                document.body.appendChild(floater);
+                setTimeout(() => floater.remove(), 1000);
+               
+                showMessage(`✅ ${emojis[type]} +1 aldın!`);
+            } else {
+                showMessage('💰 Yetersiz altın!');
+            }
+        }
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.Fog(0x87CEEB, 300, 500);
+
+        const canvas = document.getElementById('canvas');
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+       
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+
+        camera.position.set(0, 12, 20);
+        camera.lookAt(0, 3, 0);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.95);
+        directionalLight.position.set(30, 60, 40);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.camera.left = -100;
+        directionalLight.shadow.camera.right = 100;
+        directionalLight.shadow.camera.top = 100;
+        directionalLight.shadow.camera.bottom = -50;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.bias = -0.0005;
+        scene.add(directionalLight);
+
+        const groundGeometry = new THREE.PlaneGeometry(300, 300);
+        const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x7CB342, shininess: 30 });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        const skyGeometry = new THREE.SphereGeometry(400, 32, 32);
+        const skyMaterial = new THREE.MeshBasicMaterial({ color: 0x87CEEB, side: THREE.BackSide });
+        const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+        scene.add(sky);
+
+        function createCloud() {
+            const group = new THREE.Group();
+            for (let i = 0; i < 5; i++) {
+                const geometry = new THREE.SphereGeometry(8, 16, 16);
+                const material = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, emissive: 0xFFFFFF, emissiveIntensity: 0.3 });
+                const cloud = new THREE.Mesh(geometry, material);
+                cloud.position.x = i * 12 - 24;
+                cloud.position.y = Math.random() * 5 - 2;
+                cloud.scale.set(1 + Math.random() * 0.5, 0.6 + Math.random() * 0.3, 1);
+                cloud.castShadow = true;
+                group.add(cloud);
+            }
+            group.position.set(Math.random() * 200 - 100, 80, Math.random() * 200 - 100);
+            group.userData.speed = 0.01 + Math.random() * 0.02;
+            scene.add(group);
+            return group;
+        }
+
+        const clouds = [createCloud(), createCloud(), createCloud()];
+
+        // RAYCASTER - TIKLANAN YERİ BUL
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function getClickPosition3D(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+           
+            raycaster.setFromCamera(mouse, camera);
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+            const target = new THREE.Vector3();
+            raycaster.ray.intersectPlane(plane, target);
+            return target;
+        }
+
+        class CuteChick {
+            constructor() {
+                this.group = new THREE.Group();
+                this.state = 'wandering';
+                this.targetFood = null;
+                this.walkSpeed = 0.06;
+                this.animationTime = 0;
+                this.eatingTime = 0;
+                this.eyelidsOpen = 1;
+                this.foodEaten = false;
+                this.isDead = false;
+                this.deathTime = 0;
+                this.skeleton = null;
+                this.wanderDirection = new THREE.Vector3(1, 0, 0);
+                this.changeDirectionTime = 0;
+                this.peckingTime = 0;
+                this.isPecking = false;
+               
+                this.createCuteChick();
+                this.group.position.set(0, 0, 0);
+                scene.add(this.group);
+            }
+
+            createCuteChick() {
+                const bodyGeometry = new THREE.SphereGeometry(1.8, 32, 32);
+                const bodyMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFFEB3B,
+                    shininess: 100,
+                    emissive: 0xFDD835,
+                    emissiveIntensity: 0.2
+                });
+                this.body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+                this.body.castShadow = true;
+                this.body.receiveShadow = true;
+                this.body.position.y = 1.5;
+                this.group.add(this.body);
+
+                const headGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+                const headMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFFEB3B,
+                    shininess: 100,
+                    emissive: 0xFDD835,
+                    emissiveIntensity: 0.2
+                });
+                this.head = new THREE.Mesh(headGeometry, headMaterial);
+                this.head.castShadow = true;
+                this.head.receiveShadow = true;
+                this.head.position.set(0, 3.8, 0);
+                this.group.add(this.head);
+
+                const crownGeometry = new THREE.ConeGeometry(0.35, 1, 8);
+                const crownMaterial = new THREE.MeshPhongMaterial({ color: 0xFFEB3B, shininess: 100 });
+               
+                const crown1 = new THREE.Mesh(crownGeometry, crownMaterial);
+                crown1.position.set(-0.35, 1.3, 0);
+                crown1.castShadow = true;
+                this.head.add(crown1);
+
+                const crown2 = new THREE.Mesh(crownGeometry, crownMaterial);
+                crown2.position.set(0.35, 1.3, 0);
+                crown2.castShadow = true;
+                this.head.add(crown2);
+
+                const eyeGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+                const eyeMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x000000,
+                    shininess: 200,
+                    emissive: 0x1a1a1a,
+                    emissiveIntensity: 0.3
+                });
+               
+                this.eyeLeft = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                this.eyeLeft.position.set(-0.6, 0.4, 1);
+                this.eyeLeft.castShadow = true;
+                this.head.add(this.eyeLeft);
+
+                this.eyeRight = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                this.eyeRight.position.set(0.6, 0.4, 1);
+                this.eyeRight.castShadow = true;
+                this.head.add(this.eyeRight);
+
+                const eyelidGeometry = new THREE.SphereGeometry(0.55, 32, 32);
+                const eyelidMaterial = new THREE.MeshPhongMaterial({ color: 0xFFEB3B, shininess: 100 });
+
+                this.eyelidLeft = new THREE.Mesh(eyelidGeometry, eyelidMaterial);
+                this.eyelidLeft.position.set(-0.6, 0.4, 1.05);
+                this.eyelidLeft.scale.set(1, 0.5, 1);
+                this.eyelidLeft.castShadow = true;
+                this.head.add(this.eyelidLeft);
+
+                this.eyelidRight = new THREE.Mesh(eyelidGeometry, eyelidMaterial);
+                this.eyelidRight.position.set(0.6, 0.4, 1.05);
+                this.eyelidRight.scale.set(1, 0.5, 1);
+                this.eyelidRight.castShadow = true;
+                this.head.add(this.eyelidRight);
+
+                const glassGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+                const glassMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFFFFFF,
+                    shininess: 255,
+                    emissive: 0xFFFFFF,
+                    emissiveIntensity: 0.5
+                });
+
+                const glassLeft = new THREE.Mesh(glassGeometry, glassMaterial);
+                glassLeft.position.set(-0.15, 0.15, 0.35);
+                this.eyeLeft.add(glassLeft);
+
+                const glassRight = new THREE.Mesh(glassGeometry, glassMaterial);
+                glassRight.position.set(0.15, 0.15, 0.35);
+                this.eyeRight.add(glassRight);
+
+                const upperBeakGeometry = new THREE.SphereGeometry(0.45, 16, 16);
+                const beakMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFF9800,
+                    shininess: 120,
+                    emissive: 0xFF8C00,
+                    emissiveIntensity: 0.2
+                });
+                this.upperBeak = new THREE.Mesh(upperBeakGeometry, beakMaterial);
+                this.upperBeak.position.set(0, 0.1, 1.3);
+                this.upperBeak.scale.set(0.75, 0.6, 0.9);
+                this.upperBeak.castShadow = true;
+                this.head.add(this.upperBeak);
+
+                this.lowerBeak = new THREE.Mesh(upperBeakGeometry, beakMaterial);
+                this.lowerBeak.position.set(0, -0.3, 1.3);
+                this.lowerBeak.scale.set(0.65, 0.4, 0.8);
+                this.lowerBeak.castShadow = true;
+                this.head.add(this.lowerBeak);
+
+                const wingGeometry = new THREE.SphereGeometry(0.8, 24, 24);
+                const wingMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFFEB3B,
+                    shininess: 100,
+                    emissive: 0xFDD835,
+                    emissiveIntensity: 0.2
+                });
+               
+                this.wingLeft = new THREE.Mesh(wingGeometry, wingMaterial);
+                this.wingLeft.position.set(-1.6, 1.8, -0.2);
+                this.wingLeft.scale.set(0.6, 0.8, 0.4);
+                this.wingLeft.castShadow = true;
+                this.group.add(this.wingLeft);
+
+                this.wingRight = new THREE.Mesh(wingGeometry, wingMaterial);
+                this.wingRight.position.set(1.6, 1.8, -0.2);
+                this.wingRight.scale.set(0.6, 0.8, 0.4);
+                this.wingRight.castShadow = true;
+                this.group.add(this.wingRight);
+
+                const legGeometry = new THREE.CylinderGeometry(0.2, 0.18, 1.5, 12);
+                const legMaterial = new THREE.MeshPhongMaterial({ color: 0xFF9800, shininess: 80 });
+
+                this.legLeft = new THREE.Mesh(legGeometry, legMaterial);
+                this.legLeft.position.set(-0.8, 0.3, 0);
+                this.legLeft.castShadow = true;
+                this.group.add(this.legLeft);
+
+                this.legRight = new THREE.Mesh(legGeometry, legMaterial);
+                this.legRight.position.set(0.8, 0.3, 0);
+                this.legRight.castShadow = true;
+                this.group.add(this.legRight);
+
+                const footGeometry = new THREE.SphereGeometry(0.35, 16, 16);
+                const footMaterial = new THREE.MeshPhongMaterial({ color: 0xFF9800 });
+
+                const footLeft = new THREE.Mesh(footGeometry, footMaterial);
+                footLeft.position.y = -0.95;
+                footLeft.scale.set(1.5, 0.6, 1.2);
+                footLeft.castShadow = true;
+                this.legLeft.add(footLeft);
+
+                const footRight = new THREE.Mesh(footGeometry, footMaterial);
+                footRight.position.y = -0.95;
+                footRight.scale.set(1.5, 0.6, 1.2);
+                footRight.castShadow = true;
+                this.legRight.add(footRight);
+
+                const tailGeometry = new THREE.SphereGeometry(0.4, 20, 20);
+                const tailMaterial = new THREE.MeshPhongMaterial({ color: 0xFF9800, shininess: 80 });
+                this.tail = new THREE.Mesh(tailGeometry, tailMaterial);
+                this.tail.position.set(0, 1.3, -1.8);
+                this.tail.scale.set(0.8, 0.5, 1);
+                this.tail.castShadow = true;
+                this.group.add(this.tail);
+
+                this.bodyOriginalY = this.body.position.y;
+                this.headOriginalY = this.head.position.y;
+            }
+
+            update(deltaTime) {
+                this.animationTime += deltaTime;
+                this.changeDirectionTime += deltaTime;
+
+                if (this.isDead) {
+                    return;
+                }
+
+                if (this.isPecking) {
+                    this.updatePecking();
+                } else if (this.state === 'wandering') {
+                    this.updateWandering();
+                } else if (this.state === 'walking' && this.targetFood) {
+                    this.updateWalking();
+                } else if (this.state === 'eating') {
+                    this.updateEating(deltaTime);
+                }
+
+                const wingBeat = Math.sin(this.animationTime * 4) * 0.3;
+                this.wingLeft.rotation.z = wingBeat;
+                this.wingRight.rotation.z = -wingBeat;
+
+                const tailWag = Math.sin(this.animationTime * 3) * 0.3;
+                this.tail.rotation.z = tailWag;
+
+                if (!this.isPecking) {
+                    const headTilt = Math.sin(this.animationTime * 1.5) * 0.12;
+                    this.head.rotation.z = headTilt;
+                }
+
+                if (Math.random() < 0.01) {
+                    this.eyelidsOpen = this.eyelidsOpen === 1 ? 0 : 1;
+                }
+                this.eyelidLeft.scale.y = this.eyelidsOpen;
+                this.eyelidRight.scale.y = this.eyelidsOpen;
+
+                this.clampPosition();
+            }
+
+            clampPosition() {
+                this.group.position.x = Math.max(-CHICK_MAX_X, Math.min(CHICK_MAX_X, this.group.position.x));
+                this.group.position.z = Math.max(-CHICK_MAX_Z, Math.min(CHICK_MAX_Z, this.group.position.z));
+            }
+
+            updatePecking() {
+                this.peckingTime += 0.016;
+               
+                if (this.peckingTime < 2) {
+                    const peckProgress = (this.peckingTime % 0.3) / 0.3;
+                    const bendAmount = Math.sin(peckProgress * Math.PI) * 0.8;
+                   
+                    this.head.position.y = this.headOriginalY - bendAmount;
+                    this.body.position.y = this.bodyOriginalY - bendAmount * 0.5;
+                    this.lowerBeak.position.y = -0.3 - Math.sin(this.animationTime * 10) * 0.2;
+                    this.upperBeak.rotation.x = Math.sin(this.animationTime * 10) * 0.4;
+                } else {
+                    this.isPecking = false;
+                    this.head.position.y = this.headOriginalY;
+                    this.body.position.y = this.bodyOriginalY;
+                    this.lowerBeak.position.y = -0.3;
+                    this.upperBeak.rotation.x = 0;
+                    this.peckingTime = 0;
+                }
+            }
+
+            updateWandering() {
+                if (Math.random() < 0.001 && !this.isPecking) {
+                    this.isPecking = true;
+                    this.peckingTime = 0;
+                }
+
+                if (this.changeDirectionTime > 5) {
+                    const angle = Math.random() * Math.PI * 2;
+                    this.wanderDirection.set(Math.cos(angle), 0, Math.sin(angle));
+                    this.changeDirectionTime = 0;
+                }
+
+                const nextPos = this.group.position.clone().add(
+                    this.wanderDirection.clone().multiplyScalar(this.walkSpeed)
+                );
+
+                nextPos.x = Math.max(-CHICK_MAX_X, Math.min(CHICK_MAX_X, nextPos.x));
+                nextPos.z = Math.max(-CHICK_MAX_Z, Math.min(CHICK_MAX_Z, nextPos.z));
+                this.group.position.copy(nextPos);
+
+                const angle = Math.atan2(this.wanderDirection.x, this.wanderDirection.z);
+                this.group.rotation.y = angle;
+
+                const bobAmount = Math.sin(this.animationTime * 2) * 0.12;
+                this.body.position.y = this.bodyOriginalY + Math.abs(bobAmount);
+
+                this.legLeft.rotation.z = Math.sin(this.animationTime * 2.5) * 0.2;
+                this.legRight.rotation.z = Math.cos(this.animationTime * 2.5) * 0.2;
+            }
+
+            updateWalking() {
+                if (!this.targetFood) {
+                    this.state = 'wandering';
+                    return;
+                }
+
+                const distance = this.group.position.distanceTo(this.targetFood.group.position);
+               
+                if (distance < 1.2) {
+                    this.state = 'eating';
+                    this.eatingTime = 0;
+                    this.foodEaten = false;
+                    return;
+                }
+
+                const direction = new THREE.Vector3().subVectors(this.targetFood.group.position, this.group.position).normalize();
+                const newPos = this.group.position.clone().add(direction.multiplyScalar(this.walkSpeed));
+               
+                newPos.x = Math.max(-CHICK_MAX_X, Math.min(CHICK_MAX_X, newPos.x));
+                newPos.z = Math.max(-CHICK_MAX_Z, Math.min(CHICK_MAX_Z, newPos.z));
+                this.group.position.copy(newPos);
+
+                const angle = Math.atan2(direction.x, direction.z);
+                this.group.rotation.y = angle;
+
+                const bobAmount = Math.sin(this.animationTime * 4) * 0.15;
+                this.body.position.y = this.bodyOriginalY + Math.abs(bobAmount);
+
+                this.legLeft.rotation.z = Math.sin(this.animationTime * 4) * 0.3;
+                this.legRight.rotation.z = Math.cos(this.animationTime * 4) * 0.3;
+            }
+
+            updateEating(deltaTime) {
+                this.eatingTime += deltaTime;
+
+                const bendDuration = 0.6;
+                const bendProgress = Math.min(1, this.eatingTime / bendDuration);
+                const bendAmount = Math.sin(bendProgress * Math.PI) * 1.2;
+               
+                this.head.position.y = this.headOriginalY - bendAmount;
+                this.body.position.y = this.bodyOriginalY - bendAmount * 0.7;
+                this.group.rotation.x = Math.sin(bendProgress * Math.PI) * 0.5;
+
+                if (bendProgress > 0.3) {
+                    this.lowerBeak.position.y = -0.3 - Math.sin(this.animationTime * 8) * 0.3;
+                    this.upperBeak.rotation.x = Math.sin(this.animationTime * 8) * 0.3;
+                }
+
+                this.legLeft.rotation.z = 0.35;
+                this.legRight.rotation.z = -0.35;
+
+                this.eyelidLeft.scale.y = 0.15;
+                this.eyelidRight.scale.y = 0.15;
+
+                if (bendProgress > 0.3 && !this.foodEaten && this.targetFood) {
+                    this.targetFood.shouldBeEaten = true;
+                    this.foodEaten = true;
+                    gameState.lastHealthDamageTime = Date.now();
+                }
+
+                if (this.eatingTime > 2.8) {
+                    this.state = 'wandering';
+                    this.lowerBeak.position.y = -0.3;
+                    this.upperBeak.rotation.x = 0;
+                    this.head.position.y = this.headOriginalY;
+                    this.body.position.y = this.bodyOriginalY;
+                    this.group.rotation.x = 0;
+                    this.eyelidLeft.scale.y = 1;
+                    this.eyelidRight.scale.y = 1;
+                    this.targetFood = null;
+                    gameState.dirtiness = Math.min(100, gameState.dirtiness + 15);
+                }
+            }
+
+            die() {
+                this.isDead = true;
+                this.state = 'dead';
+                this.deathTime = 0;
+            }
+
+            resurrect() {
+                this.isDead = false;
+                this.deathTime = 0;
+                this.group.visible = true;
+                this.group.rotation.set(0, 0, 0);
+                this.body.position.y = this.bodyOriginalY;
+                this.head.position.y = this.headOriginalY;
+                this.state = 'wandering';
+                this.eyelidLeft.scale.y = 1;
+                this.eyelidRight.scale.y = 1;
+                this.changeDirectionTime = 0;
+                this.isPecking = false;
+            }
+        }
+
+        class Food {
+            constructor(type, position) {
+                this.type = type;
+                this.group = new THREE.Group();
+                this.eatProgress = 0;
+                this.shouldBeEaten = false;
+
+                if (type === 'seed') {
+                    const geometry = new THREE.SphereGeometry(0.5, 16, 16);
+                    const material = new THREE.MeshPhongMaterial({ color: 0xDAA520, shininess: 120 });
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    this.group.add(mesh);
+                    this.value = 15;
+                    this.eatDuration = 0.5;
+                } else if (type === 'corn') {
+                    const geometry = new THREE.CylinderGeometry(0.6, 0.6, 1.3, 12);
+                    const material = new THREE.MeshPhongMaterial({ color: 0xFFD700, shininess: 100 });
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    this.group.add(mesh);
+                    this.value = 25;
+                    this.eatDuration = 0.5;
+                } else if (type === 'worm') {
+                    const curve = new THREE.CatmullRomCurve3([
+                        new THREE.Vector3(0, 0, 0),
+                        new THREE.Vector3(0.4, 0.2, 0),
+                        new THREE.Vector3(0.8, 0, 0),
+                        new THREE.Vector3(1.2, -0.3, 0)
+                    ]);
+                    const geometry = new THREE.TubeGeometry(curve, 20, 0.2, 8, false);
+                    const material = new THREE.MeshPhongMaterial({ color: 0x8B4513, shininess: 40 });
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    this.group.add(mesh);
+                    this.value = 35;
+                    this.eatDuration = 0.5;
+                }
+
+                this.group.position.copy(position);
+                this.group.position.y = 0.4;
+                scene.add(this.group);
+                this.animationTime = 0;
+            }
+
+            update(deltaTime) {
+                if (this.shouldBeEaten) {
+                    this.eatProgress += deltaTime / this.eatDuration;
+                    const scale = Math.max(0, 1 - this.eatProgress * 1.5);
+                    this.group.scale.set(scale, scale, scale);
+                    this.group.rotation.y += 0.2;
+                } else {
+                    this.animationTime += deltaTime;
+                    this.group.position.y = 0.4 + Math.sin(this.animationTime * 2.5) * 0.3;
+                    this.group.rotation.y += 0.025;
+                }
+            }
+
+            remove() {
+                scene.remove(this.group);
+            }
+
+            isComplete() {
+                return this.eatProgress >= 1;
+            }
+        }
+
+        const chick = new CuteChick();
+
+        function addFood(type, position) {
+            if (gameState.isGameOver) return;
+           
+            const food = new Food(type, position);
+            gameState.foods.push(food);
+            chick.targetFood = food;
+            chick.state = 'walking';
+        }
+
+        function handleCanvasClick(clientX, clientY) {
+            if (gameState.isGameOver) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const y = clientY - rect.top;
+
+            if (y > window.innerHeight - 100) return;
+
+            lastClickPos = { x: clientX, y: clientY };
+
+            if (selectedFoodType === 'vaccine') {
+                gameState.vaccinated = Math.min(100, gameState.vaccinated + 50);
+                gameState.happiness = Math.min(100, gameState.happiness + 20);
+                gameState.lastHealthDamageTime = Date.now();
+                showMessage('💉 Aşı uygulandı!');
+                updateUI();
+            } else if (selectedFoodType === 'clean') {
+                gameState.dirtiness = Math.max(0, gameState.dirtiness - 80);
+                gameState.happiness = Math.min(100, gameState.happiness + 15);
+                gameState.score += 5;
+                gameState.lastHealthDamageTime = Date.now();
+                showMessage('🧹 Temizlendi!');
+                updateUI();
+            } else if (selectedFoodType) {
+                const foodPos = getClickPosition3D(clientX, clientY);
+                addFood(selectedFoodType, foodPos);
+            }
+        }
+
+        canvas.addEventListener('click', (event) => {
+            handleCanvasClick(event.clientX, event.clientY);
+        });
+
+        canvas.addEventListener('touchstart', (event) => {
+            if (event.touches.length === 1) {
+                const touch = event.touches[0];
+                if (touch.clientY < window.innerHeight - 100) {
+                    handleCanvasClick(touch.clientX, touch.clientY);
+                }
+            }
+        }, { passive: true });
+
+        function showMessage(text) {
+            const message = document.createElement('div');
+            message.className = 'popup-message';
+            message.textContent = text;
+            document.body.appendChild(message);
+            setTimeout(() => message.remove(), 1200);
+        }
+
+        function showWarning(count) {
+            const messages = ['❌ YÖK!', '❌ YÖK!!', '❌ YÖK!!!', '❌ MAĞAZAYA GİT!!!'];
+            const message = document.createElement('div');
+            message.className = 'warning-message';
+            message.textContent = messages[Math.min(count - 1, 3)];
+            document.body.appendChild(message);
+            setTimeout(() => message.remove(), 800);
+        }
+
+        function updateUI() {
+            document.getElementById('hunger-bar').style.width = gameState.hunger + '%';
+            document.getElementById('happiness-bar').style.width = gameState.happiness + '%';
+            document.getElementById('health-bar').style.width = gameState.health + '%';
+            document.getElementById('dirty-bar').style.width = gameState.dirtiness + '%';
+            document.getElementById('vaccine-bar').style.width = gameState.vaccinated + '%';
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('gold').textContent = gameState.gold;
+        }
+
+        function endGame() {
+            gameState.isGameOver = true;
+            chick.die();
+            showMessage('Civciv Öldü... 💀');
+        }
+
+        function resetGame() {
+            gameState.foods.forEach(food => food.remove());
+            gameState = {
+                hunger: 100,
+                happiness: 100,
+                health: 100,
+                dirtiness: 0,
+                vaccinated: 0,
+                score: 0,
+                gold: 100,
+                inventory: { seed: 0, corn: 0, worm: 0, vaccine: 0 },
+                foods: [],
+                deltaTime: 0,
+                isGameOver: false,
+                lastHealthDamageTime: Date.now()
+            };
+
+            chick.resurrect();
+            chick.group.position.set(0, 0, 0);
+            chick.state = 'wandering';
+            chick.targetFood = null;
+            selectedFoodType = null;
+            warningCount = 0;
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+            updateUI();
+            updateBadges();
+            closeShop();
+        }
+
+        let lastTime = Date.now();
+
+        function gameLoop() {
+            requestAnimationFrame(gameLoop);
+
+            const currentTime = Date.now();
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            gameState.deltaTime = Math.min(deltaTime, 0.016);
+
+            chick.update(gameState.deltaTime);
+
+            gameState.foods.forEach((food, index) => {
+                food.update(gameState.deltaTime);
+               
+                if (food.isComplete()) {
+                    gameState.hunger = Math.min(100, gameState.hunger + food.value);
+                    gameState.happiness = Math.min(100, gameState.happiness + food.value * 0.6);
+                    gameState.score += food.value;
+                    food.remove();
+                    gameState.foods.splice(index, 1);
+                    gameState.lastHealthDamageTime = Date.now();
+                }
+            });
+
+            clouds.forEach(cloud => {
+                cloud.position.x += cloud.userData.speed;
+                if (cloud.position.x > 200) cloud.position.x = -200;
+            });
+
+            if (!gameState.isGameOver) {
+                gameState.hunger = Math.max(0, gameState.hunger - 0.008);
+                gameState.happiness = Math.max(0, gameState.happiness - 0.005);
+                gameState.dirtiness = Math.min(100, gameState.dirtiness + 0.003);
+                gameState.vaccinated = Math.max(0, gameState.vaccinated - 0.001);
+
+                const timeSinceHealthAction = (currentTime - gameState.lastHealthDamageTime) / 1000;
+               
+                if (timeSinceHealthAction > 30) {
+                    let healthDecrease = 0.002;
+                    if (gameState.hunger > 70) healthDecrease += 0.015;
+                    if (gameState.happiness < 30) healthDecrease += 0.008;
+                    if (gameState.dirtiness > 80) healthDecrease += 0.01;
+                    if (gameState.vaccinated < 10) healthDecrease += 0.008;
+
+                    gameState.health = Math.max(0, gameState.health - healthDecrease);
+                }
+
+                if (gameState.health <= 0) {
+                    endGame();
+                }
+            }
+
+            updateUI();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }, false);
+
+        resetGame();
+        gameLoop();
+    </script>
+</body>
+</html>
+Bu e-posta mesajı ve ekleri gönderildiği kişi ya da kuruma özeldir ve gizlidir. Ayrıca hukuken de gizli olabilir. Hiçbir şekilde üçüncü kişilere açıklanamaz ve yayınlanamaz. Eğer mesajın gönderildiği alıcı değilseniz bu elektronik postanın içeriğini açıklamanız, kopyalamanız, yönlendirmeniz ve kullanmanız kesinlikle yasaktır ve bu elektronik postayı ve eklerini derhal silmeniz gerekmektedir. PALMET bu mesajın içerdiği bilgilerin doğruluğu veya eksiksiz olduğu konusunda herhangi bir garanti vermemektedir. Bu nedenle bu bilgilerin ne şekilde olursa olsun içeriğinden, iletilmesinden, alınmasından, saklanmasından ve kullanılmasından sorumlu değildir. Bu mesajdaki görüşler gönderen kişiye ait olup, PALMET’in görüşlerini yansıtmayabilir.
+
+This e-mail and its attachments are private and confidential and intended for the exclusive use of the individual or entity to whom it is addressed. It may also be legally confidential. Any disclosure, distribution or other dissemination of this message to any third party is strictly prohibited. If you are not the intended recipient you are hereby notified that any dissemination, forwarding, copying or use of any of the information is strictly prohibited, and the e-mail should immediately be deleted. PALMET makes no warranty as to the accuracy or completeness of any information contained in this message and hereby excludes any liability of any kind for the information contained therein or for the transmission, reception, storage or use of such information in any way whatsoever. The opinions expressed in this message are those of the sender and may not necessarily reflect the opinions of PALMET.
+
+
+
+Erol TURK
+
+​
+Erol TURK​
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>🐤 Civciv Oyunu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            background: #000;
+            overscroll-behavior: none;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        .top-hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 130px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9), rgba(0,0,0,0.7), rgba(0,0,0,0));
+            backdrop-filter: blur(10px);
+            padding: 12px 15px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-bottom: 2px solid #FFD700;
+        }
+
+        .status-row {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chick-title {
+            color: #FFD700;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .score-display {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+
+        .gold-display {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            background: rgba(255, 215, 0, 0.1);
+            padding: 5px 12px;
+            border-radius: 8px;
+            border: 1px solid #FFD700;
+        }
+
+        .stat-mini {
+            flex: 1;
+            min-width: 70px;
+        }
+
+        .stat-mini-label {
+            font-size: 0.7em;
+            color: #fff;
+            opacity: 0.8;
+            margin-bottom: 2px;
+        }
+
+        .stat-mini-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .stat-mini-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.2s ease;
+        }
+
+        .hunger-fill { background: linear-gradient(90deg, #FF6B6B, #FF8E72); }
+        .happiness-fill { background: linear-gradient(90deg, #FFD700, #FFA500); }
+        .health-fill { background: linear-gradient(90deg, #4ECDC4, #44AF69); }
+        .dirty-fill { background: linear-gradient(90deg, #795548, #A1887F); }
+        .vaccine-fill { background: linear-gradient(90deg, #00BCD4, #009688); }
+
+        .shop-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .shop-overlay.active {
+            display: flex;
+        }
+
+        .shop-panel {
+            background: linear-gradient(135deg, #1e1e1e, #2d2d2d);
+            border: 2px solid #FFD700;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3);
+        }
+
+        .shop-title {
+            color: #FFD700;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .shop-items {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .shop-item {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .shop-item:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .shop-item-emoji {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .shop-item-name {
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.95em;
+            margin-bottom: 5px;
+        }
+
+        .shop-item-price {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .floating-shop-number {
+            position: absolute;
+            font-weight: bold;
+            font-size: 1.8em;
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            pointer-events: none;
+            animation: shopFloat 1s ease-out forwards;
+        }
+
+        @keyframes shopFloat {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(0, -80px) scale(1.5); }
+        }
+
+        .shop-close-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .shop-close-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .bottom-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: auto;
+            background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.8), rgba(0,0,0,0.95));
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            z-index: 100;
+            border-top: 2px solid #FFD700;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        .control-btn {
+            padding: 12px 8px;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.75em;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            position: relative;
+        }
+
+        .control-btn span {
+            font-size: 1.2em;
+        }
+
+        .item-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #333;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 2px solid #333;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+        }
+
+        .btn-seed {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #333;
+        }
+
+        .btn-corn {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E72);
+        }
+
+        .btn-worm {
+            background: linear-gradient(135deg, #8B4513, #A0522D);
+        }
+
+        .btn-vaccine {
+            background: linear-gradient(135deg, #00BCD4, #009688);
+        }
+
+        .btn-clean {
+            background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+        }
+
+        .btn-shop {
+            background: linear-gradient(135deg, #4CAF50, #388E3C);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .control-btn.active {
+            border-color: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        .popup-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 215, 0, 0.95);
+            color: #333;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.3em;
+            animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 200;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .warning-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 100, 100, 0.95);
+            color: #fff;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.5em;
+            animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 200;
+            box-shadow: 0 12px 40px rgba(255, 0, 0, 0.5);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .floating-number {
+            position: fixed;
+            font-weight: bold;
+            font-size: 1.5em;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            z-index: 150;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(0, -60px) scale(1.2);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-hud">
+        <div class="status-row">
+            <div class="chick-title">🐤 Civciv</div>
+            <div class="gold-display">💰 <span id="gold">100</span></div>
+            <div class="score-display">⭐ <span id="score">0</span></div>
+        </div>
+        <div class="status-row">
+            <div class="stat-mini">
+                <div class="stat-mini-label">🍖 Açlık</div>
+                <div class="stat-mini-bar">
+                    <div id="hunger-bar" class="stat-mini-fill hunger-fill" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-label">😊 Mutlu</div>
+                <div class="stat-mini-bar">
+                    <div id="happiness-bar" class="stat-mini-fill happiness-fill" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-label">❤️ Sağlık</div>
+                <div class="stat-mini-bar">
+                    <div id="health-bar" class="stat-mini-fill health-fill" style="width: 100%"></div>
+                </div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-label">🚽 Temizlik</div>
+                <div class="stat-mini-bar">
+                    <div id="dirty-bar" class="stat-mini-fill dirty-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="stat-mini">
+                <div class="stat-mini-label">💉 Aşı</div>
+                <div class="stat-mini-bar">
+                    <div id="vaccine-bar" class="stat-mini-fill vaccine-fill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="shop-overlay" id="shopOverlay">
+        <div class="shop-panel">
+            <div class="shop-title">🛒 Mağaza</div>
+            <div class="shop-items">
+                <div class="shop-item" id="shop-seed" onclick="buyItem('seed')">
+                    <div class="shop-item-emoji">🌾</div>
+                    <div class="shop-item-name">Tohum</div>
+                    <div class="shop-item-price">1 💰</div>
+                </div>
+                <div class="shop-item" id="shop-corn" onclick="buyItem('corn')">
+                    <div class="shop-item-emoji">🌽</div>
+                    <div class="shop-item-name">Mısır</div>
+                    <div class="shop-item-price">2 💰</div>
+                </div>
+                <div class="shop-item" id="shop-worm" onclick="buyItem('worm')">
+                    <div class="shop-item-emoji">🪱</div>
+                    <div class="shop-item-name">Solucan</div>
+                    <div class="shop-item-price">3 💰</div>
+                </div>
+                <div class="shop-item" id="shop-vaccine" onclick="buyItem('vaccine')">
+                    <div class="shop-item-emoji">💉</div>
+                    <div class="shop-item-name">Aşı</div>
+                    <div class="shop-item-price">5 💰</div>
+                </div>
+            </div>
+            <button class="shop-close-btn" onclick="closeShop()">Kapat</button>
+        </div>
+    </div>
+
+    <div class="bottom-controls">
+        <button class="control-btn btn-seed" id="btn-seed" onclick="selectFood('seed')">
+            <span>🌾</span>
+            <span class="item-badge" id="seed-badge" style="display:none;">0</span>
+            Tohum
+        </button>
+        <button class="control-btn btn-corn" id="btn-corn" onclick="selectFood('corn')">
+            <span>🌽</span>
+            <span class="item-badge" id="corn-badge" style="display:none;">0</span>
+            Mısır
+        </button>
+        <button class="control-btn btn-worm" id="btn-worm" onclick="selectFood('worm')">
+            <span>🪱</span>
+            <span class="item-badge" id="worm-badge" style="display:none;">0</span>
+            Solucan
+        </button>
+        <button class="control-btn btn-vaccine" id="btn-vaccine" onclick="selectFood('vaccine')">
+            <span>💉</span>
+            <span class="item-badge" id="vaccine-badge" style="display:none;">0</span>
+            Aşı
+        </button>
+        <button class="control-btn btn-clean" id="btn-clean" onclick="selectFood('clean')">
+            <span>🧹</span>
+            Temizle
+        </button>
+        <button class="control-btn btn-shop" onclick="openShop()">
+            <span>🛒</span>
+            Mağaza
+        </button>
+        <button class="control-btn btn-reset" onclick="resetGame()">
+            <span>🔄</span>
+            Yeni
+        </button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const CHICK_MAX_X = 10;
+        const CHICK_MAX_Z = 10;
+
+        let selectedFoodType = null;
+        let lastClickPos = { x: 0, y: 0 };
+        let warningCount = 0;
+
+        let gameState = {
+            hunger: 100,
+            happiness: 100,
+            health: 100,
+            dirtiness: 0,
+            vaccinated: 0,
+            score: 0,
+            gold: 100,
+            inventory: { seed: 0, corn: 0, worm: 0, vaccine: 0 },
+            foods: [],
+            deltaTime: 0,
+            isGameOver: false,
+            lastHealthDamageTime: 0
+        };
+
+        function updateBadges() {
+            const badges = {
+                seed: document.getElementById('seed-badge'),
+                corn: document.getElementById('corn-badge'),
+                worm: document.getElementById('worm-badge'),
+                vaccine: document.getElementById('vaccine-badge')
+            };
+
+            Object.keys(badges).forEach(type => {
+                if (gameState.inventory[type] > 0) {
+                    badges[type].textContent = gameState.inventory[type];
+                    badges[type].style.display = 'flex';
+                } else {
+                    badges[type].style.display = 'none';
+                }
+            });
+        }
+
+        function selectFood(type) {
+            if (type === 'vaccine' || type === 'clean') {
+                selectedFoodType = type;
+                document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+                if (type === 'vaccine') document.getElementById('btn-vaccine').classList.add('active');
+                if (type === 'clean') document.getElementById('btn-clean').classList.add('active');
+                return;
+            }
+
+            if (gameState.inventory[type] <= 0) {
+                warningCount++;
+                showWarning(warningCount);
+                return;
+            }
+
+            if (type === 'seed' && gameState.inventory.seed > 0) {
+                gameState.inventory.seed--;
+                selectedFoodType = 'seed';
+            } else if (type === 'corn' && gameState.inventory.corn > 0) {
+                gameState.inventory.corn--;
+                selectedFoodType = 'corn';
+            } else if (type === 'worm' && gameState.inventory.worm > 0) {
+                gameState.inventory.worm--;
+                selectedFoodType = 'worm';
+            }
+
+            warningCount = 0;
+            updateBadges();
+            updateUI();
+           
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+            if (type === 'seed') document.getElementById('btn-seed').classList.add('active');
+            else if (type === 'corn') document.getElementById('btn-corn').classList.add('active');
+            else if (type === 'worm') document.getElementById('btn-worm').classList.add('active');
+        }
+
+        function openShop() {
+            document.getElementById('shopOverlay').classList.add('active');
+        }
+
+        function closeShop() {
+            document.getElementById('shopOverlay').classList.remove('active');
+        }
+
+        function buyItem(type) {
+            const prices = { seed: 1, corn: 2, worm: 3, vaccine: 5 };
+            const emojis = { seed: '🌾', corn: '🌽', worm: '🪱', vaccine: '💉' };
+            const shopIds = { seed: 'shop-seed', corn: 'shop-corn', worm: 'shop-worm', vaccine: 'shop-vaccine' };
+            const price = prices[type];
+
+            if (gameState.gold >= price) {
+                gameState.gold -= price;
+                gameState.inventory[type]++;
+               
+                updateUI();
+                updateBadges();
+               
+                // Mağaza ekranında +1 animasyonu
+                const shopItem = document.getElementById(shopIds[type]);
+                const rect = shopItem.getBoundingClientRect();
+                const floater = document.createElement('div');
+                floater.className = 'floating-shop-number';
+                floater.textContent = '+1';
+                floater.style.left = (rect.left + rect.width / 2) + 'px';
+                floater.style.top = (rect.top + rect.height / 2) + 'px';
+                document.body.appendChild(floater);
+                setTimeout(() => floater.remove(), 1000);
+               
+                showMessage(`✅ ${emojis[type]} +1 aldın!`);
+            } else {
+                showMessage('💰 Yetersiz altın!');
+            }
+        }
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.Fog(0x87CEEB, 300, 500);
+
+        const canvas = document.getElementById('canvas');
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+       
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+
+        camera.position.set(0, 12, 20);
+        camera.lookAt(0, 3, 0);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.95);
+        directionalLight.position.set(30, 60, 40);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.camera.left = -100;
+        directionalLight.shadow.camera.right = 100;
+        directionalLight.shadow.camera.top = 100;
+        directionalLight.shadow.camera.bottom = -50;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.bias = -0.0005;
+        scene.add(directionalLight);
+
+        const groundGeometry = new THREE.PlaneGeometry(300, 300);
+        const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x7CB342, shininess: 30 });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        const skyGeometry = new THREE.SphereGeometry(400, 32, 32);
+        const skyMaterial = new THREE.MeshBasicMaterial({ color: 0x87CEEB, side: THREE.BackSide });
+        const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+        scene.add(sky);
+
+        function createCloud() {
+            const group = new THREE.Group();
+            for (let i = 0; i < 5; i++) {
+                const geometry = new THREE.SphereGeometry(8, 16, 16);
+                const material = new THREE.MeshPhongMaterial({ color: 0xFFFFFF, emissive: 0xFFFFFF, emissiveIntensity: 0.3 });
+                const cloud = new THREE.Mesh(geometry, material);
+                cloud.position.x = i * 12 - 24;
+                cloud.position.y = Math.random() * 5 - 2;
+                cloud.scale.set(1 + Math.random() * 0.5, 0.6 + Math.random() * 0.3, 1);
+                cloud.castShadow = true;
+                group.add(cloud);
+            }
+            group.position.set(Math.random() * 200 - 100, 80, Math.random() * 200 - 100);
+            group.userData.speed = 0.01 + Math.random() * 0.02;
+            scene.add(group);
+            return group;
+        }
+
+        const clouds = [createCloud(), createCloud(), createCloud()];
+
+        // RAYCASTER - TIKLANAN YERİ BUL
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function getClickPosition3D(clientX, clientY) {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+           
+            raycaster.setFromCamera(mouse, camera);
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+            const target = new THREE.Vector3();
+            raycaster.ray.intersectPlane(plane, target);
+            return target;
+        }
+
+        class CuteChick {
+            constructor() {
+                this.group = new THREE.Group();
+                this.state = 'wandering';
+                this.targetFood = null;
+                this.walkSpeed = 0.06;
+                this.animationTime = 0;
+                this.eatingTime = 0;
+                this.eyelidsOpen = 1;
+                this.foodEaten = false;
+                this.isDead = false;
+                this.deathTime = 0;
+                this.skeleton = null;
+                this.wanderDirection = new THREE.Vector3(1, 0, 0);
+                this.changeDirectionTime = 0;
+                this.peckingTime = 0;
+                this.isPecking = false;
+               
+                this.createCuteChick();
+                this.group.position.set(0, 0, 0);
+                scene.add(this.group);
+            }
+
+            createCuteChick() {
+                const bodyGeometry = new THREE.SphereGeometry(1.8, 32, 32);
+                const bodyMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFFEB3B,
+                    shininess: 100,
+                    emissive: 0xFDD835,
+                    emissiveIntensity: 0.2
+                });
+                this.body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+                this.body.castShadow = true;
+                this.body.receiveShadow = true;
+                this.body.position.y = 1.5;
+                this.group.add(this.body);
+
+                const headGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+                const headMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFFEB3B,
+                    shininess: 100,
+                    emissive: 0xFDD835,
+                    emissiveIntensity: 0.2
+                });
+                this.head = new THREE.Mesh(headGeometry, headMaterial);
+                this.head.castShadow = true;
+                this.head.receiveShadow = true;
+                this.head.position.set(0, 3.8, 0);
+                this.group.add(this.head);
+
+                const crownGeometry = new THREE.ConeGeometry(0.35, 1, 8);
+                const crownMaterial = new THREE.MeshPhongMaterial({ color: 0xFFEB3B, shininess: 100 });
+               
+                const crown1 = new THREE.Mesh(crownGeometry, crownMaterial);
+                crown1.position.set(-0.35, 1.3, 0);
+                crown1.castShadow = true;
+                this.head.add(crown1);
+
+                const crown2 = new THREE.Mesh(crownGeometry, crownMaterial);
+                crown2.position.set(0.35, 1.3, 0);
+                crown2.castShadow = true;
+                this.head.add(crown2);
+
+                const eyeGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+                const eyeMaterial = new THREE.MeshPhongMaterial({
+                    color: 0x000000,
+                    shininess: 200,
+                    emissive: 0x1a1a1a,
+                    emissiveIntensity: 0.3
+                });
+               
+                this.eyeLeft = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                this.eyeLeft.position.set(-0.6, 0.4, 1);
+                this.eyeLeft.castShadow = true;
+                this.head.add(this.eyeLeft);
+
+                this.eyeRight = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                this.eyeRight.position.set(0.6, 0.4, 1);
+                this.eyeRight.castShadow = true;
+                this.head.add(this.eyeRight);
+
+                const eyelidGeometry = new THREE.SphereGeometry(0.55, 32, 32);
+                const eyelidMaterial = new THREE.MeshPhongMaterial({ color: 0xFFEB3B, shininess: 100 });
+
+                this.eyelidLeft = new THREE.Mesh(eyelidGeometry, eyelidMaterial);
+                this.eyelidLeft.position.set(-0.6, 0.4, 1.05);
+                this.eyelidLeft.scale.set(1, 0.5, 1);
+                this.eyelidLeft.castShadow = true;
+                this.head.add(this.eyelidLeft);
+
+                this.eyelidRight = new THREE.Mesh(eyelidGeometry, eyelidMaterial);
+                this.eyelidRight.position.set(0.6, 0.4, 1.05);
+                this.eyelidRight.scale.set(1, 0.5, 1);
+                this.eyelidRight.castShadow = true;
+                this.head.add(this.eyelidRight);
+
+                const glassGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+                const glassMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFFFFFF,
+                    shininess: 255,
+                    emissive: 0xFFFFFF,
+                    emissiveIntensity: 0.5
+                });
+
+                const glassLeft = new THREE.Mesh(glassGeometry, glassMaterial);
+                glassLeft.position.set(-0.15, 0.15, 0.35);
+                this.eyeLeft.add(glassLeft);
+
+                const glassRight = new THREE.Mesh(glassGeometry, glassMaterial);
+                glassRight.position.set(0.15, 0.15, 0.35);
+                this.eyeRight.add(glassRight);
+
+                const upperBeakGeometry = new THREE.SphereGeometry(0.45, 16, 16);
+                const beakMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFF9800,
+                    shininess: 120,
+                    emissive: 0xFF8C00,
+                    emissiveIntensity: 0.2
+                });
+                this.upperBeak = new THREE.Mesh(upperBeakGeometry, beakMaterial);
+                this.upperBeak.position.set(0, 0.1, 1.3);
+                this.upperBeak.scale.set(0.75, 0.6, 0.9);
+                this.upperBeak.castShadow = true;
+                this.head.add(this.upperBeak);
+
+                this.lowerBeak = new THREE.Mesh(upperBeakGeometry, beakMaterial);
+                this.lowerBeak.position.set(0, -0.3, 1.3);
+                this.lowerBeak.scale.set(0.65, 0.4, 0.8);
+                this.lowerBeak.castShadow = true;
+                this.head.add(this.lowerBeak);
+
+                const wingGeometry = new THREE.SphereGeometry(0.8, 24, 24);
+                const wingMaterial = new THREE.MeshPhongMaterial({
+                    color: 0xFFEB3B,
+                    shininess: 100,
+                    emissive: 0xFDD835,
+                    emissiveIntensity: 0.2
+                });
+               
+                this.wingLeft = new THREE.Mesh(wingGeometry, wingMaterial);
+                this.wingLeft.position.set(-1.6, 1.8, -0.2);
+                this.wingLeft.scale.set(0.6, 0.8, 0.4);
+                this.wingLeft.castShadow = true;
+                this.group.add(this.wingLeft);
+
+                this.wingRight = new THREE.Mesh(wingGeometry, wingMaterial);
+                this.wingRight.position.set(1.6, 1.8, -0.2);
+                this.wingRight.scale.set(0.6, 0.8, 0.4);
+                this.wingRight.castShadow = true;
+                this.group.add(this.wingRight);
+
+                const legGeometry = new THREE.CylinderGeometry(0.2, 0.18, 1.5, 12);
+                const legMaterial = new THREE.MeshPhongMaterial({ color: 0xFF9800, shininess: 80 });
+
+                this.legLeft = new THREE.Mesh(legGeometry, legMaterial);
+                this.legLeft.position.set(-0.8, 0.3, 0);
+                this.legLeft.castShadow = true;
+                this.group.add(this.legLeft);
+
+                this.legRight = new THREE.Mesh(legGeometry, legMaterial);
+                this.legRight.position.set(0.8, 0.3, 0);
+                this.legRight.castShadow = true;
+                this.group.add(this.legRight);
+
+                const footGeometry = new THREE.SphereGeometry(0.35, 16, 16);
+                const footMaterial = new THREE.MeshPhongMaterial({ color: 0xFF9800 });
+
+                const footLeft = new THREE.Mesh(footGeometry, footMaterial);
+                footLeft.position.y = -0.95;
+                footLeft.scale.set(1.5, 0.6, 1.2);
+                footLeft.castShadow = true;
+                this.legLeft.add(footLeft);
+
+                const footRight = new THREE.Mesh(footGeometry, footMaterial);
+                footRight.position.y = -0.95;
+                footRight.scale.set(1.5, 0.6, 1.2);
+                footRight.castShadow = true;
+                this.legRight.add(footRight);
+
+                const tailGeometry = new THREE.SphereGeometry(0.4, 20, 20);
+                const tailMaterial = new THREE.MeshPhongMaterial({ color: 0xFF9800, shininess: 80 });
+                this.tail = new THREE.Mesh(tailGeometry, tailMaterial);
+                this.tail.position.set(0, 1.3, -1.8);
+                this.tail.scale.set(0.8, 0.5, 1);
+                this.tail.castShadow = true;
+                this.group.add(this.tail);
+
+                this.bodyOriginalY = this.body.position.y;
+                this.headOriginalY = this.head.position.y;
+            }
+
+            update(deltaTime) {
+                this.animationTime += deltaTime;
+                this.changeDirectionTime += deltaTime;
+
+                if (this.isDead) {
+                    return;
+                }
+
+                if (this.isPecking) {
+                    this.updatePecking();
+                } else if (this.state === 'wandering') {
+                    this.updateWandering();
+                } else if (this.state === 'walking' && this.targetFood) {
+                    this.updateWalking();
+                } else if (this.state === 'eating') {
+                    this.updateEating(deltaTime);
+                }
+
+                const wingBeat = Math.sin(this.animationTime * 4) * 0.3;
+                this.wingLeft.rotation.z = wingBeat;
+                this.wingRight.rotation.z = -wingBeat;
+
+                const tailWag = Math.sin(this.animationTime * 3) * 0.3;
+                this.tail.rotation.z = tailWag;
+
+                if (!this.isPecking) {
+                    const headTilt = Math.sin(this.animationTime * 1.5) * 0.12;
+                    this.head.rotation.z = headTilt;
+                }
+
+                if (Math.random() < 0.01) {
+                    this.eyelidsOpen = this.eyelidsOpen === 1 ? 0 : 1;
+                }
+                this.eyelidLeft.scale.y = this.eyelidsOpen;
+                this.eyelidRight.scale.y = this.eyelidsOpen;
+
+                this.clampPosition();
+            }
+
+            clampPosition() {
+                this.group.position.x = Math.max(-CHICK_MAX_X, Math.min(CHICK_MAX_X, this.group.position.x));
+                this.group.position.z = Math.max(-CHICK_MAX_Z, Math.min(CHICK_MAX_Z, this.group.position.z));
+            }
+
+            updatePecking() {
+                this.peckingTime += 0.016;
+               
+                if (this.peckingTime < 2) {
+                    const peckProgress = (this.peckingTime % 0.3) / 0.3;
+                    const bendAmount = Math.sin(peckProgress * Math.PI) * 0.8;
+                   
+                    this.head.position.y = this.headOriginalY - bendAmount;
+                    this.body.position.y = this.bodyOriginalY - bendAmount * 0.5;
+                    this.lowerBeak.position.y = -0.3 - Math.sin(this.animationTime * 10) * 0.2;
+                    this.upperBeak.rotation.x = Math.sin(this.animationTime * 10) * 0.4;
+                } else {
+                    this.isPecking = false;
+                    this.head.position.y = this.headOriginalY;
+                    this.body.position.y = this.bodyOriginalY;
+                    this.lowerBeak.position.y = -0.3;
+                    this.upperBeak.rotation.x = 0;
+                    this.peckingTime = 0;
+                }
+            }
+
+            updateWandering() {
+                if (Math.random() < 0.001 && !this.isPecking) {
+                    this.isPecking = true;
+                    this.peckingTime = 0;
+                }
+
+                if (this.changeDirectionTime > 5) {
+                    const angle = Math.random() * Math.PI * 2;
+                    this.wanderDirection.set(Math.cos(angle), 0, Math.sin(angle));
+                    this.changeDirectionTime = 0;
+                }
+
+                const nextPos = this.group.position.clone().add(
+                    this.wanderDirection.clone().multiplyScalar(this.walkSpeed)
+                );
+
+                nextPos.x = Math.max(-CHICK_MAX_X, Math.min(CHICK_MAX_X, nextPos.x));
+                nextPos.z = Math.max(-CHICK_MAX_Z, Math.min(CHICK_MAX_Z, nextPos.z));
+                this.group.position.copy(nextPos);
+
+                const angle = Math.atan2(this.wanderDirection.x, this.wanderDirection.z);
+                this.group.rotation.y = angle;
+
+                const bobAmount = Math.sin(this.animationTime * 2) * 0.12;
+                this.body.position.y = this.bodyOriginalY + Math.abs(bobAmount);
+
+                this.legLeft.rotation.z = Math.sin(this.animationTime * 2.5) * 0.2;
+                this.legRight.rotation.z = Math.cos(this.animationTime * 2.5) * 0.2;
+            }
+
+            updateWalking() {
+                if (!this.targetFood) {
+                    this.state = 'wandering';
+                    return;
+                }
+
+                const distance = this.group.position.distanceTo(this.targetFood.group.position);
+               
+                if (distance < 1.2) {
+                    this.state = 'eating';
+                    this.eatingTime = 0;
+                    this.foodEaten = false;
+                    return;
+                }
+
+                const direction = new THREE.Vector3().subVectors(this.targetFood.group.position, this.group.position).normalize();
+                const newPos = this.group.position.clone().add(direction.multiplyScalar(this.walkSpeed));
+               
+                newPos.x = Math.max(-CHICK_MAX_X, Math.min(CHICK_MAX_X, newPos.x));
+                newPos.z = Math.max(-CHICK_MAX_Z, Math.min(CHICK_MAX_Z, newPos.z));
+                this.group.position.copy(newPos);
+
+                const angle = Math.atan2(direction.x, direction.z);
+                this.group.rotation.y = angle;
+
+                const bobAmount = Math.sin(this.animationTime * 4) * 0.15;
+                this.body.position.y = this.bodyOriginalY + Math.abs(bobAmount);
+
+                this.legLeft.rotation.z = Math.sin(this.animationTime * 4) * 0.3;
+                this.legRight.rotation.z = Math.cos(this.animationTime * 4) * 0.3;
+            }
+
+            updateEating(deltaTime) {
+                this.eatingTime += deltaTime;
+
+                const bendDuration = 0.6;
+                const bendProgress = Math.min(1, this.eatingTime / bendDuration);
+                const bendAmount = Math.sin(bendProgress * Math.PI) * 1.2;
+               
+                this.head.position.y = this.headOriginalY - bendAmount;
+                this.body.position.y = this.bodyOriginalY - bendAmount * 0.7;
+                this.group.rotation.x = Math.sin(bendProgress * Math.PI) * 0.5;
+
+                if (bendProgress > 0.3) {
+                    this.lowerBeak.position.y = -0.3 - Math.sin(this.animationTime * 8) * 0.3;
+                    this.upperBeak.rotation.x = Math.sin(this.animationTime * 8) * 0.3;
+                }
+
+                this.legLeft.rotation.z = 0.35;
+                this.legRight.rotation.z = -0.35;
+
+                this.eyelidLeft.scale.y = 0.15;
+                this.eyelidRight.scale.y = 0.15;
+
+                if (bendProgress > 0.3 && !this.foodEaten && this.targetFood) {
+                    this.targetFood.shouldBeEaten = true;
+                    this.foodEaten = true;
+                    gameState.lastHealthDamageTime = Date.now();
+                }
+
+                if (this.eatingTime > 2.8) {
+                    this.state = 'wandering';
+                    this.lowerBeak.position.y = -0.3;
+                    this.upperBeak.rotation.x = 0;
+                    this.head.position.y = this.headOriginalY;
+                    this.body.position.y = this.bodyOriginalY;
+                    this.group.rotation.x = 0;
+                    this.eyelidLeft.scale.y = 1;
+                    this.eyelidRight.scale.y = 1;
+                    this.targetFood = null;
+                    gameState.dirtiness = Math.min(100, gameState.dirtiness + 15);
+                }
+            }
+
+            die() {
+                this.isDead = true;
+                this.state = 'dead';
+                this.deathTime = 0;
+            }
+
+            resurrect() {
+                this.isDead = false;
+                this.deathTime = 0;
+                this.group.visible = true;
+                this.group.rotation.set(0, 0, 0);
+                this.body.position.y = this.bodyOriginalY;
+                this.head.position.y = this.headOriginalY;
+                this.state = 'wandering';
+                this.eyelidLeft.scale.y = 1;
+                this.eyelidRight.scale.y = 1;
+                this.changeDirectionTime = 0;
+                this.isPecking = false;
+            }
+        }
+
+        class Food {
+            constructor(type, position) {
+                this.type = type;
+                this.group = new THREE.Group();
+                this.eatProgress = 0;
+                this.shouldBeEaten = false;
+
+                if (type === 'seed') {
+                    const geometry = new THREE.SphereGeometry(0.5, 16, 16);
+                    const material = new THREE.MeshPhongMaterial({ color: 0xDAA520, shininess: 120 });
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    this.group.add(mesh);
+                    this.value = 15;
+                    this.eatDuration = 0.5;
+                } else if (type === 'corn') {
+                    const geometry = new THREE.CylinderGeometry(0.6, 0.6, 1.3, 12);
+                    const material = new THREE.MeshPhongMaterial({ color: 0xFFD700, shininess: 100 });
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    this.group.add(mesh);
+                    this.value = 25;
+                    this.eatDuration = 0.5;
+                } else if (type === 'worm') {
+                    const curve = new THREE.CatmullRomCurve3([
+                        new THREE.Vector3(0, 0, 0),
+                        new THREE.Vector3(0.4, 0.2, 0),
+                        new THREE.Vector3(0.8, 0, 0),
+                        new THREE.Vector3(1.2, -0.3, 0)
+                    ]);
+                    const geometry = new THREE.TubeGeometry(curve, 20, 0.2, 8, false);
+                    const material = new THREE.MeshPhongMaterial({ color: 0x8B4513, shininess: 40 });
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    this.group.add(mesh);
+                    this.value = 35;
+                    this.eatDuration = 0.5;
+                }
+
+                this.group.position.copy(position);
+                this.group.position.y = 0.4;
+                scene.add(this.group);
+                this.animationTime = 0;
+            }
+
+            update(deltaTime) {
+                if (this.shouldBeEaten) {
+                    this.eatProgress += deltaTime / this.eatDuration;
+                    const scale = Math.max(0, 1 - this.eatProgress * 1.5);
+                    this.group.scale.set(scale, scale, scale);
+                    this.group.rotation.y += 0.2;
+                } else {
+                    this.animationTime += deltaTime;
+                    this.group.position.y = 0.4 + Math.sin(this.animationTime * 2.5) * 0.3;
+                    this.group.rotation.y += 0.025;
+                }
+            }
+
+            remove() {
+                scene.remove(this.group);
+            }
+
+            isComplete() {
+                return this.eatProgress >= 1;
+            }
+        }
+
+        const chick = new CuteChick();
+
+        function addFood(type, position) {
+            if (gameState.isGameOver) return;
+           
+            const food = new Food(type, position);
+            gameState.foods.push(food);
+            chick.targetFood = food;
+            chick.state = 'walking';
+        }
+
+        function handleCanvasClick(clientX, clientY) {
+            if (gameState.isGameOver) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const y = clientY - rect.top;
+
+            if (y > window.innerHeight - 100) return;
+
+            lastClickPos = { x: clientX, y: clientY };
+
+            if (selectedFoodType === 'vaccine') {
+                gameState.vaccinated = Math.min(100, gameState.vaccinated + 50);
+                gameState.happiness = Math.min(100, gameState.happiness + 20);
+                gameState.lastHealthDamageTime = Date.now();
+                showMessage('💉 Aşı uygulandı!');
+                updateUI();
+            } else if (selectedFoodType === 'clean') {
+                gameState.dirtiness = Math.max(0, gameState.dirtiness - 80);
+                gameState.happiness = Math.min(100, gameState.happiness + 15);
+                gameState.score += 5;
+                gameState.lastHealthDamageTime = Date.now();
+                showMessage('🧹 Temizlendi!');
+                updateUI();
+            } else if (selectedFoodType) {
+                const foodPos = getClickPosition3D(clientX, clientY);
+                addFood(selectedFoodType, foodPos);
+            }
+        }
+
+        canvas.addEventListener('click', (event) => {
+            handleCanvasClick(event.clientX, event.clientY);
+        });
+
+        canvas.addEventListener('touchstart', (event) => {
+            if (event.touches.length === 1) {
+                const touch = event.touches[0];
+                if (touch.clientY < window.innerHeight - 100) {
+                    handleCanvasClick(touch.clientX, touch.clientY);
+                }
+            }
+        }, { passive: true });
+
+        function showMessage(text) {
+            const message = document.createElement('div');
+            message.className = 'popup-message';
+            message.textContent = text;
+            document.body.appendChild(message);
+            setTimeout(() => message.remove(), 1200);
+        }
+
+        function showWarning(count) {
+            const messages = ['❌ YÖK!', '❌ YÖK!!', '❌ YÖK!!!', '❌ MAĞAZAYA GİT!!!'];
+            const message = document.createElement('div');
+            message.className = 'warning-message';
+            message.textContent = messages[Math.min(count - 1, 3)];
+            document.body.appendChild(message);
+            setTimeout(() => message.remove(), 800);
+        }
+
+        function updateUI() {
+            document.getElementById('hunger-bar').style.width = gameState.hunger + '%';
+            document.getElementById('happiness-bar').style.width = gameState.happiness + '%';
+            document.getElementById('health-bar').style.width = gameState.health + '%';
+            document.getElementById('dirty-bar').style.width = gameState.dirtiness + '%';
+            document.getElementById('vaccine-bar').style.width = gameState.vaccinated + '%';
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('gold').textContent = gameState.gold;
+        }
+
+        function endGame() {
+            gameState.isGameOver = true;
+            chick.die();
+            showMessage('Civciv Öldü... 💀');
+        }
+
+        function resetGame() {
+            gameState.foods.forEach(food => food.remove());
+            gameState = {
+                hunger: 100,
+                happiness: 100,
+                health: 100,
+                dirtiness: 0,
+                vaccinated: 0,
+                score: 0,
+                gold: 100,
+                inventory: { seed: 0, corn: 0, worm: 0, vaccine: 0 },
+                foods: [],
+                deltaTime: 0,
+                isGameOver: false,
+                lastHealthDamageTime: Date.now()
+            };
+
+            chick.resurrect();
+            chick.group.position.set(0, 0, 0);
+            chick.state = 'wandering';
+            chick.targetFood = null;
+            selectedFoodType = null;
+            warningCount = 0;
+            document.querySelectorAll('.control-btn').forEach(btn => btn.classList.remove('active'));
+            updateUI();
+            updateBadges();
+            closeShop();
+        }
+
+        let lastTime = Date.now();
+
+        function gameLoop() {
+            requestAnimationFrame(gameLoop);
+
+            const currentTime = Date.now();
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            gameState.deltaTime = Math.min(deltaTime, 0.016);
+
+            chick.update(gameState.deltaTime);
+
+            gameState.foods.forEach((food, index) => {
+                food.update(gameState.deltaTime);
+               
+                if (food.isComplete()) {
+                    gameState.hunger = Math.min(100, gameState.hunger + food.value);
+                    gameState.happiness = Math.min(100, gameState.happiness + food.value * 0.6);
+                    gameState.score += food.value;
+                    food.remove();
+                    gameState.foods.splice(index, 1);
+                    gameState.lastHealthDamageTime = Date.now();
+                }
+            });
+
+            clouds.forEach(cloud => {
+                cloud.position.x += cloud.userData.speed;
+                if (cloud.position.x > 200) cloud.position.x = -200;
+            });
+
+            if (!gameState.isGameOver) {
+                gameState.hunger = Math.max(0, gameState.hunger - 0.008);
+                gameState.happiness = Math.max(0, gameState.happiness - 0.005);
+                gameState.dirtiness = Math.min(100, gameState.dirtiness + 0.003);
+                gameState.vaccinated = Math.max(0, gameState.vaccinated - 0.001);
+
+                const timeSinceHealthAction = (currentTime - gameState.lastHealthDamageTime) / 1000;
+               
+                if (timeSinceHealthAction > 30) {
+                    let healthDecrease = 0.002;
+                    if (gameState.hunger > 70) healthDecrease += 0.015;
+                    if (gameState.happiness < 30) healthDecrease += 0.008;
+                    if (gameState.dirtiness > 80) healthDecrease += 0.01;
+                    if (gameState.vaccinated < 10) healthDecrease += 0.008;
+
+                    gameState.health = Math.max(0, gameState.health - healthDecrease);
+                }
+
+                if (gameState.health <= 0) {
+                    endGame();
+                }
+            }
+
+            updateUI();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }, false);
+
+        resetGame();
+        gameLoop();
+    </script>
+</body>
+</html>
