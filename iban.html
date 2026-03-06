@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IBAN DOĞRULAMA | Profesyonel Doğrulama</title>
+
+  <!-- Tailwind CSS (DÜZGÜN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts (DÜZGÜN) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+
+  <!-- Lucide Icons (DÜZGÜN) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --navy: #020617;
+      --gold: #fbbf24;
+      --panel: rgba(15, 23, 42, 0.8);
+    }
+    body {
+      background-color: var(--navy);
+      color: white;
+      font-family: 'Inter', sans-serif;
+    }
+    .glass {
+      background: var(--panel);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    /* Başarı animasyonu */
+    @keyframes successPulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+      50% { transform: scale(1.02); box-shadow: 0 0 20px rgba(16, 185, 129, 0.35); }
+      100% { transform: scale(1); box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    .animate-success { animation: successPulse 0.6s ease-out; }
+
+    /* Hatalı animasyon (shake) */
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-6px); }
+    }
+    .animate-shake { animation: shake 0.4s ease-in-out; }
+
+    /* Logo animasyonu */
+    @keyframes logoGlow {
+      0% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 255, 0, 0.15); }
+      50% { transform: scale(1.06); box-shadow: 0 0 25px rgba(255, 255, 0, 0.45); }
+      100% { transform: scale(1); box-shadow: 0 0 10px rgba(255, 255, 0, 0.15); }
+    }
+    .logo-anim { animation: logoGlow 2.6s ease-in-out infinite; }
+
+    /* Mono font sınıfı (JetBrains Mono) */
+    .font-mono-custom { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+
+<!-- Tüm sayfayı tam ortaya hizala -->
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <!-- Konteyner -->
+  <div class="w-full max-w-xl">
+
+    <!-- Üst kısım: Logo / Başlık / Sayaç -->
+    <div class="text-center mb-10">
+      <div class="w-16 h-16 bg-yellow-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-yellow-500/20 logo-anim">
+        <i data-lucide="shield-check" class="w-10 h-10 text-slate-900"></i>
+      </div>
+
+      <h1 class="text-4xl font-black tracking-tighter mb-2">
+        IBAN <span class="text-yellow-400">DOĞRULAMA</span>
+      </h1>
+
+      <div class="inline-flex px-4 py-1.5 rounded-full bg-white/5 border border-white/10">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          Bugün <span id="counter" class="text-yellow-400">...</span> adet doğrulama yapıldı
+        </span>
+      </div>
+    </div>
+
+    <!-- Ana panel -->
+    <div class="glass rounded-[2.5rem] p-8 relative overflow-hidden">
+      <div class="space-y-8">
+
+        <!-- Açıklama -->
+        <label class="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 opacity-70 block">
+          Reklamsız ve Güvenli Bir IBAN Numarası Doğrulayın..
+        </label>
+
+        <!-- IBAN input + sağda Yapıştır ikonu -->
+        <div class="relative">
+          <input
+            type="text"
+            id="ibanInput"
+            placeholder="TR00 0000 0000 0000 0000 0000 00"
+            class="w-full h-14 bg-black/30 border border-white/10 rounded-xl pl-4 pr-12
+                   text-lg font-mono-custom tracking-widest text-white
+                   focus:outline-none focus:border-yellow-500/50 transition-all"
+          />
+          <button
+            type="button"
+            onclick="pasteIban()"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-yellow-400 transition"
+            title="Panodan yapıştır"
+            aria-label="Panodan yapıştır">
+            <i data-lucide="clipboard-paste" class="w-6 h-6"></i>
+          </button>
+        </div>
+
+        <!-- Doğrulama butonu -->
+        <button
+          type="button"
+          onclick="validateIban()"
+          class="w-full h-16 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black text-lg rounded-2xl transition-all active:scale-[0.98]">
+          DOĞRULAMAYI BAŞLAT
+        </button>
+
+        <!-- Sonuç kutusu: ortalı -->
+        <div id="resultBox" class="hidden rounded-2xl p-6 border-2 transition-all text-center">
+          <div id="resultIcon" class="mx-auto mb-2"></div>
+          <h3 id="resultTitle" class="font-black text-xl italic"></h3>
+          <p id="resultBank" class="text-sm font-medium opacity-60 mt-1"></p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Alt bilgi -->
+    <footer class="mt-12 text-center">
+      <p class="text-[9px] font-black text-slate-700 uppercase tracking-[0.4em]">
+        ISO-13616 COMPLIANT • SECURE ENGINE
+      </p>
+    </footer>
+
+  </div>
+
+  <script>
+    // Banka listesi
+    const BANKS = {
+      "010":"Ziraat","012":"Halkbank","015":"Vakıfbank","046":"Akbank",
+      "062":"Garanti BBVA","064":"İş Bankası","067":"Yapı Kredi",
+      "111":"Finansbank","134":"Denizbank","157":"EnPara",
+      "203":"Albaraka","205":"Kuveyt Türk","206":"Türkiye Finans"
+    };
+
+    // Supabase (var olan yapı)
+    const S_URL = "https://luyhfyhwqyzwdjpcfyyn.supabase.co";
+    const S_KEY = "sb_publishable_FftwyHK-9ZkFEp37Ejrv6A_ctj6mLFy";
+
+    // Lucide ikonları DOM yüklendikten sonra kur
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        lucide.createIcons();
+      }
+      fetchDailyCount();
+    });
+
+    // PANO: Yapıştır
+    async function pasteIban() {
+      try {
+        const text = await navigator.clipboard.readText();
+        const input = document.getElementById('ibanInput');
+        input.value = text;
+        input.dispatchEvent(new Event('input'));
+      } catch (err) {
+        // Tarayıcı izin vermezse kullanıcıya küçük bir uyarı verebilirsin
+        alert('Panodan yapıştırma izni verilmedi. Lütfen Ctrl+V ile deneyin.');
+      }
+    }
+
+    // IBAN girişini temizle + TR otomatik + 4'lü gruplama
+    document.getElementById('ibanInput').addEventListener('input', function(e) {
+      let v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      if (!v.startsWith("TR")) v = "TR" + v.replace(/^TR/, "");
+      let f = "";
+      for (let i = 0; i < v.length && i < 26; i++) {
+        if (i > 0 && i % 4 === 0) f += " ";
+        f += v[i];
+      }
+      e.target.value = f;
+      document.getElementById('resultBox').classList.add('hidden');
+    });
+
+    // Doğrulama (Mod-97)
+    function validateIban() {
+      const raw = document.getElementById('ibanInput').value;
+      const iban = raw.replace(/\s/g, "");
+      const box = document.getElementById('resultBox');
+      box.classList.remove('hidden');
+
+      if (iban.length !== 26 || !iban.startsWith("TR")) {
+        showResult(false, "IBAN Geçersiz", "");
+        return;
+      }
+
+      const rearranged = iban.slice(4) + iban.slice(0, 4);
+      // Harfleri sayıya çevir (A=10 ... Z=35)
+      const numeric = rearranged.replace(/[A-Z]/g, c => (c.charCodeAt(0) - 55));
+
+      let remainder = 0;
+      for (let i = 0; i < numeric.length; i++) {
+        remainder = (remainder * 10 + Number(numeric[i])) % 97;
+      }
+
+      if (remainder === 1) {
+        const bankCode = iban.slice(6, 9);
+        const bankName = BANKS[bankCode] || "";
+        showResult(true, "IBAN Geçerli", bankName);
+        recordToSupabase();
+      } else {
+        showResult(false, "IBAN Geçersiz", "");
+      }
+    }
+
+    // Sonuç görseli
+    function showResult(success, title, bank) {
+      const box = document.getElementById('resultBox');
+
+      // Animasyonu tekrarlatmak için resetle
+      box.classList.remove('animate-success','animate-shake');
+      void box.offsetWidth;
+
+      box.className =
+        `rounded-2xl p-6 border-2 transition-all text-center ` +
+        (success
+          ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-300 animate-success"
+          : "bg-rose-500/5 border-rose-500/20 text-rose-300 animate-shake"
+        );
+
+      document.getElementById('resultIcon').innerHTML =
+        success
+          ? '<i data-lucide="check-circle" class="w-10 h-10 mx-auto"></i>'
+          : '<i data-lucide="alert-circle" class="w-10 h-10 mx-auto"></i>';
+
+      document.getElementById('resultTitle').innerText = title;
+      document.getElementById('resultBank').innerText = bank;
+
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        lucide.createIcons();
+      }
+    }
+
+    // Günlük sayaç
+    async function fetchDailyCount() {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const r = await fetch(`${S_URL}/rest/v1/iban_validations?day=eq.${today}&select=ts`, {
+          headers: { "apikey": S_KEY, "Authorization": `Bearer ${S_KEY}` }
+        });
+        const d = await r.json();
+        document.getElementById('counter').innerText = d.length || 0;
+      } catch (e) {
+        document.getElementById('counter').innerText = "0";
+      }
+    }
+
+    // Kayıt
+    async function recordToSupabase() {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        await fetch(`${S_URL}/rest/v1/iban_validations`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": S_KEY,
+            "Authorization": `Bearer ${S_KEY}`
+          },
+          body: JSON.stringify([{ day: today }])
+        });
+        fetchDailyCount();
+      } catch (e) {
+        // Sessiz geç
+      }
+    }
+  </script>
+</body>
+</html>
