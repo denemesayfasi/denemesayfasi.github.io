@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doğal Gaz Mevzuat Danışmanı</title>
+    
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM (CDN) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX Compilation in Browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Custom Scrollbar */
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #bfdbfe; border-radius: 20px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#F0F4F8] font-sans text-[#1A202C]">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        // --- SVGs (İkonlar) ---
+        const FlameIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>);
+        const BotIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>);
+        const UserIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>);
+        const SendIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>);
+        const ChevronRightIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>);
+
+        // --- ÖNEMLİ: API ANAHTARINIZI BURAYA YAZIN ---
+        const API_KEY = "AIzaSyD_GNYVIlXXsvUpjRtaVqCykUeY3yEkaYs"; 
+
+        // --- Mevzuat Metni ---
+        const REGULATION_TEXT = `
+DOĞAL GAZ PİYASASI DAĞITIM VE MÜŞTERİ HİZMETLERİ YÖNETMELİĞİ
+
+ 
+
+BİRİNCİ KISIM
+
+Genel Hükümler
+
+ 
+
+BİRİNCİ BÖLÜM
+
+Amaç, Kapsam, Hukuki Dayanak, Tanımlar ve Kısaltmalar
+
+Amaç
+
+Madde 1- Bu Yönetmeliğin amacı, doğal gaz şehir içi dağıtım lisansı verilecek şirketin seçimi ve dağıtım lisansı sahibi şirketlerin yapacağı doğal gaz dağıtım faaliyetleri ile müşteri hizmetlerine ilişkin usul ve esasların düzenlenmesidir.
+
+Kapsam
+
+Madde 2- Bu Yönetmelik, doğal gaz şehir içi dağıtım lisansı ihalesi, dağıtım şebekesinin inşa edilmesi, işletilmesi, genişletilmesi, iyileştirilmesi, doğal gazın sunumu ve bu faaliyetlerin izlenmesi, denetimi ile dağıtım lisansı ve dağıtım lisansı sahibi şirket ve müşterilerin hak ve yükümlülüklerine ilişkin düzenlemeleri kapsar.
+
+Hukuki dayanak
+
+Madde 3- (Değişik:RG-21/2/2026-33175)
+
+Bu Yönetmelik, 20/2/2001 tarihli ve 4628 sayılı Enerji Piyasası Düzenleme Kurumunun Teşkilat ve Görevleri Hakkında Kanun ile 18/4/2001 tarihli ve 4646 sayılı Doğal Gaz Piyasası Kanununa dayanılarak hazırlanmıştır.
+
+Tanımlar ve kısaltmalar
+
+Madde 4- Bu Yönetmelikte geçen;
+
+1)   Kanun:18/4/2001 tarihli ve 4646 sayılı Doğal Gaz Piyasası Kanununu,
+
+2)   Kurum: Enerji Piyasası Düzenleme Kurumunu,
+
+3)   Kurul: Enerji Piyasası Düzenleme Kurulunu,
+
+4)    Başkan: Enerji Piyasası Düzenleme Kurulu Başkanını,
+
+5)   (Değişik:RG-13/10/2018-30564) Abone bağlantı bedeli: Dağıtım şebekesinin abone iç tesisatına bağlantısı için gereken proje, işçilik, malzeme, kontrol ve onay harcamaları ile sayaç bedeli toplamının abone başına düşen payını ifade eden sabit bedeli,
+
+6)   Alçak basınçlı dağıtım hattı: Şehir içi bölge istasyonlarının çıkışından başlayan ve alçak basınçta doğal gaz taşıyan muhtelif çaplardaki  boru hatlarını,
+
+7)  Bağlantı hattı: Ulusal iletim şebekesini veya dağıtım şebekesini serbest tüketici servis kutusuna veya basınç düşürme ve ölçüm istasyonuna bağlayan boru hattını ve servis kutusu veya basınç düşürme ve ölçüm istasyonu dahil ilgili teçhizatı,
+
+8)  Basınç düşürme ve ölçüm istasyonu: Doğal gazın basıncının düşürüldüğü, ayarlandığı ve doğal gaz miktarının ölçüldüğü istasyonu ,
+
+9)  Birim hizmet ve amortisman bedeli: Dağıtım şirketinin bir kWh doğal gazın müşteriye sunumu karşılığında amortismanlar ve getiri dahil talep ettiği toplam bedeli,
+
+10)  Çeyrek dönem : Ocak-Şubat-Mart, Nisan-Mayıs-Haziran, Temmuz-Ağustos-Eylül, Ekim-Kasım-Aralık olarak üç aylık dönemlerden oluşan süreyi,
+
+11)  Dağıtım: Doğal gazın müşterilere teslim edilmek üzere mahalli gaz boru hattı şebekesi ile naklini ve perakende satışını,
+
+12)  Dağıtım hattı: Alçak basınçlı ve/veya orta basınçlı dağıtım hattını,
+
+13)  Dağıtım lisansı ihalesi: Kurum tarafından belirlenecek lisans süresi için doğal gaz dağıtım şebekesinin mülkiyeti de dahil olmak üzere, ilgili şehirde dağıtım faaliyetlerini gerçekleştirmeye yetkili şirketi belirlemek için yapılan ihaleyi,
+
+14)  Dağıtım lisansı: Tüzel kişilere şehir içi doğal gaz dağıtım faaliyetinde bulunabilmeleri için Kanun uyarınca Kurul tarafından verilen izin belgesini,
+
+15)  Dağıtım şirketi: Belirlenen bir şehirde doğal gazın dağıtımı ve mahalli gaz boru hattı şebekesi ile nakli faaliyetlerini yapmaya yetkili kılınan tüzel kişiyi,
+
+16)  Dağıtım şebekesi: Bir dağıtım şirketinin belirlenmiş bölgesinde, işlettiği doğal gaz dağıtım tesislerini ve boru hatlarını,
+
+17)  Doğal gaz: Yerden çıkarılan veya çıkarılabilen gaz halindeki doğal hidrokarbonlar ile bu gazların piyasaya sunulmak üzere çeşitli yöntemlerle sıvılaştırılmış, basınçlandırılmış veya fiziksel işlemlere tabi tutulmuş (Sıvılaştırılmış Petrol Gazı -LPG hariç) diğer hallerini,
+
+18) Halihazır proje: Dağıtım şebekesine ait tatbikat projelerinin, uygulama sırasında yapılan değişikliklerin de kaydedilerek inşaat sonunda yeniden düzenlenmiş son halini,
+
+19)  İç tesisat: Basınç düşürme ve ölçüm istasyonu veya servis kutusu çıkışından itibaren sayaç hariç, müşteri tarafından yaptırılan ve mülkiyeti müşteriye ait olan boru hattı ve teçhizatı ile tüketim cihazları, atık gaz çıkış borusu, baca ve havalandırma sistemleri gibi tesisatı,
+
+20)  İlgili mevzuat: Doğal gaz piyasasına ilişkin Kanun, yönetmelik, tebliğ, genelge ve Kurul Kararı ile ilgili tüzel kişinin sahip olduğu lisans veya lisansları,
+
+21)  ISO: Uluslararası Standardizasyon Kuruluşunu (International Organization for Standardization),
+
+22)  Mahallî gaz boru hattı: Şehir içi doğal gaz dağıtımı yapacak olan dağıtım şirketinin inşa edip işleteceği tüm dağıtım hatlarını,
+
+23)  Müşteri: Serbest veya serbest olmayan tüketiciyi,
+
+24)  Orta basınçlı dağıtım hattı: Şehir giriş istasyonlarını birbirine ve/veya şehir içi bölge istasyonlarına bağlayan ve orta basınçta doğal gaz taşıyan boru hatlarını,
+
+25)   (Değişik:RG-14/5/2022-31835) Otomatik hacim düzeltici (Hacim dönüştürme cihazı): Sayaçtan ölçülen doğal gazın hacmini; standart şartlar ile doğal gazın basıncı, sıcaklığı ve özelliklerine göre düzelterek gösteren ölçüm cihazını,
+
+26)   (Değişik:RG-14/5/2022-31835) Ölçü Aletleri Mevzuatı: 11/1/1989 tarihli ve 3516 sayılı Ölçüler ve Ayar Kanunu ile 5/3/2020 tarihli ve 7223 sayılı Ürün Güvenliği ve Teknik Düzenlemeler Kanunu ve bu Kanunlara dayanılarak çıkarılan düzenlemeleri,
+
+27)  (Değişik:RG-14/5/2022-31835) Ön ödemeli sayaç: Müşterinin bedelini daha önceden ödediği miktarda veya tutarda doğal gaz kullanımına imkân veren, Ölçü Aletleri Mevzuatına göre piyasaya arz edilen ve dağıtım şirketinin sistemine uyum sağlayan sayacı veya ön ödemeli sayaç dönüşüm kiti vasıtasıyla dönüştürülen mekanik sayacı,
+
+28)  (Değişik:RG-14/5/2022-31835) Sayaç: Müşterilerin doğal gaz tüketimini ölçen Ölçü Aletleri Mevzuatına göre piyasaya arz edilmiş ve dağıtım şirketinin sistemine uyum sağlayan sayacı,
+
+29)  Serbest tüketici: Yurt içinde herhangi bir üretim şirketi, ithalat şirketi, dağıtım şirketi veya toptan satış şirketi ile doğal gaz alım-satım sözleşmesi yapma serbestisine sahip gerçek veya tüzel kişiyi,
+
+30)  Serbest olmayan tüketici (abone): Doğal gazı kendi kullanımı için dağıtım şirketlerinden almak zorunda olan gerçek veya tüzel kişiyi,
+
+31)  Sertifika sahibi: Doğal Gaz Piyasası Sertifika Yönetmeliğine göre sertifika almış gerçek veya tüzel kişiyi,
+
+32)  Servis hattı: Dağıtım şebekesini abone servis kutusuna veya basınç düşürme ve ölçüm istasyonuna bağlayan boru hattı ve servis kutusu veya basınç düşürme ve ölçüm istasyonu dahil ilgili teçhizatı,
+
+33)  Servis kutusu: Servis ya da bağlantı hattının bitimine konulan ve içinde servis regülatörü veya servis regülatör-sayaç seti ve/veya vana bulunan kutuyu ya da ana kapama vanasını ,
+
+34)   Servis regülatörü: Servis hattı basıncını istenilen basınca düşüren cihazı,
+
+35)   (Değişik:RG-18/11/2016-29892) Şehir: Belediye veya büyükşehir belediyesine ait belediye sınırları ile mücavir alanların tamamını,
+
+36) Şehir besleme hattı: Şehir giriş istasyonunu ulusal iletim hattına bağlayan yüksek basınçlı boru hattını,
+
+37)  Şehir giriş istasyonu: Şehir besleme hattından gelen yüksek basınçlı doğal gazın istenilen basınç değerine düşürülmesinin ve ölçülmesinin yanı sıra ısıtma, harmanlama, filtreleme ve kokulandırma gibi doğal gazla ilgili ihtiyaç duyulacak diğer işlemlerin de yapıldığı ilgili teçhizat ve binalardan oluşan tesisin bütününü,
+
+38) Şehir içi bölge istasyonları: Belirli bir bölgeyi beslemek üzere orta basınçlı dağıtım hatlarındaki basıncı alçak basınçlı dağıtım şebekesi basıncına düşüren ve gerektiğinde ölçen istasyonları,
+
+39) (Değişik:RG.-25/1/2008-26767) Taşıma hizmeti sözleşmesi: Tedarikçi ile dağıtım şirketi arasında doğal gazın taşınması amacıyla yapılan sözleşmeyi,
+
+40)  Tedarikçi: Serbest tüketicilere, toptan satış şirketlerine, ithalatçı şirketlere, ihracatçı şirketlere, CNG dağıtımı, iletimi ve satış şirketlerine ve dağıtım şirketlerine doğal gaz satan ithalatçı şirketleri, toptan satış şirketleri ve üretim şirketlerini,
+
+41) (Değişik:RG-25/1/2008-26767) Teslim hizmeti sözleşmesi: Dağıtım şirketinin, serbest tüketici ve tedarikçi ile doğal gazın devir teslimi için yaptığı sözleşmeyi,
+
+42) Tüzel kişi (şirket): Kanun hükümleri uyarınca doğal gazın üretimi, iletimi, dağıtımı, toptan satışı, ithali, ihracı, ticareti ve depolanması fonksiyonlarını yürütmek üzere kurulmuş özel veya kamu hukuku tüzel kişisini,
+
+43)   Ulusal iletim şebekesi: Ulusal iletim sisteminin bir parçası olan yüksek basınçlı boru hatlarını,
+
+44) (Ek:RG-3/5/2012-28281)  Dağıtım bölgesi; Dağıtım şirketinin dağıtım faaliyetini gerçekleştirebilmek için yetkili kılındığı bölgeyi,
+
+45) (Ek:RG-14/5/2022-31835) Ön proje: Doğal gaz yakıt sistemli olarak inşa edilmek üzere inşaat ruhsatı almış binalar için ilgili dağıtım şirketine ibraz edilen ve onaylanan projeyi,
+
+46) (Ek:RG-14/5/2022-31835) Mesafeli sözleşme: 7/11/2013 tarihli ve 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve anılan Kanun uyarınca çıkarılan mevzuat kapsamında uzaktan iletişim araçlarının kullanılması suretiyle kurulan sözleşmeyi,
+
+47) (Ek:RG-14/5/2022-31835) Ön ödemeli sayaç dönüşüm kiti: Mekanik sayacı ön ödemeli sayaca dönüştürmek amacıyla haricen monte edilen cihazı,
+
+ifade eder.
+
+ 
+
+İKİNCİ BÖLÜM
+
+Dağıtım Lisansı İhalesi
+
+İhale kararı ve ilanı
+
+Madde 5- Dağıtım lisansı ihalesi Kurul Kararı ile yapılır. İhaleye çıkılacak şehir, ilgili şehirdeki lisans süresi, serbest tüketici limiti, lisans süresi boyunca uygulanacak abone bağlantı bedeli, geçici ve kesin teminat miktarı ile ihaleyle ilgili diğer hususlar Kurul Kararında belirtilir. Kurumun açacağı ihale, Resmi Gazete’de ilan edilir. İhale ilanında, başvuru süresi, müracaat yeri, soru-cevap yöntem ve süresi, istenecek bilgi ve belgeler ile diğer hususlar bulunur.
+
+Dağıtım lisansı, ihaleyi kazanan şirkete dağıtım şebekesinin mülkiyeti de dahil olmak üzere, şehrin gelişmişlik düzeyi, tüketim kapasitesi ve kullanıcı sayısı gibi hususlar dikkate alınarak, Kurum tarafından ihale ilanında belirlenen lisans süresi için verilir. Kurul, nüfus yoğunluğuna göre, bir şehri sınırları belirlenmiş birden fazla dağıtım bölgesine ayırabilir ve her bölgeyi ayrı ayrı ihale edebilir.
+
+İhale komisyonu
+
+Madde 6- Dağıtım lisansı için başvuracak şirketlerin ve verilecek tekliflerin değerlendirilmesi amacıyla, yeterli sayıda üyeden müteşekkil komisyon veya komisyonlar, Başkanın teklifi üzerine Kurul Kararı ile oluşturulur. Komisyonların çalışma usul ve esasları Kurul tarafından belirlenir.
+
+ İhale dışında bırakma
+
+Madde 7- İhalenin herhangi bir aşamasında, kasıtlı olarak Kuruma yanıltıcı bilgi, belge veya sahte belge verdiği tespit edilen başvuru sahipleri, değerlendirmeye alınmaksızın ihale dışında bırakılır.
+
+ Başvuruda bulunamayacak olanlar
+
+Madde 8- Aşağıda belirtilen şirketler, ihaleye başvuruda bulunamaz:
+
+a) İhale ilan tarihi itibari ile kamu ihalelerine katılmaktan yasaklanmış şirketler,
+
+b) Yüzde on ve üzerinde doğrudan veya dolaylı pay sahibi olan gerçek kişi hissedarlarının; taksirli suçlar hariç olmak üzere, ağır hapis veya beş yıldan fazla hapis, basit veya nitelikli zimmet, cürüm işlemek için teşekkül oluşturmak, irtikap, rüşvet, hırsızlık, dolandırıcılık, sahtecilik, inancı kötüye kullanma, hileli iflas gibi yüz kızartıcı suçlar; istimal ve istihlak kaçakçılığı dışında kalan kaçakçılık suçları, resmi ihale ve alım satımlara fesat karıştırma, kara para aklama, Devlet sırlarını açığa vurma veya vergi kaçakçılığı suçlarından dolayı hüküm giymiş olduğu şirketler,
+
+c) Kurul başkanı ve üyeleri, ihale komisyonu başkanı ve üyeleri ile birinci dereceye kadar kan ya da sıhri hısımlarının organize borsalar aracılığıyla edindikleri hisse senetleri hariç olmak üzere, doğrudan veya dolaylı hissedar oldukları şirketler.
+
+İhalenin herhangi bir aşamasında, yukarıdaki durumların tespiti halinde, şirket ihale dışı bırakılarak, mevcut teminatı Kurum lehine irat kaydedilir.
+
+Yeterlilik değerlendirmesi
+
+Madde 9- Teklif vermek isteyen şirketler, ihale ilanında belirtilen süre içinde, ilanda verilen usul ve esaslara uygun olarak Kuruma başvuruda bulunur. İhale komisyonu, şirketleri yeterlilik açısından değerlendirmeye tabi tutar. Şirketlerin yeterliliği, ihale yapılacak şehirdeki şebeke yatırımı ve işletme faaliyetlerinin yürütülmesi açısından şirketin ve/veya ortaklarının mali güç ile tecrübelerine göre değerlendirilir. Yeterlilik başvurusu;
+
+ a) Mali güç açısından; şirketin öz sermayesi, bilanço ve gelir tabloları ile yatırımın finansmanının nasıl sağlanacağını gösteren belge ve niyet mektupları,
+
+b) Tecrübe açısından; teklif sahibinin veya proje, inşaat ve işletme hizmeti alacağı firmaların doğal gaz sektörü ve diğer sektörlerle ilgili tecrübesi,
+
+esas alınarak değerlendirilir.             
+
+ Değerlendirme sonucunda ihale komisyonu tarafından hazırlanan rapor, Kurula sunulur. Kurul tarafından yeterli bulunmayan şirketlere durum bildirilir ve bu şirketler ihaleye teklif veremez. Yeterli bulunan şirketler ise, Kurumdan ihale dosyası almak ve tekliflerini ihale dosyasına uygun şekilde hazırlayarak belirtilen süreler içinde Kuruma sunmak üzere davet edilir.
+
+İhale dosyasının içeriği
+
+Madde 10- İhale dosyasında; tekliflerin hazırlanması, verilmesi, tekliflerin verileceği para cinsi, tekliflerin açılması, değerlendirilmesi, sonuçlandırılması, dağıtım lisansı verilecek şehirdeki serbest tüketici limiti, lisans süresi, lisans süresi boyunca uygulanacak abone bağlantı bedeli, geçici ve kesin teminat miktarı, birim hizmet ve amortisman bedelinin sabit olarak uygulanacağı süre, yatırımın başlangıç tarihi, ihaleyi kazanan firmaya dağıtım lisansı verilmesine ilişkin usul ve esaslar, dağıtım şebekesi inşası için gerekli tasarım, yapım, kullanılacak malzemeler ve tamamlanan şebekenin işletmeye alınması dahil tüm aşamalarda uygulanacak usul ve esaslar ile temel teknik kriterleri içeren şartname yer alır. Şartname, ihale kararı verilen şehrin özelliklerine göre düzenlenir.
+
+İlgili mevzuat, ihale dosyasının ayrılmaz bir parçasıdır.
+
+İhale dosyasında değişiklik yapılması
+
+Madde 11- Kurul, tekliflerin verilmesi için tanınan sürenin sona ermesinden önceki herhangi bir tarihte, kendi inisiyatifine bağlı olarak veya şirketlerden herhangi birinin ihale ile ilgili olarak istemiş olduğu açıklama neticesi ortaya çıkan yeni bir durum sebebiyle, ihale dosyasında değişiklik yapabilir. Değişiklikler yazılı olarak, ihale dosyası almış bulunan bütün şirketlere bildirilir ve tüm teklif sahiplerini bağlar.
+
+Tekliflerin değerlendirilmesi
+
+Madde 12- Teklifler, bir kWh doğal gazın sunumu için tek bir bedel olarak verilen birim hizmet ve amortisman bedeli üzerinden değerlendirilir. Verilen teklifler en düşük birim hizmet ve amortisman bedeline göre sıralanır, en düşük ilk üç teklif belirlenir ve bu tekliflerin sahipleri açık eksiltme yapar. Kurul, eksiltme sonucu en düşük teklifi veren ve dağıtım lisansı almaya hak kazanan şirket ile sıralamadaki ikinci ve üçüncü şirketi belirleyebileceği gibi verilen teklifleri uygun bulmadığı takdirde ihaleyi iptal edebilir. 
+
+İhale ile belirlenen birim hizmet ve amortisman bedeli, şartnamede belirlenen süre boyunca uygulanır. Bu sürenin bitiminden itibaren Kurul tarafından fiyat tavanına göre belirlenen birim hizmet ve amortisman bedeli uygulanır.
+
+Davet bildirimi
+
+Madde 13- Kurul kararı, Tebligat Kanunu hükümlerine göre teklif veren şirketlere gönderilir ve ihaleyi kazanan şirket lisans almaya davet edilir. Davet bildiriminde, şirketten, lisans alma öncesi yapılması gereken işlemleri, bildirimde belirtilen sürede tamamlayarak, kesin teminat tutarı ile birlikte Kuruma müracaat etmesi istenir. İlgilinin süre uzatımı talebinde bulunması ve bu talebinin Kurum tarafından kabul edilmesi halinde, müracaat süresi uzatılabilir.
+
+Teminat olarak kabul edilecek değerler
+
+Madde 14 — (Değişik:RG-9/6/2017- 30091)
+
+Teklifle birlikte verilecek geçici teminat ve lisans almaya hak kazanılması halinde verilecek kesin teminat olarak;
+
+a) Kurum adına banka veya katılım bankası hesaplarında bloke edilmiş Türk Lirası mevduat veya Türk Lirası nakit,
+
+b) Türk Lirası olarak düzenlenmiş banka veya katılım bankası teminat mektubu,
+
+verilebilir.
+
+Teminat mektupları banka veya katılım bankalarından alınır. Yabancı bankalardan sağlanan teminatlarda Türk banka veya katılım bankalarından bir veya birkaçının kontrgarantisi aranır. Teminatlarla ilgili tüm masraflar teklif sahipleri tarafından karşılanır. Verilecek teminat mektuplarının kapsam ve şeklini tespite Kurum yetkilidir.
+
+Teminatların değiştirilmesi
+
+Madde 15- Kurum, gerekli görmesi halinde, verilen teminatların para birimi ile kaynağının ve cinsinin değiştirilmesini isteyebileceği gibi, teminat olarak sayılan değerlerden bir veya bir kaçının birlikte tevdi edilmesini de isteyebilir. Kurum talebiyle yapılacak teminat değişikliklerine ait masraflar, teklif sahipleri tarafından karşılanır.
+
+Geçici ve kesin teminat
+
+Madde 16- Geçici teminat, açılacak her ihale için maktu olarak belirlenir ve ihale ilanında yer alır, kesin teminat tutarı ise şartnamede belirtilir.
+
+ Kesin teminatın sunulması ve geçici teminatın iadesi
+
+Madde 17-İlk üç teklifin Kurul tarafından nihai olarak tespit edilmesini müteakip diğer teklif sahiplerinin geçici teminatları iade edilir. Kurul onayı ile dağıtım lisansı almaya hak kazanan şirket, Kuruma, şartnamede belirtilen tutarda kesin teminatı sunar ve geçici teminatı Kurum tarafından iade edilir. Diğer iki şirketin geçici teminatları ise dağıtım lisansının verilmesini müteakip iade edilir. (Ek son cümle:RG-02/09/2003-25217)Ancak, ikinci ve üçüncü şirketin ihale sonrasında birinci şirketin şartlarını ve bedelini kabul etmeyeceğini beyan ve taahhüt etmesi halinde geçici teminatı iade edilir.
+
+Yatırımın kontrolü, işletmeye alınması ve kabulü
+
+Madde 18- (Değişik:RG-9/6/2017- 30091)
+
+Dağıtım şebekesinin projelendirme, yapım ve test aşamalarının her birinin kontrolü ile tamamlanan bölümlerinin işletmeye alınması ve kabulü, söz konusu faaliyetlerin gerçekleştirilmesinde görev almamış sertifika sahipleri tarafından yapılır ve tüm bu işlemler tutanak altına alınır. Dağıtım şirketlerinin hizmet alacağı yapım kontrol firmalarının belirlenmesi, değiştirilmesi, sözleşmelerde yer alacak asgari hükümler ve kontrollük faaliyetlerinin yürütülmesine ilişkin usul ve esaslar Kurul tarafından belirlenir.
+
+Kesin teminatın iadesi
+
+Madde 19- Kesin teminat, dağıtım şebekesinin uygun şekilde tamamlanan ve kabulü yapılan bölümleri itibarıyla şartnamede belirtilen usul ve esaslara göre iade edilir.
+
+Geçici veya kesin teminatın irat kaydedileceği haller
+
+Madde 20- Aşağıdaki hallerde, şirket tarafından verilen geçici veya kesin teminat iade edilmeyerek Kurum lehine irat kaydedilir:
+
+ a) Teklifler verildikten sonra, dağıtım lisansına hak kazanan şirket ilan edilinceye kadar geçen sürede ihaleden çekilinmesi,
+
+b)  Lisans almaya hak kazanıldığı halde, süresinde dağıtım lisansı almak için gerekli işlemlerin tamamlanmaması veya lisans almaktan imtina edilmesi ya da alınan lisanstan Kurul onayı ile vazgeçilmesi,
+
+c)  (Değişik:RG-9/6/2017- 30091) Dağıtım lisansı sahibi şirketin iflasının kesinleşmesi veya Kanunun 9 uncu maddesindeki yaptırımların uygulanmasıyla lisansın iptal edilmesi durumlarında teminat mektubuna konu yükümlülüklerin yerine getirilmemiş olması.
+
+d)  (Mülga:RG-9/6/2017- 30091)
+
+ Belediye ortaklığı
+
+Madde 21- (Değişik: RG-23/10/2003-25268)
+
+Dağıtım lisansı alan şirket, lisans yürürlük tarihinden itibaren bir ay içerisinde, yetki aldığı şehirde bulunan belediye veya belediye şirketini sermaye koyma şartı aramaksızın, yüzde on nispetinde dağıtım şirketine ortak olmaya davet etmek zorundadır. Bu sermaye oranı, bedeli defaten ve peşin ödenmek kaydıyla en fazla yüzde yirmi oranına kadar artırılabilir.
+
+Belediye veya belediye şirketinin hisse almaması veya bir yönetim kurulu üyeliğine hak kazanamayacak oranda hisse alması halinde, şirket durumu Kuruma bildirir. Kurum, şirketten Türk Ticaret Kanununun 275 inci maddesine göre, belediyeye şirket yönetim ve denetim kurullarında temsil hakkı verecek düzenlemelerin yapılmasını isteyebilir.
+
+Lisans alma öncesi işlemler
+
+Madde 22- Dağıtım lisansı almaya hak kazanan şirketin, lisans alabilmesi için, ilgili mevzuat doğrultusunda, şirket ana sözleşmesi ile ilgili aşağıda belirtilen değişiklikleri yapması zorunludur;
+
+a)  (Mülga:RG-23/10/2003-25268)
+
+a) Değişik:RG-23/10/2003-25268) Şirketin, Türk Ticaret Kanunu hükümleri doğrultusunda kurulmuş bir anonim şirket olması halinde, hisseleri nama yazılı değil ise hisselerinin tamamının nama yazılı hale getirilmesi,
+
+b) (Değişik: RG-06/08/2004-25545)
+
+Dağıtım lisansı sahibi şirket, doğal gaz şehir içi dağıtım faaliyeti dışında başka faaliyette bulunamayacağından, şirketin ana sözleşmesinin ilgili kısmının; buna uygun şekilde düzenlenmesi,
+
+c) (Değişik:RG-23/10/2003-25268) Lisansın iptalinin gerekmesi halinde, iptalden önce alınacak Kurul Kararı doğrultusunda, tüketicilerin korunması ve hizmetin aksamaması açısından, lisans kapsamındaki faaliyetlerin yürütülmesini ve dağıtım şebekesinin işletilmesini teminen, lisans sahibi tüzel kişinin yönetim kurulu veya tüzel kişiyi idare edenlerin; lisans sahibinin anonim şirket olmaması halinde ise ortaklar genel kurulu ve/veya tüzel kişiliği idare edenlerin bir kısmının veya tamamının; geçici olarak değiştirilmesi suretiyle, Kurum tarafından yerlerine yeni atama yapılabileceğinin kabulüne ilişkin hükümlerin ana sözleşmede yer alacak şekilde düzenlenmesi.
+
+Lisans verilmesi
+
+Madde 23- Şirket, 13 üncü maddede verilen süre içerisinde, 22 nci maddede belirtilen işlemleri tamamlayarak, tadil edilmiş ise şirket ana sözleşmesini, lisans bedeli alındı makbuzu ve talep edilecek diğer belge ve bilgileri Kuruma sunarak, dağıtım lisansı verilmesini talep eder. Alınan teklif dikkate alınarak Doğal Gaz Piyasası Lisans Yönetmeliği hükümleri uyarınca dağıtım lisansı düzenlenir ve belirlenen günde şirket tarafından teslim alınır.
+
+(Değişik fıkra:RG-02/09/2003-25217) Şirketin dağıtım lisansını almaktan imtina etmesi halinde, mevcut teminatı Kurum lehine irat kaydedilerek dağıtım lisansı, birinci gelenin şartlarında ve aynı bedelle kabul etmediğini daha önce beyan ve taahhüt etmemiş olmaları halinde sırasıyla ikinci ve üçüncüye teklif edilir ve yapılan teklifin kabul edilmemesi halinde geçici teminatları iade edilir ve yeniden ihaleye çıkılır.
+
+Kurumun teklifi reddetme ve ihaleyi iptal etme hakkı
+
+Madde 24- Kurum, 2886 sayılı Devlet İhale Kanununa, Kurum tarafından açılan dağıtım lisansı ihalesi, 4734 sayılı Kamu İhale Kanununa ve 4735 sayılı Kamu İhale Sözleşmeleri Kanununa tabi değildir. Kurum, 7 ve 8 inci maddelerde belirtilen veya gerekli gördüğü her durumda ve ihalenin her aşamasında herhangi bir teklifi veya tekliflerin tamamını reddetme ya da ihaleyi tamamen iptal etme yetkisine sahiptir. Kurum, bu karar ve uygulamalarından dolayı sorumlu tutulamaz.
+
+Dağıtım lisansı ihalesi yapılan şehrin belediyesi, ihale öncesinde ve ihalenin her aşamasında, teklif verecek şirketlere ihale ve yatırımla ilgili gereken yardımı ve kolaylığı gösterir. İlgili belediyenin, ihalenin herhangi bir aşamasında başvuru sahipleri arasında ayrımcılık yaptığının saptanması halinde, Kurum, ihaleyi iptal edebilir ve ilgili şehirde yapılacak yeni ihalenin tarihini erteleyebilir. Kurum, gerekli gördüğü diğer önlemleri almakta serbesttir.
+
+Dağıtım şirketinin üçüncü kişilerle yapacağı sözleşmeler
+
+Madde 25- Dağıtım şirketi, dağıtım şebekesiyle ilgili inşa işlerini, kendisinin yapmaması halinde, yapım ve hizmet sertifikasına sahip üçüncü kişilerle yapacağı sözleşmeler kapsamında gerçekleştirir. Dağıtım şirketinin, lisans kapsamındaki faaliyet konusu ile ilgili olarak üçüncü kişilerle yapacağı sözleşmelerde, ilgili mevzuata aykırı olan ya da sistem güvenliğini ve işleyişini engelleyen hükümler yer alamaz. Dağıtım şirketi, işlerin niteliğine uygun ve zamanında yapılmasından, proje ve müteahhit şirketlerinin bu işle ilgili hata veya ihmallerinden sorumludur. Dağıtım şirketi, sözleşmelerinde şebeke inşası esnasında çevreye verilecek rahatsızlık ve zararları önlemeye yönelik her türlü önlemi alır ve yatırım faaliyetleri süresince çevre ve diğer mevzuat hükümlerine uyar.
+
+Süre uzatımı
+
+Madde 26- Şartnamede yer alan süreler, Doğal Gaz Piyasası Lisans Yönetmeliğinin 46 ncı maddesinde yer alan mücbir sebepler dışında uzatılamaz.
+
+Sigorta zorunluluğu
+
+Madde 27- Dağıtım şirketleri, gerçekleştirdikleri faaliyet ile ilgili varlıklarını muhtemel risklere karşı korumak amacıyla sigorta ettirmekle yükümlüdür. Bu kapsamda dağıtım şirketleri dağıtım şebekesini; doğal afetler, yangın ve kaza gibi riskleri kapsayan bir “varlık tüm risk” sigortası ile teminat altına alır.
+
+ İzleme raporları
+
+Madde 28- (Değişik birinci fıkra:RG-24/12/2014-29215) Dağıtım şirketi, dağıtım şebekesinin inşasında gerçekleşen ilerlemeleri içeren özet bilgileri, Enerji Piyasası Bildirim Yönetmeliği hükümleri kapsamında Kuruma bildirir.
+
+Dağıtım şirketi ayrıca, Kurumun talebi halinde verilmek üzere, kurulan alt yapıya ait teçhizat ve malzemelerin ilgili mevzuata uygunluğunu gösteren, Türk Standartları Enstitüsünden alınmış uygunluk belgelerini, test ve kontrol kayıtlarını, vukuat raporlarını, kamulaştırma, mülkiyetin gayri ayni haklar tesisi ve kiralama kayıtlarını, Kurum tarafından talep edilecek diğer bilgi, belge, kayıt ve raporları tutmakla yükümlüdür.
+
+Bilanço, gelir tablosu ve diğer ek mali tablolar
+
+Madde 29- (Değişik:RG-14/5/2022-31835)
+
+Dağıtım şirketleri, yatırım faaliyetleri sürecinde ilgili mevzuata göre düzenlenen yıllık bilanço ve gelir tablosuyla, gerek görülen diğer ek mali tabloları, 27/5/2014 tarihli ve 29012 sayılı Resmî Gazete’de yayımlanan Enerji Piyasası Bildirim Yönetmeliği hükümleri kapsamında Kuruma sunmakla yükümlüdür.
+
+Kurumun inceleme yetkisi
+
+Madde 30- Kurum, dağıtım şirketinin dağıtım faaliyetlerini yönlendirir, denetler, izler ve gerektiğinde bu hizmetleri, masrafları dağıtım şirketine ait olmak üzere, sertifika sahibi kişilerden satın alabilir. Dağıtım şirketi, Kurumun, denetleme ve izleme çalışmaları için gerekli kolaylığı sağlar.
+
+Lisans süre uzatımı
+
+Madde 31- Lisans süresi sona eren dağıtım şirketinin, lisans süresinin tamamlanmasından bir yıl önce, söz konusu şehir içi dağıtım lisansının yenilenmesini Kurumdan talep etmesi halinde Kurul, şirketin ekonomik ve teknik gücünü, hizmet kalitesini, abonelerinin memnuniyetini, ilgili mevzuatta belirtilen diğer hususları dikkate alarak ikinci kez dağıtım lisansı verebilir. Yenilenen lisans süresi boyunca Kurul tarafından belirlenecek olan birim hizmet ve amortisman bedeli ile abone bağlantı bedeli uygulanır.
+
+Şebekenin satışı ve devri
+
+Madde 32- Dağıtım şirketi, mülkiyetindeki dağıtım şebekesini, lisans süresi sona ermeden başka bir tüzel kişiye Kurul onayı ile satabilir. Kurul, bu satışa, şebekenin bir bütün olarak satılması, şebekeyi satın alacak tüzel kişinin dağıtım lisansı alma koşullarını haiz olması, önceden, dağıtım lisansı başvuru talebi Kurul tarafından reddedilmiş ise ret gerekçelerinin ortadan kalkmış olması,  söz konusu satışın müşteriler aleyhine uygulamalar getirmemesi ve  uygulanmakta olan birim hizmet ve amortisman bedeli aşılmamak şartıyla onay verir. Dağıtım şebekesini satın alan tüzel kişi, ilgili mevzuata göre dağıtım lisansı almak için Kuruma başvurur.
+
+Lisans süresi içinde, lisansın iptalinin zorunlu hale gelmesi ya da lisans sahibinin lisansından Kurul onayı ile vazgeçmesi hallerinde, şebekenin satışı, Kurul tarafından yapılacak ihale yoluyla mümkündür. Önceki lisans sahibi tarafından uygulanmakta olan birim hizmet ve amortisman bedeli ve abone bağlantı bedelini geçmemek ve diğer şartlar aynen korunmak kaydıyla, şebeke mülkiyetinin devri karşılığında en yüksek bedeli teklif eden ve dağıtım lisansı alma koşullarını haiz tüzel kişiye, Kurul tarafından belirlenen lisans süresi için lisans verilir. Şebekenin bedeli yeni lisans sahibinden tahsil edilerek, eski lisans sahibine ödenir.
+
+Dağıtım lisansının süresinin uzatılmadığı durumda, dağıtım şebekesinin işletme ve mülkiyeti için ihale açılır. Yeni lisans sahibi tarafından lisans süresince Kurul tarafından belirlenen birim hizmet ve amortisman bedeli ile abone bağlantı bedeli uygulanmak kaydıyla, şebekenin işletme ve mülkiyetinin devri karşılığında en yüksek bedeli teklif eden ve dağıtım lisansı alma koşullarını haiz tüzel kişiye dağıtım lisansı verilir. Şebekenin bedeli yeni lisans sahibinden tahsil edilerek, eski lisans sahibine ödenir.
+
+Dağıtım lisansı sahibi, bu maddede belirtilen durumlarda, mevcut şebekeyi ve ilgili tesislerin tamamını, taşınır ve taşınmaz tüm malları, bunlar üzerindeki haklarla birlikte, her türlü borç ve yükümlülükten arındırılmış, normal yıpranma dışında bakımlı, tam ve çalışır durumda yeni lisans sahibine devreder. Dağıtım lisansı sahibi, Kurul Kararıyla, yeni lisans sahibi tarafından şebekenin işletme ve mülkiyeti devralınıncaya kadar aynı koşullarla hizmete devam eder.
+
+ Dağıtım bölgelerinin tek bir lisans altında birleştirilmesi ve mevcut dağıtım bölgelerinin birden fazla lisans sahasına bölünmesi
+
+MADDE 32/A  – (Ek:RG-18/11/2016-29892)
+
+ Dağıtım lisansı sahibi tüzel kişilerin talep etmesi ve Kurulun teknik ve ekonomik olarak uygun bulması durumunda dağıtım bölgeleri tek bir lisans altında birleştirilebilir veya mevcut dağıtım bölgeleri birden fazla lisans sahasına bölünebilir.
+
+Dağıtım şirketlerinin birleşme taleplerine ilişkin başvuruların değerlendirilmesinde, işletme verimliliği açısından şebeke bütünlüğü ve bölgesel yakınlık dikkate alınır.
+
+Birleşmeye konu dağıtım bölgelerinin, doğal gaz dağıtım lisansı ihalesi kapsamında olması durumunda, ihalede belirlenen birim hizmet ve amortisman bedelinin geçerli olacağı ihale şartnamesinde belirtilen sürenin dolmuş olması şarttır.
+
+Dağıtım bölgelerinin birleştirilmesine/bölünmesine ilişkin talepler aşağıdaki esaslar çerçevesinde değerlendirilir:
+
+a) Birleşmeye/bölünmeye konu dağıtım bölgelerine ilişkin tüm hak ve yükümlülüklerin muhafaza edilmesi,
+
+b) Kurum tarafından talep edilecek teminat mektuplarının sunulması,
+
+c) Birleşme/bölünme işlemi gereği yapılacak lisans tadil ve sona erdirme işlemlerinin eş zamanlı olarak yürürlüğe girmesi,
+
+ç) Birleşme/bölünme işlemi gereği yapılması gereken her türlü sözleşme devirlerinin tamamlanması,
+
+d) Birleşme/bölünme işlemi nedeniyle hizmette aksamaya mahal bırakılmaması,
+
+e) Birleşme/bölünme işleminin gerektirdiği tüm hukuki sorumlulukların ifa edildiğinin/ edileceğinin beyan edilmesi.
+
+Birleşme/bölünme işlemine ilişkin olarak Kuruma yapılacak başvurularda, teknik ve ekonomik gerekçelerin de detaylandırıldığı ve bu maddenin dördüncü fıkrasında belirtilen hususların kabul, beyan ve taahhüt edildiğini içeren talep yazıları ile Kurum tarafından talep edilecek her türlü bilgi ve belge Kuruma sunulur.
+
+Birleşme/bölünme talebinin kabulü neticesinde tadili yapılacak lisansın sona erme tarihi, birleşmeye konu şirketlerden lisans sona erme tarihi daha yakın olan lisansın sona erme tarihi olarak belirlenir.
+
+Birleşme işlemi neticesinde oluşan yeni dağıtım bölgesi için geçerli olacak tarife belirlenene kadar birleşmeye konu bölgelerin mevcut tarifeleri uygulanmaya devam edilir.
+
+ 
+
+ÜÇÜNCÜ BÖLÜM
+
+Diğer Hükümler
+
+Yaptırımlar
+
+Madde 33- Kurum tarafından yapılan veya yaptırılan incelemelerde, ilgili mevzuata aykırı bir durumun tespit edilmesi halinde, fiilin niteliğine göre Kanunun 9 uncu maddesi hükümleri uygulanır.
+
+Dağıtım lisansı verilmesine esas olan şartların, faaliyetin yürütülmesi sırasında ortadan kalktığının veya bu şartların baştan mevcut olmadığının saptanması hallerinde, varsa kesin teminatın Kurum lehine irat kaydedilmesinin yanı sıra, Kanunun 9 uncu maddesine göre işlemler yapılır ve Kurul, hizmetin aksamaması için 34 üncü maddede sayılan gerekli tedbirleri önceden almak suretiyle lisansı iptal eder.
+
+Kurum tarafından alınacak tedbirler
+
+Madde 34- Dağıtım lisansının iptal edilmesinin zorunlu hale gelmesi durumunda, lisans iptalinden önce alınacak Kurul kararıyla, tüketicilerin korunması ve hizmetin aksamaması açısından, lisans kapsamındaki faaliyetlerin yürütülmesini ve dağıtım şebekesinin işletilmesini teminen, lisans sahibi tüzel kişinin yönetim kurulu veya tüzel kişiyi idare edenlerin; lisans sahibinin anonim şirket olmaması halinde ise ortaklar genel kurulu ve/veya tüzel kişiliği idare edenlerin bir kısmının veya tamamının; geçici olarak değiştirilmesi suretiyle, Kurum tarafından yerlerine yeni atama yapılabilir. Bu atamaların kabulüne ilişkin hükümler, dağıtım lisansında ve dağıtım şirketinin ana sözleşmesinde yer alır.
+
+ Dağıtım lisansı sahibinin iflası halinde lisans kendiliğinden sona erer, Kurum gereken tedbirleri alır ve kesin teminat ile varsa teminat hükmündeki diğer değerler Kurum lehine irat kaydedilir.
+
+Kanuni yükümlülükler ve diğer harcamalar
+
+Madde 35- Teklif sahiplerinin, ihale ile ilgili vergi, resim, harç, onay gideri ve benzeri kanuni yükümlülükleri ile geçici ve kesin teminat masrafları dahil her şekilde yaptıkları harcamalar kendilerince karşılanır. Kurumdan bu konuda herhangi bir talepte bulunulamaz.
+
+ 
+
+İKİNCİ KISIM
+
+Müşteri Hizmetleri
+
+ 
+
+BİRİNCİ BÖLÜM
+
+Bağlantı, Müşteri Sözleşmeleri, Güvence Bedeli ve İç Tesisat Onayı
+
+Bağlantı
+
+Madde 36 — (Değişik:RG-14/5/2022-31835)  
+
+Dağıtım şirketi, sorumluluk alanında bulunan tüketicileri talep etmeleri halinde, dağıtım şebekesine bağlamakla yükümlüdür. Ancak bağlantı yapma yükümlülüğü, dağıtım şirketinin tasarrufu altındaki sistemin bağlantı yapmaya imkân veren kapasitede olmasına ve bağlantının teknik ve ekonomik olarak mümkün olması yanında talep sahibinin ilgili ve diğer mevzuatta öngörülen işlemleri yapmasına bağlıdır. Dağıtım şirketinin, sorumluluk alanı dışına bağlantı yapabilmesi Kurum izni ile mümkündür.
+
+Dağıtım şirketine yapılacak bağlantı talepleri; bağımsız bölüm maliki, binanın veya tesisin sahibi ya da bunların yetkili temsilcilerince yapılır. Dağıtım şirketi, bağlantı talebini en geç on beş gün içinde değerlendirir ve talebi uygun bulması durumunda bağlantının gerçekleştirilmesi için gereken işlemleri yapar, uygun bulmaması halinde ise gerekçelerini yazılı olarak talep sahibine bildirir. Diğer mevzuattan kaynaklanan belgelerin geçerli ve doğru olarak mevzuata uygun şekilde tesliminden bağlantı başvurusunda bulunan talep sahibi sorumludur. Bağlantı anlaşmasında sorumluluğun talep sahibinde olduğu belirtilir. Talebi uygun bulunan talep sahibi ile bağlantı anlaşması imzalanır veya mesafeli sözleşme yapılır.
+
+Bağlantı hattı, servis hattı ve sayacın mülkiyetinin dağıtım şirketine devriyle ilgili hususlar talep sahibi ile dağıtım şirketi arasında yapılacak bağlantı anlaşmalarında yer alır. Birden fazla bağımsız bölümün bulunduğu yapılarda ilk yapılan bağlantı anlaşması sonrasında ilgili adresten gelen bağlantı talepleri için yapılacak bağlantı anlaşmalarında bağlantı bedeli ve sayacın devriyle ilgili hususlar dışında ilk bağlantı anlaşması kapsamında tesis edilen bağlantıya dair hususlar yer almayabilir. Her bağımsız bölümün bağlantı bedeli, bölüme ait bağlantı anlaşma başvurusu sırasında başvuru sahibinden, merkezi ısıtma sistemi bağlantı anlaşma başvurusu esnasında her bir bağımsız bölüm adına yapı yönetiminden tahsil edilir.
+
+Bağlantı anlaşmalarının yapılması esnasında dağıtım şirketi tarafından tüm başvuru sahiplerine, iç tesisatın yapımı için anlaşacakları sertifikalı firmalar ile yapacakları sözleşmelerde işin geciktirilmesi, eksik yapılması ya da hiç yapılmaması durumlarında tarafların mağdur olmaması için özel hukuk yoluna başvurabileceklerine ilişkin, açıklayıcı bilgilendirme yapılır.
+
+(Değişik beşinci fıkra:RG-21/2/2026-33175) Abone bağlantı bedeli, bağlantı anlaşmasının yapılması sırasında bir defaya mahsus olmak üzere tahsil edilir ve servis hattının imalatına başlandıktan sonra bu bedelin iadesi yapılamaz. Servis hattının yapımına başlanmamış ise talep sahibinin başvurusu ile 5 (beş) iş günü içerisinde abone bağlantı bedeli iade edilir. Aynı adresle ilgili daha önce bağlantı bedeli alınmış ise bu bedel tekrar alınamaz. Servis hattı yapımına ilişkin, ilgili kurum ve kuruluşlara yapılacak izin başvuruları, abone bağlantı bedelinin tahsilinden itibaren en geç 5 (beş) iş günü içerisinde tamamlanır. İlgili mercilerin başvuruyu belli tarihlerde kabul ettiği durumlarda dağıtım şirketi gecikmeden sorumlu tutulmaz. Servis hattı, abone bağlantı bedelinin tahsilinden itibaren en geç 30 (otuz) gün içerisinde tamamlanarak gaz arzına hazır hale getirilir, ancak talep sahibinin kabul etmesi kaydıyla bu süre 90 (doksan) güne kadar uzatılabilir. Gerekli izinlerin alınamaması sebebiyle 90 (doksan) gün içerisinde servis hattının gaz arzına hazır hale getirilemeyecek olması halinde, süre bitiminden itibaren 5 (beş) iş günü içerisinde abone bağlantı bedeli iade edilir. Başvuru sahibinin abone bağlantı bedelinin iade edilmesini istemediğine dair yazılı başvuru yapması halinde talep edene kadar iade yapılmaz. Bağlantı bedelinin iadesinde güvence bedelinin iadesinde uygulanan güncelleme yöntemi geçerlidir. İlgili merciler tarafından kazı izinlerinin verildiği tarihte sürenin bitimine 30 (otuz) günden daha az süre kalmış ise tüketiciye bilgi verilerek servis hattı 30 (otuz) gün içerisinde tamamlanır.
+
+(Değişik altıncı fıkra:RG-21/2/2026-33175) Abone bağlantı bedelinin taksitli olmasını talep eden müşterilere abone bağlantı bedeli kredi kartına tüketicilerin tercihleri doğrultusunda 6 (altı) aya kadar eşit taksit yapılır. Bu fıkra kapsamındaki ödemeler hakkında kredi kartlarına ilişkin yürürlükte olan ilgili mevzuat hükümleri uygulanır ve oluşan finansman maliyetleri tarife kapsamında dikkate alınmaz.
+
+Yapı veya tesiste değişiklik yapılması sonucunda ortaya çıkabilecek maliyetler ilgili mevzuata göre mülk sahibi gerçek veya tüzel kişi tarafından karşılanır.
+
+Serbest tüketicilerin bağlantı bedelinin hesaplanmasında abonelerin bağlantı bedeli hesap yönteminin kullanılması, sadece aynı binada yer almaları ve tüm bina bağlantısının tek bir bağlantı hattı veya servis hattı ile sağlanmasının zorunlu olması durumunda mümkündür.
+
+Aynı yerleşkede serbest tüketiciler ve abonelerin bir arada bulunması durumunda şebekeye bağlantısı ayrı olarak yapılması zorunlu olan tüketiciler ile aynı yerleşkede bulunup yerleşke içi hatlarla tüketicilerin bina hat girişlerinin ayrıştığı durumlarda serbest tüketiciler ve abonelerin bağlantı bedelleri ilgili mevzuatta belirtilen kendi usullerince hesaplanır.
+
+Bağlantı talebi reddedilen talep sahibi, dağıtım şirketinin kararının kendisine ulaştığı tarihten itibaren altmış gün içinde Kuruma yazılı olarak başvurarak bağlantının teknik ve ekonomik olarak mümkün olup olmadığının tespitini isteyebilir. Bağlantı talebine ilişkin teknik ve ekonomik değerlendirme ancak dağıtım şebekesinin ulaştığı cadde veya sokaklarda yapılabilir. Kurul, dağıtım şirketinin konu hakkındaki savunmasını aldıktan sonra, bu maddede belirtilen esasların ihlal edildiğinin tespit edilmesi halinde, dağıtım şirketi Kurulun bu konuda vereceği karara uymak zorundadır. Kurulun bağlantı talebinin teknik ve ekonomik olmadığına karar vermesi halinde talep sahibinin maliyetleri üstlenmesi kaydıyla bağlantı tesis edilir.
+
+Serbest tüketicilerin bağlantı hattı, bedeli kendilerine ait olmak üzere, dağıtım şirketinin uygun göreceği yerden şebekeye bağlanacak şekilde, serbest tüketicinin seçimine bağlı olarak dağıtım şirketine veya sertifika sahibi kişilere aşağıdaki esaslar çerçevesinde yaptırılır:
+
+a) Serbest tüketiciler tarafından dağıtım şirketine veya sertifika sahibi kişilere yaptırılan bağlantı hattının mülkiyeti dağıtım şirketine bağlantı anlaşması kapsamında bilabedel devredilir ve dağıtım şebekesi olarak kabul edilir. Serbest tüketicinin bu fıkrada düzenlenen hak ve yükümlülüklerine bağlantı anlaşmasında yer verilir.
+
+b) Serbest tüketiciler, bağlantı hattı taleplerinde, gelecek tüketim öngörüleri de dahil olmak üzere tüketim ihtiyacını yazılı olarak dağıtım şirketine bildirir ve bağlantı hattı ile ilgili tüm çalışmalarda serbest tüketicilerin bildirdiği tüketim ihtiyacı esas alınır. Bağlantı hattının, sertifika sahibi firmalara yaptırılmak istenmesi durumunda dağıtım şebekesine bağlantı noktası, hat güzergâhı, boru çapı ve uzunluğu, ilgili ekipmanları ile hat imalatına yönelik diğer nitelikleri belirlemeye dağıtım şirketi yetkilidir. Dağıtım şirketleri tarafından rekabeti engelleyici davranışlarda bulunulamaz ve başvuru sırasında bağlantı hattının sertifika sahiplerine de yaptırılabileceği konusunda ilgili serbest tüketiciye gerekli bilgilendirmeler dağıtım şirketince yapılır. Serbest tüketicinin bağlantı hattını sertifika sahibine yaptırmak istemesi durumunda; sertifika sahibinin belirlediği bağlantı hattı bedeli, dağıtım şirketinin ilgili bağlantı hattı için belirlediği bedelden yüksek olamaz. Dağıtım şirketinin belirlediği bağlantı hattı bedeli, ilgili tarife yılı yatırım harcaması maliyetleriyle uyumlu olmalıdır.
+
+c) Dağıtım şirketinin geleceğe yönelik bölgesel tüketim ve yatırım öngörüleri çerçevesinde serbest tüketici için belirlenen bağlantı hattı kapasitesinden daha yüksek kapasitede yatırım yapılacak olması halinde; ileride bu hatta ilave yapılacak her türlü ilk bağlantıda ya da ilave bağlantı yapılmaması halinde en geç üç yıl içerisinde, serbest tüketicinin tüketim ihtiyacının üzerinde imal edilmiş olan bağlantı hattının bedeli, yıpranma süresi dikkate alınmaksızın dağıtım şirketi tarafından ilgili serbest tüketiciye ödenir.
+
+d) Bu fıkranın yürürlüğe girdiği tarihten önce imalatı yapılmış olan hatlara bağlantı yapılacak olması halinde, serbest tüketicilerin tüketim ihtiyacı üzerinde katlandıkları maliyetler, bir defaya mahsus olmak üzere dağıtım şirketi tarafından ilgili serbest tüketicilere ödenir.
+
+e) Bu fıkra kapsamında ilgili serbest tüketicilere ödenecek bedeller; defter değeri üzerinden bağlantı hattının tamamlanma tarihi dikkate alınarak öncelikle varsa ödenmiş katılım payları düşüldükten sonra kalan bedel üzerinden her yıl %10 oranında yıpranma payı düşülerek hesaplanır. Bu hesaplama kapsamındaki maliyetler ve katılım payları TÜFE dikkate alınarak güncellenir. Hesaplanacak bedel en fazla bir yıl içerisinde ilgili serbest tüketiciye ödenir ve bu süre için yıpranma payı düşülmez.
+
+Bağlantı ve servis hatlarının test ve kontrolü dağıtım şirketince tamamlanır ve işletmeye alınır.
+
+Dağıtım şirketi, işlettiği tüm servis ve bağlantı hatlarının bakım, onarım ve iyileştirilmesinden sorumludur. Dağıtım şirketi bu kapsamdaki işlemler için bir bedel alamaz.
+
+Doğal gaz bağlantısı yapılmış bir adreste mevcut servis hattı değişmeksizin, müşterinin isteğiyle servis kutusunun sökülmesi ve/veya yeniden takılması durumunda dağıtım şirketi tarafından ilgili müşteriye servis kutusu söküm bedeli yansıtılır. Bu bedel Kurul tarafından belirlenir.
+
+İç Tesisat Onayı ve İşletmeye Alınması
+
+Madde 37 —  (Değişik:RG-14/5/2022-31835)
+
+İç tesisatların projelendirilmesi ve yapımı, bağımsız bölüm maliki, binanın veya tesisin sahibi ya da bunların yetkili temsilcileri tarafından sertifika sahiplerine yaptırılır. Sertifika sahibi firma ile başvuru sahipleri arasında yapılacak işin kapsamı ve koşullarını belirleyen bir sözleşme imzalanır. İlgili mevzuat çerçevesinde dağıtım şirketi tarafından belirlenen asgari hükümleri içeren örnek sözleşme ve sigorta poliçesi dağıtım şirketinin internet sitesinde yayımlanır. Ön proje dosyaları hariç, bu sözleşmenin bir kopyası, ilgili sigorta poliçesi ve sertifikalı firmanın tesisatın imalatını yapacağı tarih aralığı ile imalatı yapacak personel bilgisi sertifika sahibinin projenin onayı için dağıtım şirketine vereceği müracaat dosyasında veya dijital onay sisteminde yer alır. Sunulan tarih aralığı veya personel bilgisinde değişiklik olması halinde 3 (üç) iş günü içerisinde dağıtım şirketine bilgi verilir. Dağıtım şirketi veya projeyi yapan firma dışında dağıtım şirketi adına çalışan sertifika sahipleri projeyi kendilerine teslim edilen tarihi takiben aboneler için 5 (beş) iş günü içerisinde kontrol eder. Kontrol sonucu uygun projeler onaylanır, uygun olmayan projeler ise projelerin reddedilme sebepleri ilgili sertifika sahibine dijital platform kullanıldığı durumlarda aynı gün, aksi takdirde 2 (iki) gün içerisinde bildirilir. İç tesisat ve/veya dönüşüm projesinin onaya sunulmasından önce iç tesisatı yapacak olan firma sözleşme kapsamındaki tüm yükümlülüklerini içerecek şekilde Kurul tarafından belirlenen sigortalamaya ilişkin sorumluluklarını yerine getirir. Sigortanın bu maddede yer alan iç tesisatın imalat süresini ve devreye alınması işleminden başlamak üzere bir yıl boyunca yapılan iç tesisat ile ilgili çıkabilecek tüm sorunları kapsaması zorunludur. Sigorta poliçesinin gerekli şartları kapsamaması halinde dağıtım şirketi tarafından müşteri ve ilgili firma bilgilendirilir ve poliçe düzeltilene kadar iç tesisat projesi onaylanmaz. Ayrıca, dağıtım şirketince proje onayı yapılmadan sertifikalı firma tarafından iç tesisat imalatına başlanamaz ve dağıtım şirketince onaylanan projelerde yapılacak tüm değişiklikler proje tadilatı olarak değerlendirilir.
+
+Sertifikalı firmanın müşteri ile imzaladığı sözleşme hükümleri içerisindeki taahhütlerinin sigorta poliçesinde belirtilen mücbir sebepler hariç olmak üzere herhangi bir nedenle sözleşme süresi içinde tamamlanamaması halinde yürütülecek işlemler ve doğal gaz iç tesisat onayı ve işletmeye alınması konusunda sertifika sahibi ile dağıtım şirketlerinin takip edeceği usul ve esaslar Kurul tarafından belirlenir.
+
+Dağıtım şirketi, yaptırılan iç tesisatı ilgili mevzuat hükümlerine göre, tesisatın kontrol ve onayı için kendisine yapılan müracaat tarihinden itibaren en geç 7 (yedi) iş günü içinde kendi teknik personeline veya iç tesisatı yapan firma dışında kendi adına çalışan sertifika sahiplerine kontrol ettirir ve uygun bulması halinde onaylar. Uygun bulmaması halinde ise, tespit edilen hata ve eksiklikler giderildikten sonra, kontrol ve testlere ilişkin işlemler yeniden yapılır. İç tesisatın ilgili mevzuat ve standartlara uygun olarak yapılmasından ve test edilmesinden sertifika sahibi, kontrolünden ise dağıtım şirketi sorumludur. Dağıtım şirketi iç tesisat yapım süreçlerinde karşılaşılabilecek sorunları engelleyici uyarı ve bilgilendirmeleri yapar.
+
+İç tesisata gaz verilmesi; ilk abonelik sözleşmesinin imzalanmasından sonra yakıcı cihazların tesis edilmiş olması şartıyla, dağıtım şirketi yetkilisi veya tesisatın kontrolü için yetkilendirdiği sertifikalı firma yetkilisi, iç tesisatın yapım ve/veya montajından sorumlu olan sertifikalı firma yetkilisi ve müşterinin birlikte imzaladığı tesisatın imalatını yapan usta bilgisinin de yer aldığı bir tutanakla kayıt altına alınır.
+
+İç tesisata gaz verilmesi öncesinde sertifikalı firma tarafından imalatı yapılan tesisata ilişkin teknik rapor hazırlanır ve bu rapor tesisatın kontrol edilmesi esnasında müşteriye teslim edilir. Bu raporda asgari olarak tesisatın yapılmasında yetkili mühendis, tesisatı yapan usta/ustalar, kullanılan malzeme, tesisatın basınç sınıfı bilgileri yer alır. Tesisata gaz verildikten sonra yakıcı cihaz değişimi de dahil olmak üzere proje tadilatı gerektiren tüm işlemlerde devreye alma dağıtım şirketinin tüm iç tesisatı kontrolü ile tesisata uygunluk vermesinden sonra sağlanır.
+
+(Değişik altıncı fıkra:RG-21/2/2026-33175) Yakıcı cihaz değişikliklerinde; dağıtım şirketine daha önce sunulan proje kapsamında cihazın tipinde ve yerleşiminde değişiklik veya kapasitesinde artış olmaması halinde dağıtım şirketleri tarafından hazırlanan yakıcı cihaz değişim formunun cihaz değişimini yapan firma tarafından doldurulması ve dağıtım şirketi yetkilisinin kontrolü şartıyla proje tadilatı olmadan değişim yapılır. Yakıcı cihaz devreye alma işlemi dağıtım şirketi yetkilisinin tesisat kontrolü ile sağlanır. Yakıcı cihaz değişim formunun bir nüshası müşteriye bırakılır. Dağıtım şirketi tarafından müşterinin tesisatına ilişkin bilgiler güncellenir.
+
+Doğal gaz yakıt sistemli olarak projelendirilerek inşa edilecek binalarda, diğer mevzuat gereğince ilgili dağıtım şirketine onayı için ibraz edilen proje dağıtım şirketi tarafından ön proje olarak kabul edilir ve gerekli kontroller yapılarak onaylanır. Bu aşamada dağıtım şirketi, binanın inşası sürecinde doğal gaz iç tesisatının standartlara uygun yapılmasını teminen bilgilendirme yapar. Ancak, ön projenin onaylanması sonrasında tesisatın sertifikalı firma tarafından imalatına başlanmadan önce imalatı yapacak olan sertifikalı firmanın dağıtım şirketine bu maddenin birinci fıkrasında belirtilen müracaat dosyasını sunması gerekir. Sunulacak dosya içerisinde daha önce kabulü yapılmış ön projede herhangi bir değişiklik bulunmasa dahi proje onay için tekrar sunulur.
+
+Herhangi bir nedenle müşteri ile sertifikalı firma arasındaki sözleşmenin iptali halinde, sözleşme iptalinden itibaren en geç 5 (beş) iş günü içerisinde sertifikalı firma dağıtım şirketine iptal edilen sözleşme, iç tesisat numarası, iptal gerekçesi hakkında bilgi verir ve herhangi bir ekipman teslim almışsa dağıtım şirketine teslim eder. Dağıtım şirketi iptal edilen sözleşme ile ilgili olarak müşteri ile iletişime geçer ve konu hakkında bilgi verir. Ayrıca, proje onay sürecinde olup başvuru tarihinden itibaren üzerinden 5 (beş) yıl geçen iç tesisat projeleri dağıtım şirketi tarafından iptal edilir ve projeyi sunan firmaya bilgi verilir.
+
+Dağıtım şirketleri tüketicilerin proje sunum, onay ve gaz açım işlemlerine ait süreçleri internet sitelerinde takip edebilmesine olanak sağlayacak bir sistemi internet siteleri bünyesinde kurar. Ayrıca, dağıtım şirketleri kendi dağıtım bölgelerinde faaliyet göstermekte olan sertifikalı firmaların sunduğu proje sayısı, ilk kontrolde proje onay sayısı, ilk kontrolde proje onay yüzdesi, kontrol edilen tesisat sayısı, ilk kontrolde onay sayısı, ilk kontrolde onay yüzdesi olmak üzere 6 (altı) kalem üzerinden sertifikalı firmaların son 6 (altı) aylık performans değerlendirme tablosunu yayımlar. Konut ve endüstriyel tesisatlar için ayrı ayrı oluşturulan tabloya yeni sertifika alan firmalar azami 15 (on beş) iş günü içerisinde eklenir. Bu tablo her 6 (altı) ayda bir yenilenir.
+
+Bu madde kapsamında ilgili dağıtım şirketinin alacağı tüm bedeller Kurul tarafından belirlenir.
+
+Müşteri Sözleşmeleri
+
+Madde 38—(Değişik:RG-14/5/2022-31835)
+
+(Değişik birinci fıkra:RG-21/2/2026-33175) İlk abonelik esnasında yapılacak abonelik sözleşmesi; iç tesisat proje onayını müteakip ilgili ve diğer mevzuat kapsamında gerekli belgelerin dağıtım şirketine ibrazı ve ilgili mevzuat çerçevesinde belirlenmiş güvence bedelinin tahakkuku ve/veya tahsili ile imzalanır veya mesafeli sözleşme yapılır. Abonelik sözleşmesi, doğal gazı fiilen kullanacak olan gerçek veya tüzel kişi veya bunların yetkili temsilcileriyle yapılır. İlk abonelikte 37 nci madde çerçevesinde abonenin doğal gazı kullanıma açılır. İlk abonelikten sonra aynı adreste yapılacak tüm yeni abonelik işlemlerinde ise; doğal gazın kullanıma açılması iç tesisatın dağıtım şirketi veya kendi adına çalışan sertifikalı şirketlerce abonelik sözleşmesinin yapılmasından itibaren 4 (dört) iş günü içinde kontrol edilmesinden sonra yapılır. Yapılacak kontrol neticesinde, tesisatın uygun bulunmaması halinde, dağıtım şirketinin tespitleri doğrultusunda tesisata ilişkin eksiklikler ilgisine göre sertifikalı firmalar ve/veya müşteriler tarafından giderilerek tesisat mevzuata uygun hale getirilir. Bu durumda tesisatı uygun hale getiren sertifikalı firma ve/veya müşteri tarafından dağıtım şirketine yapılacak başvurudan sonra tesisat 4 (dört) iş günü içinde kontrol edilir ve doğal gaz kullanıma açılır. Tüzel kişilere ait vergi kimlik numaraları Gelir İdaresi Başkanlığından e-vergi levhası sorgulaması yoluyla, ticaret sicil bilgileri ise ilgili ticaret sicil müdürlüğünden ticaret sicil sorgulaması yoluyla teyit edilir.
+
+Dağıtım şirketi tarafından sözleşmesiz olarak doğal gaz kullanıldığının ve fiili olarak tüketimi gerçekleştiren kişinin somut belgeler ile tespit edildiği durumlarda, tüm mali yükümlülükler ilgili kişiye tahakkuk ettirilir. Adreste ikamet etmekte olan doğal gaz kullanıcılarının değişimi, ödeme yöntemine bağlı sayaç tipi değişimi veya vergi numarası gibi sözleşmede yer alan esas unsurlardan birinin değişimi halinde yeni sözleşme imzalanır.
+
+Dağıtım şirketi tarafından, sözleşmenin yapılması esnasında, uygulanacak fiyatlandırma esasları ve sözleşme hükümleri ile güvenli gaz kullanımı, acil durumlar ve tüketicinin telefon ve e-posta bilgilerini güncel tutacağı, dağıtım şirketi sisteminde kayıtlı telefona ve/veya e-posta adresine yapılacak bildirimlerin geçerli sayılacağı hakkında bilgileri kapsayan bir doküman talep sahibine teslim edilir veya iletilir. Dağıtım şirketi müşterilerini konut, ticari, sanayi ve benzeri olmak üzere gruplandırır ve bu müşteri grupları ile mevzuat hükümlerine aykırı olmamak koşuluyla standart tip sözleşme yapar. Yapılacak tüm standart tip sözleşmelerin birer örneği dağıtım şirketinin internet sitesinde yayımlanır.
+
+Abonenin vefatı halinde diğer mirasçılardan herhangi bir itiraz gelmediği takdirde, vefat eden abonenin eşi, dağıtım şirketinde mevcut bulunan güvence bedeli aktarılarak ve ilave bir güvence bedeli alınmaksızın abone yapılır.
+
+Taşıma hizmeti sözleşmesi; dağıtım şirketinin tedarikçilerle, teslim hizmeti sözleşmesi ise dağıtım şirketinin serbest tüketici ve tedarikçilerle doğal gazın devir teslimi için yaptığı sözleşmelerdir. Bu sözleşmelerde ilgili mevzuat çerçevesinde taraflarca serbestçe belirlenen hükümler yer alır. Sözleşme metinleri üzerinde mutabık kalınamadığı durumlarda Kurul tarafından belirlenen sözleşme metinleri imzalanır. Serbest tüketiciler ile tedarikçiler arasında imzalanacak sözleşmelerin süreleri taraflar arasında serbestçe belirlenir.
+
+Tüketiciler dağıtım şirketlerine bildirdikleri mobil, sabit ve elektronik iletişim kanallarını ve gerek görülmesi halinde vergi numarasını güncel tutar. Dağıtım şirketlerinin sistemlerinde kayıtlı mobil, sabit ve/veya elektronik iletişim kanallarına yaptığı bildirimler geçerli sayılır.
+
+Dağıtım şirketi ile tüketiciler arasında yapılacak sözleşmelerde, ilgili mevzuata aykırı hükümler yer alamaz.
+
+(Ek fıkra:RG-21/2/2026-33175) Diğer mevzuat kapsamında yetkili idarelerce dağıtım şirketine yapılan yazılı bildirimler çerçevesinde hizmeti durdurulan veya sözleşmesi sonlandırılan aboneliklerin bulunduğu adreslerde yapılacak yeni abonelik başvurularında, dağıtım şirketine bildirimi yapan yetkili idarenin yazılı olarak uygun görüşü alınmadan sözleşme imzalanamaz.
+
+Güvence Bedeli
+
+Madde 39 — (Değişik:RG-14/5/2022-31835)
+
+(Değişik birinci fıkra:RG-21/2/2026-33175) Dağıtım şirketi, alacaklarını garanti altına alabilmek amacıyla, mekanik sayaç kullanan abonelerden, abonelerin tercihlerine göre nakit veya kredi kartına, peşin ya da taksitli olarak bir defaya mahsus olmak üzere güvence bedeli tahsil edebilir. Güvence bedelinin taksitli olmasını talep eden müşterilere tercihlerine göre güvence bedeli ödemesi için vade farksız en az 6 (altı) eşit taksit yapılır. Bu fıkra kapsamındaki bedellerin faturaya yansıtılması yerine kredi kartı kullanılarak ödenmesi halinde, kredi kartlarına ilişkin yürürlükte olan ilgili mevzuat hükümleri uygulanır.
+
+Güvence bedeli, doğal gazı fiilen kullanmak üzere sözleşme yapan kişilerden veya bunların yetkili temsilcilerinden alınır.
+
+Güvence bedelleri ile bunların hesaplanmasına ilişkin usul ve esaslar Kurul tarafından belirlenir.
+
+(Ek fıkra:RG-21/2/2026-33175)(3) Ancak;
+
+a) Ön ödemeli sayaç kullanan tüketicilerden,
+
+b) Herhangi bir gerekçe ile abonelik esnasında güvence bedeli alınmamış abonelerden daha sonra aynı adres için yeni sözleşme yapılana kadar,
+
+c) İbadethanelerden, cemevlerinden ve Diyanet İşleri Başkanlığına bağlı Kur’an eğitim ve öğretimine yönelik kurslardan,
+
+ç) 10/12/2003 tarihli ve 5018 sayılı Kamu Malî Yönetimi ve Kontrol Kanununa ekli (I) sayılı cetvelde yer alan kamu idarelerinden, bu kamu idarelerinin dinlenme tesisleri, misafirhaneleri ile iktisadi ve ticari amaçla işletilen tesisleri hariç,
+
+d) 29/5/1986 tarihli ve 3294 sayılı Sosyal Yardımlaşma ve Dayanışmayı Teşvik Kanunu ile 1/7/1976 tarihli ve 2022 sayılı 65 Yaşını Doldurmuş Muhtaç, Güçsüz ve Kimsesiz Türk Vatandaşlarına Aylık Bağlanması Hakkında Kanun kapsamında aylık veya düzenli sosyal yardım almaya ilişkin hak sahipliği verilen haneler için, hak sahibi adına yapılacak müşteri sözleşmesi kapsamında,
+
+güvence bedeli alınmaz. Bu fıkra kapsamında güvence bedeli alınmamasına ilişkin hükümler, mevcut aboneliğin sona erdirilerek aynı gerçek veya tüzel kişi tarafından yeniden aynı adreste abonelik tesis edilmesi hâlinde uygulanmaz. Bu fıkranın (ç) bendi kapsamındaki kamu kurumlarının kabul etmesi halinde dağıtım şirketi tarafından ön ödemeli sayaç takılabilir.
+
+Abonelik sözleşmesi sona eren abonenin dağıtım şirketinde bulunan güvence bedeli, tüm borçların ödenmiş olması ve nakit olarak alınan güvence bedellerinin ise ilgili mevzuat çerçevesinde güncelleştirilmesi kaydıyla, abonelik sözleşmesinin sona ermesine ilişkin talep tarihinden itibaren en geç on beş gün içerisinde aboneye veya onun yetkili temsilcisine iade edilir.
+
+Serbest tüketiciler güvence bedeli olarak nakit yerine banka kesin teminat mektubu da verebilir. Serbest tüketicilerden güvence bedeli alınıp alınmayacağı ve koşulları imzalanacak sözleşmeler kapsamında ilgili mevzuata aykırı olmamak kaydıyla serbestçe belirlenir.
+
+İKİNCİ BÖLÜM
+
+Sayaç, Ölçüm ve Müşteri Şikayetleri
+
+Sayaç
+
+Madde 40- (Değişik fıkra:RG-14/5/2022-31835) Sayaçlar, dağıtım şirketinin mülkiyetinde olup abone bağlantı bedeli dışında hiçbir bedel alınmadan dağıtım şirketince temin edilerek sisteme dahil edilir. Sayaçların muayenesi ile tamir ve ayar işlemleri Ölçü Aletleri Mevzuatı kapsamında yapılır.
+
+(Değişik ikinci fıkra:RG-21/2/2026-33175) Sayaçların takılması, sökülmesi, değiştirilmesi, kontrolü ve benzeri her türlü işlem dağıtım şirketi tarafından yapılır veya yaptırılır. Sayaçlar hiçbir koşulda tüketicilere teslim edilmez. Bununla birlikte sayacın sertifikalı firmalar tarafından tesis edileceği durumlarda, sayaçlar müşteri sözleşmesinin imzalanması sonrasında sertifikalı firmalar tarafından dağıtım şirketinden tutanakla teslim alınır. Abone sayaçlarında meydana gelen ve gaz arzının sürdürülmesini engelleyen tüm arıza ve sorunlar dağıtım şirketine arıza bildirimi yapıldıktan sonra 24 (yirmi dört) saati geçmeyecek şekilde en kısa sürede giderilir. Müşteri, sayaca hiçbir şekilde müdahale etmemekle ve sayacı dağıtım şirketinin erişimini engellemeyecek şekilde korumakla yükümlüdür. Sayaçlara ve ölçümü etkileyecek her türlü ekipmana dışarıdan yapılan müdahale sonucu oluşacak zarar ve ziyan müşteri tarafından karşılanır. Bu durumda dağıtım şirketi tarafından hazırlanacak müdahale/hasar raporu ve yerinde tutulacak tutanak esas alınır.
+
+(Ek fıkra:RG-06/08/2004-25545) (Değişik fıkra:RG-13/2/2013-28558) Bağımsız bölüm maliki, binanın veya tesisin sahibi ya da bunların yetkili temsilcilerinin yazılı talebi ve dağıtım şirketinin onayı ile, dağıtım şirketi tarafından mevcut mekanik sayaç ön ödemeli sayaç ile değiştirilebilir. Dağıtım şirketi, mevcut mekanik sayacın ön ödemeli sayaç ile değişimi hususunda müşterilerine hiçbir şekilde zorlamada bulunamaz. Sayacın değiştirilmesi durumunda alınacak bedel Kurul Kararıyla belirlenir. 
+
+(Ek fıkra:RG-13/2/2013-28558) Dağıtım şirketi, ön ödemeli sayaç kullanan müşterilere, benzer müşterilerin son iki yılın aynı çeyrek dönemlerine rastlayan doğal gaz kullanım miktarlarının ortalamasını esas alarak, bir ay içerisinde, en fazla ortalama iki aylık doğal gaz tüketim miktarı kadar doğal gaz satışı yapabilir. 
+
+(Ek fıkra:RG-29/7/2018-30493)(2) Sistemde kullanılmakta olan mevcut ön ödemeli sayaçlara Türk Lirası yükleme/Türk Lirası düzeltme/Türk Lirası satış yöntemleri uygulanabilir. Dağıtım şirketi uygulayacağı yöntemi Kurul onayına sunar. Kurul gerekli görmesi halinde sunulan uygulama yönteminde değişiklik yapar ve uygulama yöntemi Kurul onayı ile yürürlüğe girer. Uygulama yönteminde Kurul onayı olmaksızın değişiklik yapılamaz. Bu fıkranın yürürlüğe girdiği tarih itibarıyla satın alması tamamlanmış olan doğal gaz alımları için bu fıkra hükmü uygulanmaz.
+
+(Ek fıkra:RG-13/2/2013-28558) Dağıtım şirketi, sayaçların ölçüm toleranslarına ilişkin müşteriye bilgi verir ve müşterinin istemesi halinde, aradaki fark müşteri tarafından karşılanmak koşuluyla, ölçüm hassasiyeti daha yüksek olan sayaçları temin ederek, sistemine dahil eder.
+
+Ölçüm
+
+Madde 41- (Mülga ibare:RG-06/08/2004-25545) Doğal gaz tüketim miktarının belirlenmesinde, sayaçlardan okunan değerin otomatik hacim düzelticiler vasıtasıyla düzeltilmiş hacim ölçüsüne göre hesaplanması esastır. Otomatik hacim düzelticisi olmayan müşterilerin doğal gaz tüketim miktarı ise ilgili mevzuatta belirtilen usul ve esaslara uygun olarak düzeltilmiş hacim ölçüsüne göre hesaplanır.
+
+(Ek fıkra:RG-14/5/2022-31835) Müşteri tüketimlerinin saatlik takibinin yapılabildiği, bir veya birden çok cihazın tek bir sayaç ile ölçümü yapılan tesislerde, sayaçların ölçüm kapasiteleri altında çekiş yapıldığının tespiti ve tüketicilere bildirilmesi halinde, sayaçların asgari ölçüm kapasiteleri dikkate alınarak ölçüm miktarlarında düzeltme yapılır. Düzeltme sonucu ortaya çıkan bedel müşteri tarafından ödenir. Bu durumlarda tüketiciye ölçüm sistemi hakkında dağıtım şirketi tarafından bilgilendirme yapılır. Tüketicinin tercihine bağlı olarak ve maliyetinin tüketici tarafından karşılanması kaydıyla ölçüm kapasitesi veya hassasiyeti uygun sayaç tesis edilir.
+
+(Ek fıkra:RG-14/5/2022-31835) Faturalandırmaya esas olarak kullanılan veriler isteyen tüketicilerin erişebileceği ve asgari olarak geriye dönük son 5 (beş) yılı kapsayacak şekilde dağıtım şirketlerinin internet sitesinde yayımlanır.
+
+Sayacın ölçüm yapmaması veya yanlış ölçüm yapması
+
+Madde 42- Sayacın, (Mülga ibare:RG-21/2/2026-33175) herhangi bir nedenle ölçüm yapmadığı veya yanlış ölçüm yaptığı tespit edilirse, doğal gaz tüketim miktarı aşağıdaki şekilde belirlenir:
+
+a) (Değişik:RG-14/5/2022-31835) Serbest tüketicilerin kullanmakta oldukları ölçüm ekipmanlarının herhangi bir nedenle devre dışı kalması veya arızalanması halinde, bu ekipmanların devre dışı kaldığı süredeki tüketim miktarlarının hesaplanmasında öncelikle taraflar arasında imzalanmış olan sözleşme hükümleri çerçevesinde işlem yürütülür. Ancak sözleşmede belirlenmiş bir yöntem bulunmaması halinde üretim kapasitesindeki değişimler de dikkate alınarak sırasıyla;
+
+1- Teçhiz edilmiş ise kontrol amaçlı ölçüm ekipmanları,
+
+2- Sayacın akredite kuruluşlarca test ve kontrolü sonucunda belirlenen ölçüm toleransı dışındaki sapma yüzdesi,
+
+3- Gaz mühendisliği teknolojisi doğrultusunda manuel olarak yapılabilecek hesaplamalar,
+
+4- Geçmiş dönem benzer şartlardaki doğal gaz kullanım miktarlarının ortalaması,
+
+5- Tespit edilebilmesi durumunda arıza öncesi ve arıza sonrası benzer şartlardaki en yakın döneme ait tüketim ortalamaları,
+
+ile işlem yapılır. Doğal gazı sadece ısınma amaçlı kullanan serbest tüketicilere ise (b) bendi hükümleri uyarınca işlem yapılır.
+
+b) (Değişik:RG-21/2/2026-33175) Aboneler için ise; son iki yılın aynı aylarına, aylık değer tespit edilememesi halinde çeyrek dönemlerine rastlayan doğal gaz kullanım miktarlarının ortalaması esas alınır. Bu ortalama, benzer tüketim eğilimine sahip diğer müşteriler emsal alınmak suretiyle hesaplanan aynı dönemdeki tüketimlerin ortalaması ile kıyaslanır. Müşterinin tüketim ortalamasının; emsal alınan müşterilerin ortalamasından fazla olması halinde, emsal alınan müşterilerin tüketim ortalaması, az olması halinde ise, müşterinin kendi tüketim ortalaması esas alınarak sayacın ölçüm yapmadığı veya yanlış ölçüm yaptığı dönem tüketimleri hesaplanır ve tahakkuk ettirilir. Müşteriye ilişkin geçmiş yıla ait veri olmaması veya mevcut verilerin eksik, hatalı ya da kaçak tüketim nedeniyle güvenilir olmaması durumunda, hesaplamalar, benzer tüketim eğilimine sahip diğer müşterilere ilişkin veriler dikkate alınarak yapılır. Hesaplanan tüketim miktarından, müşteriye ilgili dönemde tahakkuk ettirilmiş tüketim miktarı mahsup edilir.
+
+c) (Değişik:RG-14/5/2022-31835) Sayacın ölçüm yapamadığı veya yanlış ölçüm yaptığı süre; iç tesisatın işletmeye alınması, iç tesisatın kontrol edilmesi, sayaç muayenesi, sayaç açma-kapama, sayaç değiştirme, sayaç sökme-takma ve abonelik sözleşmesi imzalanması işlemlerinden en son yapılan işlem tarihi ile sayacın ölçüm yapmadığı veya yanlış ölçüm yaptığının tespit edildiği tarih arasındaki süre veya bu süreler bir yıldan uzun ise son bir yıllık süredir. Faturaya itiraz durumunda, tüketicinin itiraza konu dönemdeki elektrik ve su faturaları dikkate alınarak düzeltme yapılabilir.
+
+d) (Ek:RG-06/08/2004-25545) Bu madde hükümleri otomatik hacim düzeltici arızası için de uygulanır. Otomatik hacim düzelticisinin, müşterinin kusuru dışında herhangi bir nedenle arızalanması halinde, dağıtım şirketi tarafından yapılacak geriye dönük doğal gaz tüketim hesabında; sayaçtan okunan hacim değerlerinin ilgili mevzuata göre belirlenen K faktörü ile düzeltilmesi esas alınır.
+
+Sayacın ölçüm yapmaması veya yanlış ölçüm yapmasından dolayı oluşan ölçüm farkları, ilgili dönem perakende satış fiyatları esas alınarak hesaplanır ve dağıtım şirketi tarafından 51 inci madde hükümlerine göre işlem yapılır.
+
+Sayaçların kontrol edilmesi
+
+Madde 43-  (Değişik fıkra:RG-14/5/2022-31835) Dağıtım şirketi, sayaçların sağlıklı işleyişini bir yılı geçmemek kaydıyla düzenli olarak kontrol eder. Sayacın 3516 sayılı Kanun hükümleri doğrultusunda dağıtım şirketi tarafından, her türlü ayar ve bakımı için periyodik olarak muayene ettirilmesi esastır. Ölçü Aletleri Mevzuatı hükümleri doğrultusunda; sayaçların muayenesinin, gerektiğinde ise tamir ve ayarının yaptırılması ve izin verilen hata sınırları içinde çalışmasının sağlanması dağıtım şirketinin sorumluluğundadır.
+
+Sayaçların arızalanması veya ölçme hassasiyetinden şüphe edilmesi halinde müşteri sayacın muayenesini talep edebilir. Bu talep, dağıtım şirketi tarafından 3516 sayılı Ölçüler ve Ayar Kanunu hükümleri çerçevesinde karşılanır. Müşterinin haklı olduğu durumlarda muayene bedeli dağıtım şirketi tarafından ödenir.
+
+Dağıtım şirketi, sayaçları gerekli gördüğü zamanda müşterinin nezaretinde olsun veya olmasın her zaman kontrol edebilir. Yapılan kontrolde, sayaçta arıza tespit edilirse, endeks değerini de içeren tutanak düzenlenerek çalışır durumda başka bir sayaç takılır.
+
+(Değişik fıkra:RG-14/5/2022-31835) Müşterinin adresinde bulunmadığı durumlarda sayaçla ilgili olarak, dağıtım şirketi tarafından herhangi bir işlem yapılmış ise müşteri adresine bildirim bırakılır ve müşterinin sistemde kayıtlı telefonuna kısa mesaj ile bilgi verilir. Müşteri, gerekiyorsa bildirim ile birlikte dağıtım şirketine müracaat eder.
+
+Dağıtım şirketi, güvenlik açısından tehlike arz eden durumlarda, müşteri veya inceleme yapılan yerde ikamet eden kişinin izni ile sayaçtan sonraki doğal gaz tesisatını kontrol edebilir. İzin alınamaması halinde, dağıtım şirketi tehlike giderilinceye kadar müşterinin doğal gazını keser.
+
+Hizmetin durdurulması
+
+Madde 44- (Değişik:RG-14/5/2022-31835)
+
+Dağıtım şirketince;
+
+a) Müşterinin belli bir süre için doğal gazı kullanmak istememesi halinde o döneme kadar tükettiği doğal gazın bedelini ödemesi şartıyla üç gün içinde,
+
+b) Müşterinin; faturasının son ödeme tarihinden itibaren on beş gün içerisinde ödenmemesi halinde fatura borcundan dolayı doğal gaz kesintisi yapılacağının en az 3 (üç) iş günü önceden kısa mesaj, telefon, e-posta, adrese ihbarname, fatura altında bildirim ve benzeri yöntemlerden en az ikisi yoluyla haber verilmesi kaydıyla,
+
+c) Mahkeme veya Kurul Kararına istinaden ya da kaçak veya usulsüz doğal gaz kullanıldığının tespiti halinde,
+
+d) Müşteriden kaynaklanan nedenlerle sayacın en az iki fatura dönemi okunamamasından dolayı dağıtım şirketince bırakılan bildirime üç iş günü içinde cevap verilmemesi halinde,
+
+e) 63 üncü maddedeki hallerde,
+
+f) Bina kolon tesisatında tadilat gerekmesi durumunda,
+
+g) Üst üste üç faturalandırma döneminde tüketiciden kaynaklanan nedenlerle ulaşılamayan sayaçlar için dağıtım şirketince aboneye yapılan bildirim neticesinde durumun belgelendirilmesi şartıyla, üç gün içinde sayacın ulaşılabilir duruma getirilmemesi durumunda,
+
+h) Periyodik kontrollerde müşteriden kaynaklanan nedenlerden dolayı üç defa arka arkaya iç tesisatın kontrolünün yapılamaması durumunda,
+
+ı) Yıllık sayaç kontrollerinde veya dağıtım şirketi tarafından gerçekleştirilen saha kontrollerinde müşteriden kaynaklanan nedenlerden dolayı bildirim bırakılması şartıyla üç defa arka arkaya sayacın kontrolünün yapılamaması durumunda,
+
+i) Güvence bedelinin taksitlendirilmesi halinde, taksitlerden herhangi birinin son ödeme tarihinden itibaren on beş gün içerisinde ödenmemesi durumunda, doğal gaz kesintisi yapılacağının en az 3 (üç) iş günü önceden kısa mesaj, telefon, e-posta, ihbarname, fatura altında bildirim ve benzeri yöntemlerden en az ikisi yoluyla haber verilmesi suretiyle,
+
+j) İlgili mevzuat gereğince, haberleşme sistemi veya otomatik hacim düzeltici tesis edilmesine veya güvence bedeli uygulamaları konusunda belirlenen güncellemeye ilişkin yükümlülüklerin yerine getirilmemesi halinde ilgili serbest tüketiciye doğal gaz arzının durdurulacağına dair gerekli bildirimlerin 1 (bir) ay önceden yapılmış olması kaydıyla,
+
+k) Diğer mevzuattan kaynaklanan zorunlu hallerde,
+
+doğal gaz kesilerek hizmet durdurulur ve bu hususlar müşteri sözleşmesinde belirtilir. Hizmeti durdurulan sayaçların okuması da 48 inci madde hükümleri kapsamında yapılır.
+
+Birinci fıkranın (b) bendinde belirtilen ödenmemiş faturalara esas tüketim miktarının hesaplanan karşılığının G4 sayaçlar için belirlenen sayaç açma-kapama bedelinin 3 (üç) katını geçmemesi halinde gaz arzı durdurulamaz. Ancak faturanın 3 (üç) ay ödenmemesi halinde miktara bakılmaksızın (b) bendinde belirtilen yöntemle gerekli bildirimlerin yapılması kaydıyla doğal gaz kesilerek hizmet durdurulabilir. Ayrıca;
+
+1) 65 yaş üstü tüketicilerin,
+
+2) Hayati risk taşıyacak şekilde sürekli cihaza bağlı olarak yaşayan ve raporları dağıtım şirketine ibraz edilen bireylerin ikamet ettikleri adreslerdeki tüketicilerin,
+
+3) Diğer mevzuattaki kriterleri taşıyan şehit aileleri ve muharip/malul gazi tüketicilerin,
+
+bir aboneliğine ait faturanın en az üç dönem ödenmemesi ve dağıtım şirketi tarafından (b) bendinde belirtilen yöntemle gerekli bildirimlerin yapılması kaydıyla gaz arzı durdurulabilir. Borcun ödenmesine ilişkin taksitlendirme talep edilmesi halinde dağıtım şirketi tarafından 4 (dört) eşit taksit yapılır.
+
+Birinci fıkranın (c) ve (e) bentleri hariç, doğal gaz hizmet kesintileri mesai saatleri içinde ve resmi tatil günleri dışında yapılır. Konut müşterileri için cuma günleri ve resmi tatillerin başladığı günden önceki gün kesinti yapılamaz. Ayrıca yukarıda belirtilen hizmet kesintileri ile ilgili olarak gönderilecek bildirim açık ve kolay anlaşılabilir bir şekilde düzenlenir, içeriğinde hizmet durdurma tarihi ve gerekçesi ile bu konuda daha fazla bilgi alınabilmesi için dağıtım şirketinin telefon numaraları yer alır.
+
+Doğal gaz hizmet kesintisi yapıldığında, tüketicinin adresine hizmetin durdurulduğuna dair gerekçeli bildirim bırakılır. Ayrıca, tüketici telefonuna kısa mesaj ile bildirim gönderilir.
+
+Müşteriye yeniden doğal gaz verilmesi
+
+Madde 45- (Değişik:RG-21/2/2026-33175)
+
+Doğal gazı kesilen müşterinin, yükümlülüklerini yerine getirmesi ve dağıtım şirketine başvurusu üzerine, 44 üncü maddenin birinci fıkrasının (c) ve (e) bentleri hariç müşteriye 24 (yirmi dört) saati geçmeyecek şekilde en kısa sürede yeniden doğal gaz verilir. 44 üncü maddenin birinci fıkrasının (b) ve (i) bentlerinde tanımlanan durumlarda faturanın ödenmesinden, (c) ve (e) bentlerinde tanımlanan durumlarda ise, bu süre söz konusu durumun ortadan kalkmasından itibaren başlar. Ancak, gerekiyorsa iç tesisatın kontrol ve testlerine ilişkin işlemler bu süre içinde yeniden yapılır. Doğal gazı 44 üncü maddenin birinci fıkrasının (a), (e), (f), (h), (ı) ve (k) bentleri hariç diğer hükümlerine göre kesilen müşteriden, ilgili yıl için Kurul tarafından belirlenen sayaç açma kapama bedeli alınır.
+
+Müşteri sözleşmesinin sona ermesi
+
+Madde 46 — (Değişik:RG-14/5/2022-31835)  
+
+Müşteri sözleşmesi;
+
+a) Müşterinin veya müşteri nam ve hesabına yetkili temsilcisinin dağıtım şirketine başvurusu üzerine,
+
+b) (Değişik:RG-21/2/2026-33175) Müşterinin dağıtım şirketine olan borcunu son ödeme tarihinden itibaren üç ay süre ile ödememesi halinde fatura borcundan dolayı sözleşmenin sona erdirileceğinin en az 3 (üç) iş günü önceden kısa mesaj, telefon, e-posta, adrese ihbarname, fatura altında bildirim ve benzeri yöntemlerden en az ikisi yoluyla haber verilmesi kaydıyla,
+
+c) Müşterinin vefatının tespiti halinde,
+
+d) Müşterinin tüzel kişiliğinin sona ermesi halinde,
+
+e) Müşterinin, sözleşmesini sona erdirmeksizin sözleşmeye konu adresten ayrıldığının tespit edilmesi durumunda,
+
+f) (Değişik:RG-21/2/2026-33175) Dağıtım şirketi tarafından güvence bedelinin taksitlendirilmesi halinde, herhangi bir taksitin üç ay süre ile ödenmemesi durumunda, sözleşmenin sona erdirileceğinin en az 3 (üç) iş günü önceden kısa mesaj, telefon, e-posta, adrese ihbarname, fatura altında bildirim ve benzeri yöntemlerden en az ikisi yoluyla haber verilmesi kaydıyla,
+
+g) 1 (bir) yıl içerisinde 3 (üç) defa usulsüz doğal gaz kullanımı tespit edilmesi durumunda,
+
+dağıtım şirketince en geç 3 (üç) iş günü içinde sona erdirilir. Ancak 44 üncü maddenin ikinci fıkrası kapsamındaki tüketiciler için bu fıkranın (b) bendinde belirtilen süre 6 (altı) ay olarak uygulanır.
+
+Hesap tasfiyesinden sonra on yıl içinde geri alınmayan müşteri alacakları ilgili yıl sonunda irat kaydedilmek üzere dağıtım şirketi tarafından ilgili il defterdarlığı vasıtasıyla Hazineye aktarılır.
+
+Sözleşmesi sona erdirilen veya erdirilecek olan müşterinin kapama vanası uygun aparat ile kapatılır ve doğal gaz arzı durdurulur. Müşteri sayacının kapama anındaki son ölçüm değeri bir tutanakla tespit edilir, fotoğrafı çekilerek arşivlenir, tespit edilen bu değer üzerinden tahakkuk işlemi yapılır ve varsa müşterinin diğer borçları ve alacakları hesaplanarak müşteri hesabı tasfiye edilir.
+
+Müşterinin alacağı varsa, abonelik sözleşmesinin müşteri tarafından sona ermesine ilişkin talep tarihinden veya dağıtım şirketi tarafından resen sona erdirildiği tarihten itibaren en geç 15 (on beş) gün içerisinde müşteriye veya onun yetkili temsilcisine ödenir.
+
+Abonenin, sözleşmesini sona erdirmeksizin ikamet ettiği adresten ayrılması durumunda, söz konusu adrese taşınan gerçek ve tüzel kişi ile yeni bir abonelik sözleşmesi yapılır. Ayrıca aynı adreste başka abonelerin daha önceki dönemlere ilişkin tüketimlerinden kaynaklanan borçları yeni abonenin üstlenmesi talep edilemez.
+
+Müşteri şikâyetleri, bilgilendirme ve diğer hizmetler
+
+Madde 47- (Başlığı ile Birlikte Değişik:RG-14/5/2022-31835)
+
+Müşteri, doğal gaz kullanımı ile ilgili her türlü şikâyetini dağıtım şirketinin müşteri hizmetleri birimine yapar. Müşteri şikâyetini şahsen, yazılı olarak, telefonla, faksla veya internet aracılığıyla yapabilir. Dağıtım şirketi, şikâyetleri, başvuru tarihinden itibaren şikâyetin niteliğine göre en geç on beş gün içinde müşterinin talebi dikkate alınarak başvurunun yapıldığı usul ile cevaplar ve/veya gerekli işlemleri yapar. Müşteri şikâyetleri ve yapılan işlemler dağıtım şirketi tarafından kayıt altına alınır ve talep halinde Kuruma iletilir.
+
+Dağıtım şirketleri tarafından, tüketicilere yönelik yirmi dört saat kesintisiz hizmet verecek şekilde çağrı merkezi kurulur. Dağıtım şirketleri tüketicilere yönelik çağrı hizmetleri ile ilgili olarak hizmet alımı yapabilirler. Dağıtım şirketlerinin faaliyet konuları ile ilgili olarak itiraz, şikâyet ve taleplere ilişkin bilgilendirme ve yönlendirme konularında kullanıcılara yardımcı olmak üzere kuracakları çağrı merkezinde yapılan görüşmeler sesli kayıt altına alınır. Çağrı merkezi, arayan kişinin operatöre kolay ulaşabilmesine imkân vermelidir. Çağrı merkezine yapılan aramalar ve çağrı merkezi tarafından yapılan geri aramalara ilişkin çağrı merkezi sistemi üzerinde yapılan tüm işlemler kayıt altına alınır. Cevap ve bilgilendirme için yapılacak geri dönüşler arayan kişinin talebine uygun olarak e-posta, telefon veya kısa mesaj yoluyla ya da yazılı olarak yapılır. Ayrıca, çağrı merkezi aramalarına ilişkin tüm işlem kayıtları ve ses kayıtları ile çağrı merkezi sisteminin işleyişini etkileyen yetkilendirme, ayarlama, güncelleme, menü ağacı değişiklikleri, anons değişiklikleri gibi işlemlere ilişkin kayıtlar asgari 1 (bir) yıl çağrı merkezi sisteminde doğrudan erişilebilir biçimde ve ilave olarak asgari 5 (beş) yıl da yedekleme ünitelerinde saklanır.
+
+Dağıtım şirketleri internet sitelerinde tüketicilerin şikâyetlerini iletebilecekleri, kolay erişim sağlanabilen, yapılan başvuruların tüketiciler tarafından takip edilmesine olanak sağlayan ve tüketici tarafından şikâyete konu belgeyi yüklemeye imkân veren bir “Şikâyet Başvuru Sistemi” oluşturur. Bu kapsamda oluşturulan kayıtlar 24/3/2016 tarihli ve 6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında gerekli önlemler alınarak 5 (beş) yıl süreyle muhafaza edilir.
+
+Dağıtım şirketleri, tüketicilerin dağıtım şirketlerine bildirdikleri mobil, sabit ve elektronik iletişim bilgilerini ve fatura bildirim tercihlerini güncellemelerine imkân verecek bir sistem kurar. Dağıtım şirketinin kurduğu bu sistemde müşteriler tarafından değiştirilen bilgilerin güncelliği, doğruluğu ve sorumluluğu müşteriye aittir. Bu sistem tahmini fatura hesabı ile asgari son 3 (üç) yıla ilişkin tüketimlerin sorgulanmasına imkân sağlamalı ve sistemde tüketicinin geriye dönük faturaya esas bilgileri bulunmalıdır. Dağıtım şirketleri ihtiyaç görülecek diğer bilgilere de bu sistemde yer verir.
+
+Dağıtım şirketleri, tüketicilerin yeterli, güvenli, sürekli ve kolay bir şekilde hizmet almalarını ve hizmet seçeneklerini öğrenmelerini teminen, gerekli bilgilendirme faaliyetini yerine getirmekle yükümlüdür.
+
+Tüketicilerin bilgilendirilmesi görevi ilgili dağıtım şirketi tarafından uygun kanallar vasıtasıyla yürütülür. Dağıtım şirketleri tarafından tüketicilere ücretsiz olarak broşür, katalog gibi araçlar dağıtılabilir ve/veya e-posta veya kısa mesaj gönderilebilir. Bu madde kapsamında yapılacak bilgilendirmeler, ayrıca internet sitesi üzerinden de kolayca ulaşılabilecek bir biçimde yayımlanır.
+
+Dağıtım şirketi tarafından tüketicilerin yaptıkları başvurular göz önünde bulundurularak internet sitesinde “Sıkça Sorulan Sorular” kısmı oluşturulur. Ayrıca dağıtım şirketinin internet sitesinde tüketim faturalarının, güvence bedelinin ve abone bağlantı bedelinin hesaplanabileceği modüller oluşturulur.
+
+Dağıtım şirketlerinin müşteri hizmetleri merkezlerinde engelli ve 65 yaş üstü vatandaşların erişiminin kolaylaştırılması için rampa, uygun gişe, kapı ve tutunma çubukları gibi gerekli düzenlemeler yapılır. 65 yaş üstü vatandaşlar ile raporlarını dağıtım şirketine ibraz eden engelli vatandaşların çağrı merkezine ulaşımlarında öncelik tanınır ve taleplerinin karşılanmasında gerekli özen gösterilir. Dağıtım şirketi, engelli raporunun kendisine ibrazından sonra en geç 3 (üç) gün içerisinde öncelik verilmesi için gereken işlemleri tamamlar.
+
+Tüketicilerin kişisel kusurları haricinde oluşan ve Kurul tarafından belirlenecek kapsamda, lisans ve sertifika sahiplerinin uygulamalarından kaynaklanan tüketici mağduriyetlerinin tazminine ilişkin usul ve esaslar Kurul tarafından belirlenir. 
+
+ÜÇÜNCÜ BÖLÜM
+
+Tahakkuk ve Faturalandırma
+
+ 
+
+Tüketimlerin tespit edilmesi, tahakkuk ve faturalandırma
+
+Madde 48 — (Değişik:RG-14/5/2022-31835)
+
+Dağıtım şirketi, tüketicilerin sayaç endekslerini müşteri bazında bir önceki okuma tarihine göre artı-eksi beş günden fazla sapma olmayacak şekilde, aylık okur veya okutur. Abonenin sayaç okuma tarihlerinin değiştirilmesini talep etmesi ve talebin dağıtım şirketince uygun bulunması, ilk faturalama, sayaç değişimi veya borcundan dolayı ara tahakkuk çıkarılması hallerinde bu kriter bir defaya mahsus olarak aranmaz. Uzaktan okuma imkânı bulunan tüketicilerin sayaçları ise ilgili mevzuat hükümleri çerçevesinde her ayın sonunda okunur ve tüketim bilgileri tüketicilere e-posta ile iletilir.
+
+(Değişik ikinci fıkra:RG-21/2/2026-33175) Dağıtım şirketinden kaynaklanan bir gerekçe ile tüketicilerin ilk okuma ve son okuma arasındaki fatura okuma süresinin birinci fıkrada belirtilen sürenin altında kalması halinde fatura ödeme süresi asgari 25 (yirmi beş) gün olarak uygulanır. Bununla birlikte ilk okuma ve son okuma arasındaki fatura okuma süresi, dağıtım şirketinden kaynaklanan nedenlerle birinci fıkrada belirtilen sürenin üzerinde olması halinde tüketim tutarı tüketiciye en az 4 (dört) fatura döneminde tahakkuk ettirilir ve tahakkuk ettirilen tutarlara vade farkı uygulanmaz. Yapılan işlemler hakkında müşteriler beşinci fıkradaki yöntemlerle bilgilendirilir. Ancak, tüketicinin talep etmesi halinde tüketim tutarı tek seferde ödenebilir. Bu fıkra kapsamında oluşan finansman maliyetleri tarifelerde dikkate alınmaz.
+
+Dağıtım şirketi, doğal gaz satış miktarını son okuma tarihindeki ile bir önceki okuma tarihi arasındaki iki endeksin farkını alarak bu Yönetmeliğin 41 inci maddesine göre hesaplar ve tahakkuk bu değer üzerinden yapılır. Ancak, dağıtım şirketi, 50 (elli) metreküpe ulaşmayan aylık tüketimleri o dönem için faturalandırmama hakkına sahiptir. Doğal gaz kullanım faturaları metreküp ve kWh enerji miktarı bazında müşteriye fatura edilir. Tüketim faturalarında okuma periyotlarına göre hesaplanacak gün bazında ağırlıklı ortalama perakende satış fiyatı kullanılarak tahakkuk yapılır.
+
+Doğal gaz tüketim faturalarında doğal gaz kullanımı ile ilgili olmayan herhangi bir bedel yer alamaz. Faturalarda yer alabilecek hususlar Kurul tarafından belirlenebilir.
+
+(Değişik beşinci fıkra:RG-21/2/2026-33175) Dağıtım şirketi faturayı, son ödeme tarihinden en az 10 (on) gün önce tüketici tercihlerine göre; kâğıt fatura, kısa mesaj, e-posta, e-fatura ya da e-arşiv fatura gibi kanallar ile iletir. Ancak ödeme süresi her halükarda 5 (beş) iş gününden az olamaz. Tüketicinin iletişim bilgisi bulunması halinde, iletilen fatura tutarı ve son ödeme tarihi hakkında kısa mesajla da tüketicinin bilgilendirilmesi zorunludur.
+
+Dağıtım şirketinin tercihi halinde 15 Mayıs – 15 Ekim arasındaki dönemde konut ve ısınma amaçlı tüketiciler için sayaç okumaları azami 2 (iki) ayda bir yapılabilir. Ayrıca bu durumdaki tüketiciler için önceki ve sonraki dönem faturalarında bu maddenin birinci fıkrasında belirtilen sürelere uygun faturalandırma yapılır. Bu uygulamayı yapan şirketler tarafından uygun kanallar vasıtasıyla tüketicilere gerekli bilgilendirmeler yapılır.
+
+Doğal gaz dağıtım şirketlerinin tercihlerine bağlı olarak; aynı adreste geriye dönük en az 12 (on iki) aylık tüketimleri olan ve talepte bulunan müşteriler için sabit aylık ödeme sistemine geçilebilir. Dağıtım şirketleri aylık okumaları bu maddenin birinci fıkrasında belirlenen şekilde yapar ve tüketim bilgilerini müşterilere iletir. Müşteri ile dağıtım şirketi arasında mahsuplaşma dönemi yıllık olarak belirlenir. Belirlenen dönem sonunda gerçekleşen toplam ödeme tutarı ile toplam tüketilen miktar karşılığı tutar üzerinden mahsuplaşma yapılır. Mahsuplaşmada enflasyon güncellemesi dikkate alınır. Sabit aylık ödeme miktarının ilk belirlenmesinde müşterinin son bir yıl içindeki tüketimlerinin aylık ortalaması dikkate alınır. Sabit aylık ödeme miktarı her mahsuplaşma dönemi sonunda gerçekleşen tüketim miktarlarına göre güncellenir. Müşteri istediği zaman sabit aylık ödeme sistemini dağıtım şirketi ile mahsuplaşarak sonlandırabilir. Bu uygulamayı yapacak olan dağıtım şirketi Kuruma uygulama yöntemi ile ilgili olarak bildirim yapar.
+
+Sayacın okunamaması durumunda dağıtım şirketi tarafından müşteri adresine bırakılacak veya müşterinin dağıtım şirketinde kayıtlı olan iletişim kanallarına bildirilecek endeks bildirim belgesi en geç 3 (üç) gün içerisinde müşteri tarafından doldurulup dağıtım şirketine ulaştırılır veya dağıtım şirketinin uygun göreceği mobil, sabit veya elektronik iletişim kanalları ile endeks bilgisini dağıtım şirketine bildirir. Müşterinin kusuru dışında sayaç endeksinin belirlenememiş olması durumunda fatura bedeli, sayacın okunamadığı aylardaki perakende satış fiyatlarının, düzeltme katsayısının ve üst ısıl değerin ortalaması alınarak hesaplanan değerler ile hesaplanır ve okunamayan ay sayısı kadar taksitlendirilir.
+
+Dağıtım şirketi, ön ödemeli sayaç kullananlar için kolaylıkla ulaşılabilecek ve şehir yerleşiminin yoğun olduğu yerlerde yeterli sayıda bedelsiz işlem yapacak doğal gaz yükleme merkezleri kurar veya bu kapsamda hizmet alır. Ayrıca tüketici tercihine bağlı olarak hizmet bedeli karşılığı işlem yapan yükleme imkânı sağlayan merkezlerle anlaşabilir veya yükleme imkânı sağlayan cihazlar tesis edebilir.
+
+Doğal gaz yükleme merkezleri, hafta içi günlerde asgari 08.30-18.30 saatleri arasında hizmet verir. Acil durumlar göz önünde bulundurularak bu saatler dışında nöbetçi doğal gaz yükleme merkezlerinin hizmet vermesi sağlanır.
+
+Faturaların ödenmesi
+
+Madde 49-  (Değişik:RG-14/5/2022-31835)
+
+Faturada belirtilen doğal gaz tüketim bedeli, faturada yazılı bulunan yerlere belirtilen ödeme günleri içinde ödenir. Zamanında ödenmeyen faturaya konu tüketim bedeline gecikme zammı/bedeli dağıtım şirketi tarafından gecikmeye konu fatura ile birlikte peşin olarak veya bir sonraki faturaya eklenerek tahsil edilir. Son ödeme tarihinden sonra yapılan ödemeler için sözleşmede belirtilen gecikme zammı oranı günlük olarak uygulanır. Serbest tüketiciler için faturanın son ödeme tarihi ve gecikme zammı oranı taraflarca sözleşmede belirlenir. Gecikme zammı oranı, 21/7/1953 tarihli ve 6183 sayılı Amme Alacaklarının Tahsil Usulü Hakkında Kanunun 51 inci maddesine göre belirlenen gecikme zammı oranını aşamaz.
+
+Dağıtım şirketi şebeke büyüklüğü ve tüketici sayısına uygun olarak dağıtım bölgesi içerisinde yeterli sayıda bedelsiz işlem yapacak ödeme merkezi kurar veya bedelsiz ödeme yapılabilecek ödeme merkezleri ile anlaşır. Bedelsiz ödeme yapılabilecek tüm merkezlere ilişkin bilgiyi internet sitesinde ve faturanın arka yüzünde yayımlar. Tüketiciler kendi tercihleri ile hizmet bedeli karşılığı hizmet veren kuruluşlara ödeme yapabilir ancak, dağıtım şirketleri ödeme merkezleri arasındaki rekabeti engelleyici hiçbir faaliyette bulunamaz.
+
+Dağıtım şirketleri Kurulun uygun görmesi ve tüketicilerin rızasının alınması kaydıyla alternatif okuma, tahakkuk ve ödeme yöntemleri uygulayabilir. Ancak bu ödeme yöntemleri için tüketiciler mecbur tutulamaz.
+
+Fatura bedelinin zamanında ödenmemesi nedeniyle doğal gazı kesilen müşteri, ödemediği fatura bedelini, gecikme zammı ve sayaç açma-kapama masraflarıyla birlikte ödeyerek yeniden doğal gaz verilmesini dağıtım şirketinden talep edebilir. Bu durumda dağıtım şirketi, müşterinin talebini 45 inci madde hükümlerine göre yerine getirir. Dağıtım şirketi açma-kapama bedelini sayacın açılmasından sonraki ilk faturada tahsil edebilir.
+
+Faturaya itiraz
+
+Madde 50- Müşteri, fatura bedeline itiraz etme hakkına sahiptir. Müşteri faturaya itirazını, tebliğ tarihinden itibaren (Değişik ibare:RG-14/5/2022-31835) 1 (bir) yıl içerisinde dağıtım şirketinin müşteri hizmetleri birimine yapar. Dağıtım şirketi itirazı, itirazın yapıldığı tarihten itibaren on iş günü içinde karara bağlar.
+
+İtirazın yapılmış olması ödeme yükümlüğünü ortadan kaldırmaz. İtiraz sonuçlanıncaya kadar itiraza konu olan tüketim miktarının, müşterinin geçmiş yıl aynı dönemdeki tüketim miktarından fazla olması durumunda, bir önceki yılın aynı döneminde tüketilen miktar dikkate alınır. Bu miktar, itiraza konu olan dönemin perakende satış fiyatı üzerinden hesaplanarak müşteri tarafından son ödeme tarihine kadar ödenir. Müşteriye ilişkin geçmiş yıla ait veri olmaması durumunda, hesaplamalar, benzer tüketim eğilimine sahip diğer müşterilere ilişkin veriler dikkate alınarak yapılır.
+
+İtirazın dağıtım şirketi tarafından haklı bulunması halinde, itiraza konu tüketim bedeline dair fazla olarak tahsil edilen bedel, itirazın karara bağlandığı tarihten itibaren (Değişik ibare:RG-14/5/2022-31835) 5 (beş)  iş günü içinde müşteriye uygulanan gecikme zammı ile birlikte nakit olarak iade edilir veya müşterinin kabul etmesi halinde bir sonraki faturasından mahsup edilir. İtirazın, dağıtım şirketi tarafından haksız bulunması halinde ise, itiraza konu tüketim bedelinin eksik tahsil edilen kısmı son ödeme tarihinden itibaren hesaplanacak gecikme zammı tutarı ile birlikte itirazın karara bağlandığı tarihten itibaren beş iş günü  içinde müşteri tarafından ödenir.
+
+Eksik veya fazla faturalandırma
+
+Madde 51 — (Değişik:RG-9/6/2017- 30091)
+
+Dağıtım şirketi, kendi hatasından kaynaklanan eksik faturalandırma halinde, tüketim bedelini, eksik faturalandırmanın gerçekleştiği aylardaki perakende satış fiyatlarının, düzeltme katsayısının ve üst ısıl değerin ortalaması alınarak bulunan değerler ile hesaplar, eksik faturalandırmanın yapıldığı ay sayısı kadar eşit tutarda taksitlendirir ve bu durumda gecikme cezası uygulanmaz. (Ek cümle:RG-14/5/2022-31835) Bu fıkra için belirlenen süre geriye dönük olarak 1 (bir) yılı aşamaz.
+
+Fazla faturalandırma halinde ise, tahsil edilen fazla bedel, tespit edildiği tarihten itibaren en geç (Değişik ibare:RG-14/5/2022-31835) 5 (beş) iş günü içinde müşteriye, bu Yönetmeliğin 49 uncu maddesine göre belirlenecek gecikme zammı ile birlikte nakit olarak ödenir veya müşterinin kabul etmesi halinde bir sonraki faturasından mahsup edilir.
+
+ 
+
+DÖRDÜNCÜ BÖLÜM
+
+Kaçak ve Usulsüz Doğal Gaz Kullanımı
+
+Kaçak doğal gaz kullanımı
+
+Madde 52- (Değişik:RG-14/5/2022-31835)
+
+(Değişik birinci fıkra:RG-21/2/2026-33175) Dağıtım veya ölçüm sistemine ya da tesisata herhangi bir şekilde müdahale edilerek tüketimin doğru tespit edilmesini engellemek suretiyle, tüketimin eksik veya hatalı ölçülerek ya da hiç ölçülmeden veya yasal şekilde tesis edilmiş sayaçtan geçirilmeden mevzuata aykırı bir şekilde tüketilmesi, kaçak doğal gaz kullanımı olarak kabul edilir. Kurul tarafından belirlenecek kriterlere uygun tüketici gruplarına, ilgili dağıtım şirketi tarafından uzaktan okuma ve akıllı ölçüm sistemleri ve/veya sayaç ve regülatörleri müdahalelerden koruyucu malzemeler kullanılabilir. Sayaçta veya regülatörde tesis edilmiş olan ve ölçüm ya da basınç ayarlama sistemine müdahaleyi engelleyen malzemeler ile uzaktan okuma ve akıllı ölçüm sistemlerine yapılan müdahaleler kaçak doğal gaz kullanımı sayılır. Kaçak doğal gaz kullanımının tespit edilmesinde, dağıtım şirketinin tespitini doğru bulgu ve belgelere dayandırması ve tüketici haklarının ihlal edilmemesi esastır.
+
+Kaçak doğal gaz kullanıldığının tespit edilmesi halinde, dağıtım şirketi tarafından fotoğraf, video ve benzeri uygun kayıt araçlarıyla görüntü alınarak tutanak düzenlenir ve arşivlenir. Dağıtım şirketi tarafından kaçak kullanımın engellenmesi için gereken önlemler alınır.
+
+Kaçak doğal gaz kullanımının tespiti halinde, ölçüm ve kontrol sonuçlarına göre düzenlenen belgelere dayanılarak hesaplanmak suretiyle kullanım süresi ve bu süre içerisinde tüketilen doğal gaz miktarı dikkate alınarak dağıtım şirketi tarafından bu fiili işleyene veya yararlanana tahakkuk ettirilecek bedel içerisine, sebep olunan zarar ve ziyan, hesaplama ile elde edilen doğal gaz miktarı karşılığı bedel ve hesaplanan bu miktarın 2 (iki) katı karşılığı kaçak kullanım bedeli yansıtılır. Kaçak kullanımın aynı tüketici tarafından iki yıl içerisinde tekrarı halinde her bir tekrarda kaçak kullanım bedeli katsayısı bir öncekinin 2 (iki) katı olarak uygulanır.
+
+Usulsüz doğal gaz kullanımı
+
+Madde 53 — (Değişik:RG-9/6/2017- 30091)  
+
+Müşterinin;
+
+a) Dağıtım şirketinin yazılı onayı olmaksızın doğal gaz kullanması,
+
+b) Dağıtım şirketinin yazılı onayı olmaksızın başka bir bağımsız bölüme sayaç üzerinden doğal gaz bağlantısı yapması,
+
+c) Kendi adına sözleşme yapmadan daha önce aynı adresteki müşteri adına doğal gaz kullanması,
+
+d) İç tesisatta onaysız tadilat yaparak doğal gaz kullanması,
+
+hallerinde dağıtım şirketi tarafından usulsüz doğal gaz kullanım işlemi yapılır ve müşterinin doğal gazı kesilir.
+
+Ancak, birinci fıkranın (c) bendindeki hallerde, usulsüz doğal gaz kullanımı tespitinden önce dağıtım şirketine başvuruda bulunulmuş olması ve bunun belgelenmesi durumunda, usulsüz doğal gaz kullanımına ilişkin yaptırım hükümleri uygulanmaz. (Ek cümleler:RG-14/5/2022-31835) Ayrıca, sözleşme sahibinin her türlü hukuki ve mali sorumluluğu üstlendiğine dair dağıtım şirketine yazılı bir taahhütname vermesi kaydıyla aynı adreste yaşayan birinci dereceye kadar alt soy ve üst soy ile eş için kendi adına sözleşme yapmadan yapılan kullanımlar usulsüz kullanım sayılmaz. Bu durumlarda fiili kullanıcının bilgileri dağıtım şirketi tarafından kayıt altına alınarak sistemlerinde gerekli güncellemeler yapılır.
+
+Usulsüz doğal gaz kullanımının tespiti halinde dağıtım şirketi tarafından tutanak düzenlenir ve gerekli müdahale yapılır. Doğal gazın kesilmesine neden olan usulsüzlüğün ortadan kalkması halinde, dağıtım şirketi tarafından bu Yönetmeliğin 45 inci maddesi hükümlerine göre işlem yapılır.
+
+(Değişik fıkra:RG-14/5/2022-31835) Birinci fıkranın (d) bendindeki hallerde, onaysız yapılan tadilat neticesinde tesisata ilave cihaz eklenmesi ile tüm yakıcı cihazların toplam kapasitesinin kullanılan sayacın ölçüm aralığını aşması halinde durumun tüketiciye bildirilmesi kaydıyla, yapılan tadilat tarihinden itibaren tüm tüketim faturaları kullanılan tüm yakıcı cihazların toplam kapasitesi esas alınarak bulunan yeni değer ile adreste bulunan sayacın azami ölçüm kapasitesi arasındaki farka göre tahakkuk ettirilir. Tadilat tarihinin üzerinden 1 (bir) yıldan çok süre geçmesi halinde son 1 (bir) yıllık süre üzerinden işlem yapılır.
+
+(Ek fıkra:RG-14/5/2022-31835) Usulsüz kullanım tespiti durumunda fiili kullanıcıya Kurul tarafından belirlenen usulsüz kullanım bedeli yansıtılır.
+
+Kaçak ve usulsüz doğal gaz kullanımına ilişkin ortak hükümler
+
+Madde 54- (Değişik:RG-14/5/2022-31835)
+
+Kaçak ve usulsüz doğal gaz kullanımına ilişkin olarak;
+
+a) Tespit,
+
+b) Süre,
+
+c) Tüketim miktarı hesaplama,
+
+d) Tahakkuk,
+
+e) Ödeme,
+
+yöntemleri ile diğer usul ve esaslar Kurul tarafından belirlenir.
+
+ 
+
+ÜÇÜNCÜ KISIM
+
+İşletme ve Hizmet Yükümlülükleri
+
+ 
+
+BİRİNCİ BÖLÜM
+
+Dağıtım Şirketinin Uyacağı Usul ve Esaslar, Genişletme Yatırımları,
+
+Bakım ve Onarım, Kokulandırma ve Kaçak Tespiti
+
+Dağıtım şirketinin uyacağı usul ve esaslar
+
+Madde 55- Dağıtım şirketi;
+
+a) (Değişik:RG-06/08/2004-25545) Lisans aldığı tarihten itibaren en geç on sekiz ay içinde ISO 9001 kalite sistemi, ISO 14001 çevre yönetim sistemi ve OHSAS 18001 iş sağlığı ve iş güvenliği değerlendirme serileri sistemini kurarak işler hale getirir,
+
+b) (Değişik:RG-14/5/2022-31835) Sorumluluk alanında talebe uygun kapasiteyi sağlar, değişen doğal gaz talebine ve şehrin imar planlarının gerektirdiği nüfus yoğunluğuna göre mevcut şebekeyi genişletir, iyileştirir veya yeni şebeke yatırımı planlanmasını yapar ve uygular, yıllık yatırım planlamalarını ilgili yılın ilk çeyreği sonuna kadar hazırlar ve talep edilmesi halinde yatırım planlamaları hakkında doğru bilgilendirme yapar.
+
+c) (Değişik:RG-14/5/2022-31835) Yerel itfaiye ve güvenlik kuruluşlarını doğal gaz ve uygulamaları konusunda eğitir ve bunlarla uyum içinde çalışır, talep halinde söz konusu kuruluşların tatbikatlarına katılır.
+
+d) Müşteri başvuru ve şikayetlerini kabul edip, en kısa sürede sonuçlandırmak amacıyla müşteri hizmetleri servisini kurar,
+
+e) (Mülga ibare:RG-06/08/2004-25545)(…) Şebekeyle ilgili halihazır projelerin imar planlarına, kadastro paftalarına işlenmesini sağlar,
+
+f) Doğal gazın müşterinin talebi doğrultusunda, uygun basınçla müşteriye teslimini sağlar,
+
+g)  Müşterilere şeffaf, eşit ve tarafsız hizmet verir,
+
+h)Yasal zorunluluk veya müşterinin yazılı muvafakat vermesi hali dışında, müşteri bilgilerini gizli tutar ve bu bilgileri üçüncü kişilere açıklayamaz.
+
+i) (Değişik:RG-14/5/2022-31835) Müşterilerini belirli bir marka ya da şirkete yönlendiremez, rekabeti bozucu uygulamalar yapamaz.
+
+k) Müşterilerinin bilinçlendirilmesine yönelik olarak yazılı ve görsel yayın araçları kullanarak gerekli çalışmaları yapar ve doğal gazın etkin şekilde kullanımına ilişkin, emniyet ve diğer konularda müşteriyi bilgilendirir,
+
+l) Müşteri taleplerindeki dalgalanmaları karşılamak için doğal gaz teslimi programlamasını yapar, talep dengesizlikleri veya işletmeyle ilgili aksamalar durumunda, hizmetin devamlılığını sağlar,
+
+m)  Hizmet kesintileri, doğal gaz kaçakları ve güvenlik ile ilgili konularda gerekli önlemleri alır,
+
+n) Doğal Gaz Piyasası Sertifika Yönetmeliği hükümleri doğrultusunda, iç tesisat ve servis hatları sertifikası verir.
+
+o) (Değişik:RG-14/5/2022-31835) Dağıtım bölgesinde müşterisi olan tedarikçilere iletim şebekesi üzerinden verilen hizmetler ve iletim şebekesinin işletimi için gerekli olan verileri, iletim şirketinin talebi ve Kurumun onayı ile belirlenen zaman aralıklarında ve kapsamda vermekle yükümlüdür.
+
+p) (Ek:RG-14/5/2022-31835) Kurum tarafından talep edildiği takdirde veya gerekli görülen hallerde bu Yönetmelik kapsamındaki hizmetleri elektronik ortamda ve e-Devlet üzerinden sunar.
+
+r) (Ek:RG-14/5/2022-31835) Dağıtım şebekesine ilişkin deplase işlemleri sebebiyle oluşan maliyetlerin gerektiğinde tarife hesaplamalarında dikkate alınmasına ilişkin kriterler Kurul tarafından belirlenir.
+
+s) (Ek:RG-14/5/2022-31835) (Değişik:RG-21/2/2026-33175) Çağrı hizmetleri hariç acil müdahale hizmetleri için hizmet alamaz. Bunun haricinde hizmet alınamayacak diğer hususlar Kurul tarafından belirlenir.
+
+ş) (Ek:RG-21/2/2026-33175) Dağıtım bölgesi içerisinde, dağıtım faaliyetini eksiksiz ve kesintisiz bir şekilde yürütebilecek nitelikte, dağıtım bölgesinin ihtiyacıyla orantılı şekilde en az 1 (bir) adet işletme binası kurar.
+
+t) (Ek:RG-21/2/2026-33175) Faaliyetlerine ilişkin bilgi ve belgelerin muhafazasını sağlamak amacıyla arşiv kayıtlarını dijital ortama aktarır, bu sistemin yedekliliğini ve sürekliliğini temin eder, acil ve afet durumlarında erişilebilirliğini sağlar.
+
+u) (Ek:RG-21/2/2026-33175) Dağıtım faaliyetinin eksiksiz ve kesintisiz bir şekilde yürütülmesine ilişkin gerekli her türlü verisini, lisans bazında münferit olarak diğer şirketlerin verilerinden fiziksel altyapı ve/veya sanal sistem düzeyinde ayrıştırılmış şekilde tutar, yönetir ve bu verilerin erişimini sınırlandırır.
+
+Genişletme yatırımları
+
+Madde 56-Dağıtım şirketi, yıllık talep tahminleri, imara uygun yapılaşma gerçekleşme tespitleri ve şebekenin henüz ulaşmadığı noktalardan gelen bağlantı talepleri doğrultusunda şebeke genişletme fizibilitelerini yaparak şebeke genişletme yatırımlarını ilgili mevzuatta belirtilen usul ve esaslara göre projelendirir ve  yatırımını gerçekleştirir. Dağıtım şirketi  sorumluluk alanındaki talebe uygun kapasitenin yeterliliğini sağlamakla yükümlüdür. Ayrıca şebekenin bulunduğu mahallerde kat artışına yönelik imar değişikliği yapılmış ise bu değişikliğe uygun olarak şebeke kapasite artışı için de gerekli önlemleri alır.
+
+Bakım ve onarım faaliyetleri
+
+Madde 57- Dağıtım şirketi;                  
+
+a) Dağıtım şebekesinin hizmet kabiliyetinin üst düzeyde tutulması ve sürdürülmesi için gerekli tüm tedbirleri alır. Elli bin aboneye kadar en az iki adet ve ilave her elli bin  abone için bir araç hesabına göre tam teşekküllü ve hizmete hazır bakım - onarım aracı bulundurur,
+
+b) Bakım ve onarım faaliyetleri esnasında ortamı doğal gazdan arındırır, ilgili mevzuat ve standartlara göre gereken tedbirleri alarak güvenliği sağlar,
+
+c) Dağıtım şebekesinin fiziki ve teknik özelliklerini, üretici firmaların tavsiyelerini ve ilgili mevzuat ve standartları dikkate alarak tamir ve bakım kurallarını hazırlar ve ilgili tüm birimlerinde bulundurur,
+
+d) (Değişik:RG-14/5/2022-31835) Yıllık ve beş yıllık bakım programları oluşturarak periyodik bakım ve yedek parça stokunu planlar. Bu planlara uygun bakımları yaparak raporlarını tutar ve talep halinde Kuruma verir,
+
+e)  Üretici firmaların tavsiyelerini de göz önünde bulundurarak inşaat, bakım, onarım ve acil müdahale için yeterli düzeyde yedek parça ile tamir malzemeleri bulundurur.
+
+f) (Ek:RG-14/5/2022-31835) Tüketicilere güvenli ve kesintisiz gaz arzının sağlanmasını teminen, dağıtım şebekesinin ve şebeke işletmeciliğinde kullanılan ekipmanların yerinde fiziki kontrollerini ve bakım onarımını ilgili mevzuat, standartlar ve üretici firma tavsiyelerine uygun olarak dağıtım bölgesinin özelliklerine göre planlar ve uygular.
+
+g) (Ek:RG-14/5/2022-31835) Dağıtım şebekesinde oluşan büyük çapta hasar ve gaz kesintilerinde, dağıtım şirketi şebeke içerisinde gerekli doğal gaz akışları ile alakalı operasyonları yapar ve alternatif gaz arzı imkânlarını da değerlendirerek iletim şirketi ve Kuruma bilgi verir.
+
+Bakım ve onarımda doğal gaz kesintisi
+
+Madde 58- Doğal gaz şebekesinin genişletilmesi, yenilenmesi, iyileştirilmesi ve onarımı gibi nedenlerle önceden bilinen doğal gaz kesintileri için dağıtım şirketi, alınması gereken önlemleri, kesinti süresini ve tekrar doğal gaz verilecek zamanı mahalli veya diğer yayın araçları ile müşterilere en az üç gün önceden haber vermek suretiyle doğal gaz arzını durdurabilir. Dağıtım şirketi bu tip bakım ve onarımı en kısa sürede tamamlar.
+
+Ayrıca, müşterinin iç tesisatındaki arıza nedeniyle de doğal gaz kesilebilir. Dağıtım şirketi tarafından acil durumlar dışında önceden haber verilmeden yapılacak doğal gaz kesintisi sonucu oluşacak zarar ve ziyandan dağıtım şirketi sorumludur.
+
+Kokulandırma
+
+Madde 59- Dağıtım şirketi, doğal gaz kaçaklarının fark edilebilmesini sağlamak amacıyla doğal gazı kokulandırır. Kokulandırma, ilgili mevzuat ve standartlar doğrultusunda yapılır ve en az ayda bir kez test edilir.
+
+Kaçak tespiti ve kontrolü
+
+Madde 60- (Değişik fıkra:RG-14/5/2022-31835) Dağıtım şirketi, güvenlik açısından olası kaçakların tespiti ve bunun için gerekli tedbirlerin alınması amacıyla asgari yılda iki defa olmak üzere kaçak kontrolü yapar ve sonuçlarını kayıt altına alır. Kaçak tarama sonucunda gereği halinde şebekeye müdahale edilir.
+
+Kaçak kontrolleri, özel olarak yakınından alçak basınçlı dağıtım hattı geçen altyapı, demiryolu, kanal, kanalet, altyapı tesis kesişmeleri gibi özel geçiş noktaları da dahil, şebekenin tamamında uygun doğal gaz dedektörleri kullanılarak yapılır. Söz konusu kontrollerde uygun ölçekli haritalar ile halihazır projeler kullanılır ve kaçak kontrol kayıtları bu projelerdeki gösterimler dikkate alınarak yapılır.
+
+Dağıtım şirketi doğal gaz kaçağının giderilmesi için altı saatten fazla çalışma gerekiyorsa hastane ve okul gibi kamu hizmeti veren müşterilerin doğal gaz ihtiyaçlarını karşılamak için gerekli tedbirleri alır.
+
+ 
+
+İKİNCİ BÖLÜM
+
+Acil Müdahale, Kayıt ve Dokümantasyon
+
+Acil müdahale
+
+Madde 61-  (Değişik birinci fıkra:RG-21/2/2026-33175) Dağıtım şirketi, arızalara, şebeke özelliklerini dikkate alarak zamanında müdahale ve etkin bir çözüm sağlayacak acil müdahale organizasyonunu kurmak zorundadır. Oluşturulan acil müdahale merkezinde, acil ihbar için özel servis numarasını arayan kişiye, en geç üçüncü çalışta otomatik santral olmadan cevap verebilecek yeterli sayıda telefon hattı bulundurulur veya acil ihbarların karşılanmasına imkân sağlayan uygun teknolojik sistemler kurulur. Ayrıca, söz konusu merkezde yeterli sayıda tam teşekküllü acil müdahale aracı ile yeterli sayıda eğitimli dağıtım şirketi personeli bulundurulur.
+
+Dağıtım şirketi, doğal gazla ilgili her türlü tesis ve cihazların üzerine doğal gaz acil özel servis telefon numarasını da içeren ikaz ve işaret levhaları yerleştirir.
+
+(Değişik fıkra:RG-14/5/2022-31835) Dağıtım şirketi, ihbarları kayıt edecek personeli ve kullanılacak acil müdahale araçlarından en az birini personeli ile birlikte yirmi dört saat hazır durumda tutar. Acil müdahale gerektiren ihbarlara, abone sayısı beş binin altında olan ve şehir merkezi ile en yakın işletme merkezine karayolu mesafesi on beş km üstünde olan genişleme yoluyla dağıtım bölgesine dahil edilen yerleşim yerleri için en geç 30 (otuz) dakika içinde, dağıtım bölgesindeki diğer yerleşim yerleri için ise en geç 15 (on beş) dakika içinde ulaşacak organizasyonu yapar. Arıza sayısı ve sıklığına bağlı olarak yeterli sayıda bakım-onarım personelinin iş başında olmasını sağlar.
+
+(Değişik fıkra:RG-14/5/2022-31835) Dağıtım şirketi, acil müdahale personelini dağıtım şebekesine ilişkin asgari olarak arıza ve hasar tespiti ile onarımı, alet, cihaz ve ekipmanların kullanımı, iş emniyeti tedbirleri, tespit edilemeyen veya giderilemeyen arıza ve hasar hallerinde uygulanacak usuller konusunda eğitir veya eğitim almasını sağlar. Bu konularda mesleki yeterlilik belgesi olmayan personel, acil müdahale faaliyetlerinde çalıştırılamaz.
+
+(Değişik fıkra:RG-14/5/2022-31835) Acil müdahale merkezi; ihbarda bulunan kişileri, ihbar konusu olay karşısında nasıl davranacakları ve acil müdahale ekibinin kaç dakika içinde olay yerine ulaşabileceği gibi hususlarda bilgilendirir. Gerektiğinde güvenlik, itfaiye, acil sağlık merkezleri ve ilgili lisans sahibi ve/veya kuruluşlar ile bağlantı kurar.
+
+Dağıtım şirketi, doğal gaz ihbarlarına ilişkin kayıtlarında asgari olarak aşağıdaki hususlara yer verir ve kayıtları muhafaza eder;
+
+a) İhbarı yapan kişinin adı, ihbarın yapıldığı tarih ve saat,
+
+b) İhbar konusu arızanın olduğu adres,
+
+c) İhbarı kaydeden personel ile ihbara müdahale eden ekibin isim ve görevleri,
+
+d) İhbar sahibine yapılan bilgilendirme ile alınan tedbir ve yapılan uygulama.
+
+Müşteriler, acil durumlarda, acil müdahale merkezine bilgi verir ve yardım ister. Müşteriler, doğal gaz kaçak ve kazalarına karşı alınacak önlemlere ilişkin ilgili mevzuata ve dağıtım şirketinin kurallarına uyar.
+
+(Değişik fıkra:RG-14/5/2022-31835) Acil müdahale hizmetleri ücretsiz verilir. Ancak, dağıtım şebekesine üçüncü şahıslar veya diğer altyapı kuruluşları tarafından hasar verilmesi durumunda, meydana gelen zarar, hasar veren tarafından karşılanır. Bununla birlikte, acil müdahale sonucunda iç tesisatta yapılacak tamir ve tadilat müşterinin sorumluluğundadır.
+
+(Ek fıkra:RG-21/2/2026-33175) Afet ve acil durumlarda, dağıtım şirketleri diğer dağıtım şirketlerine personel, araç, malzeme ve ekipman desteği verebilir.
+
+Doğal gaz acil eylem planı
+
+Madde 62- Dağıtım şirketi, olağanüstü durumlarda izlenecek yöntemleri içeren Doğal Gaz Acil Eylem Planı hazırlar. Plan asgari olarak; 
+
+a) Dağıtım şirketi yönetiminin bilgilendirilmesi,
+
+b) Yerel makamların bilgilendirilmesi,
+
+c) Kriz yönetim merkezinin oluşturulması,
+
+d) Acil eylem planı organizasyonu,
+
+e) Acil eylem planı uygulama prosedürü,
+
+f) Müşterilerin, personelin ve halkın bilgilendirilmesi,
+
+g) Müdahalenin programlanması ve uygulanması,
+
+h) Sistem emniyetinin temin edilmesi,
+
+i) Sistemin tekrar devreye alınması,
+
+hususlarını içerir.
+
+Acil durumda doğal gaz kesintisi
+
+Madde 63- Dağıtım şirketi; sadece, doğal gaz kaçağı, güvenliğin ciddi bir risk altında olması ile doğal gazın kalitesi, basıncı ve diğer özelliklerinin can ve mal güvenliği açısından tehlikeye neden olması durumlarında doğal gazı kesebilir.
+
+Doğal gaz alt yapı bilgi sistemi
+
+Madde 64- Doğal gaz alt yapı bilgi sistemi; dağıtım şebekesi ile ilgili her türlü bilginin, bir bilgisayar programı yardımıyla, bilgisayar ortamına kayıt edilmesiyle oluşturulan  ve istenildiğinde bu bilgiler ile ilgili her türlü sorgulamanın tek tek veya birlikte yapılabildiği sistemdir. Dağıtım şirketi, şebeke genişletmesi için gerekli mühendislik ve projelendirme çalışmaları esnasında haritaları güncelleyerek yapılan ölçümleri ulusal koordinat sistemine uyumlu olarak bilgisayar ortamında sayısallaştırır. Uygulama sonrası, şebekeye ait halihazır proje ve bilgiler dağıtım şirketinin kuracağı doğal gaz alt yapı bilgi sistemine kayıt edilir. Doğal gaz alt yapı bilgi sisteminde dağıtım şebekesi ile ilgili bilgiler değiştikçe ve yenilendikçe güncellenerek en az üç ayda bir yedeklemesi yapılır ve saklanır.
+
+ 
+
+ÜÇÜNCÜ BÖLÜM
+
+Sevkiyat Kontrol Merkezi, Haberleşme Sistemleri, Akış Kontrolü,
+
+Kalibrasyon ve Ayarlar, Eğitim ve İş Güvenliği
+
+Sevkiyat kontrol merkezi
+
+Madde 65- Sevkiyat kontrol merkezi, yapılan ölçümleri uzaktan algılayıp kaydedecek ve bu kayıtları çözümleyecek, tüketimdeki sıra dışı düşüş ya da yükselişleri ve sayaçlara yapılabilecek müdahaleler ile saha incelemesi yapılması gereken yerleri tespit edecek donanım ve yazılımları içerir. Aynı zamanda şehir şebeke planına göre kritik kabul edilen noktalara uzaktan kumanda etme imkanı verecek şekilde tasarlanır.
+
+Dağıtım şirketi, sevkiyat kontrol merkezinin verilerine bağlı olarak ortaya çıkan mevsimsel değişikliklere göre doğal gaz programlamasını yapar ve sistem dengelemesini sağlar.
+
+Haberleşme sistemleri
+
+Madde 66- (Değişik:RG-14/5/2022-31835)  
+
+Tüketim miktarı Kurul tarafından belirlenen miktarın üzerinde olan serbest tüketiciler, tedarikçi seçme hakkını kullanan serbest tüketiciler ve Kurul tarafından belirlenecek diğer serbest tüketiciler dağıtım şirketinin bildirim tarihinden itibaren en geç 30 (otuz) gün içerisinde sevkiyat kontrol merkezi ile haberleşme sistemlerini dağıtım şirketinin belirlediği kriterler çerçevesinde bedeli kendilerine ait olmak üzere tesis eder. Serbest tüketicinin haberleşme sistemini bildirim tarihinden itibaren 30 (otuz) gün içerisinde tesis etmemesi halinde haberleşme sistemi dağıtım şirketi tarafından tesis edilerek serbest tüketiciye fatura edilir. Serbest tüketicilerin diğer mevzuata göre ekonomik ömrünü doldurmuş otomatik hacim düzelticileri ve haberleşme imkânı sağlayacak sistemleri ile ilgili olarak bu maddedeki usul ile yenileme yapılır. Tesis edilen bu sistemlerin işletimi, ilgili standartlara uygunluğu ve siber güvenlik yükümlülükleri dağıtım şirketinin sorumluluğunda olup tüm bakım, onarım, haberleşme ve işletme masrafları dağıtım şirketi tarafından karşılanır.
+
+Akış kontrolü
+
+Madde 67- (Değişik fıkra:RG-14/5/2022-31835) Dağıtım şirketi, dengeli ve emniyetli doğal gaz akışının temini için boru hatlarında, şehir içi bölge istasyonlarında ve vanalarda en fazla on beş günlük periyotlarda basınç kontrolleri yapar ve bu kontrollere ilişkin raporları muhafaza eder.
+
+ Dağıtım şirketi, sevkiyat kontrol merkezi bulunan şebekelerde periyodik kontrolleri ve merkezde acil durumlarda sisteme müdahaleye imkan verecek düzenlemeleri yapar.
+
+Kalibrasyon ve ayarlar
+
+Madde 68-  (Değişik:RG-14/5/2022-31835)
+
+Dağıtım şirketi, sayaçların muayenesi ile tamir ve ayar işlemlerini, Ölçü Aletleri Mevzuatına göre yapar veya yaptırır. Sayaçların mevzuatta belirtilen periyotlara ve üretici firmaların tavsiyelerine uygun olarak kalibrasyonunu yapar, rapor tutar ve muhafaza eder. Doğal gaz dedektörlerinin, üretici firmaların tavsiyelerine uygun periyotlarda kalibrasyonunun yapılmasını sağlar. Ayrıca ölçüm sisteminde kullanılmakta olan diğer ekipmanın kalibrasyonu da ilgili mevzuat, standartlar, eğer ilgili mevzuat ve standart yok ise üretici tavsiyelerine göre yapılır.
+
+Eğitim ve iş güvenliği
+
+Madde 69- Dağıtım şirketi, dağıtım şebekesinde görevlendirilecek personelin  mesleki eğitimini yaptırmak, hassas bölgelerde uzman personel görevlendirmek, her yıl en az iki kez olmak üzere ve personelin çalışma koşullarına göre hizmet içi periyodik eğitim programları düzenlemek ve iş güvenliğini sağlamakla yükümlüdür.  
+
+ 
+
+DÖRDÜNCÜ BÖLÜM
+
+Genel Hükümler
+
+Dağıtım bölgelerinin genişletilmesi (1)
+
+Madde 70 — (Ek:RG-24/09/2005-25946) (Değişik:RG-18/11/2016-29892)
+
+Dağıtım şirketlerinin lisanslarında belirtilen şehirlerde belediye ve mücavir alan sınırlarını kapsayan dağıtım bölgesi, teknik ve ekonomik gerekler dikkate alınarak, il sınırlarını aşmayacak şekilde;
+
+a) Dağıtım bölgesinin genişletilebilmesi için ilgili dağıtım lisansı sahibi şirketin yazılı talebinin olması,
+
+b) Dağıtım lisansı sahibi şirketin mevcut dağıtım bölgesinde uygulanan/uygulanacak tarife yöntemlerinin genişlemeye konu bölgede aynen geçerli olacağı şartının ilgili dağıtım şirketince kabul edilmesi,
+
+c) Genişlemeye konu bölgede belediyelerin olması halinde belediye meclis karar/kararlarının olumlu olması,
+
+kaydıyla dağıtım bölgesi Kurul tarafından uygun bulunması halinde ihale edilmeksizin genişletilir ve bu genişlemeye ilişkin lisans tadil işlemleri yapılır.
+
+Dağıtım şirketlerinin lisanslarında belirtilen şehirlerin belediye ve mücavir alan sınırları içerisinde ihale tarihinden sonra imarlı hale gelen alanlar, dağıtım bölgesinin kapsamındadır. Doğal gaz dağıtım şirketleri, lisanslarında belirtilen dağıtım bölgesi kapsamında doğal gaz dağıtım faaliyeti yapmakla yetkili olup, dağıtım bölgesi kapsamında bulunan şehirlerin imarlı alanlar bütününde dağıtım faaliyeti yapmakla yükümlüdür.
+
+(Değişik fıkra:RG-9/6/2017- 30091) Dağıtım bölgesine ilave edilecek şehirlerde dağıtım şirketinin başvuru sırasında ayrıca bir talebi olmaması halinde, lisans tadil tarihinden itibaren yatırıma başlama süresi en geç 6 ay, ilk gaz verme süresi en geç 18 ay, imarlı alanlar bütünündeki yatırımları tamamlama süresi ise en geç 5 yıl olarak belirlenir. Dağıtım şirketinin belirtilen sürelerden farklı talebi var ise, talep ettiği süreleri her bir şehir için ayrı ayrı olmak üzere genişleme başvurusu sırasında belirtir. Dağıtım şirketinin talep ettiği süreler, bu fıkrada belirtilen sürelerden az olmamak üzere Kurul tarafından aynen veya değiştirilerek onaylanır. İlgili şehirlere ilişkin süreler, genişlemeye ilişkin Kurul Kararında belirtilir.Bir lisanslı dağıtım şirketinin dağıtım bölgesinin, doğal gaz piyasası haricindeki mevzuattan kaynaklanan nedenlerle, başka bir lisanslı dağıtım şirketinin dağıtım bölgesinin içinde kalması durumunda, söz konusu diğer mevzuatlardan kaynaklanan değişikliğe dair ilk yapılan düzenlemede belirlenen sınırlar esas alınır.
+
+Dağıtım bölgelerinin yukarıda sayılan nedenlerden herhangi biriyle genişlemesi durumunda, Kurul, genişlemeye konu bölge için öngörülen şebeke yatırım tutarı ve genişlemeye konu bölgede yapılacak yatırımları da dikkate alarak tarifeleri yeniden belirleyebilir.
+
+Genişletilecek dağıtım bölgesinde yer alan dağıtım ve/veya bağlantı hatları, yatırımının tüketiciler tarafından karşılanan kısmı bilâbedel, lisans sahipleri tarafından karşılanan kısmı ise bedeli mukabili dağıtım şirketine devredilir.
+
+Genişlemelere ilişkin teminat mektubu alınmaz.
+
+Aynı il sınırı içerisinde farklı dağıtım şirketlerinin dağıtım faaliyeti yapması durumunda, aynı il sınırları içerisindeki diğer dağıtım şirketlerinin de genişlemeye ilişkin taleplerinin olup olmadığı sorulur. Genişlemeye ilişkin değerlendirme, lisansına konu dağıtım bölgesinin tamamındaki toplam abone sayısı daha fazla olan talep sahibi dağıtım şirketi önceliğine göre yapılır.
+
+Dağıtım bölgesi kapsamında olmayan bir şehrin bulunduğu il sınırı içerisinde faaliyet gösteren dağıtım şirketlerinin ilgili şehir için dağıtım bölgesi genişletme talebi olmaması durumunda, Kurul tarafından uygun görülmesi halinde ilgili şehir için dağıtım lisansı ihalesi yapılabilir.
+
+(Ek fıkra:RG-14/5/2022-31835) 4646 sayılı Kanunun 4 üncü maddesi uyarınca doğal gaz dağıtım şirketlerinin dağıtım bölgelerine ilave edilecek yeni genişleme bölgelerinde yerleşim yeri belediyesince doğal gaz dağıtım şirketine yatırım yapılması talebinde bulunulması halinde; ilgili dağıtım şirketinden teminat, kontrollük hizmet bedeli, kaplama bedeli, zemin/alan tahrip bedeli, hafriyat döküm bedeli ve benzeri adlarla herhangi bir bedel alınmaz ve altyapı kazı alanının üst kaplamaları ilgili belediye tarafından bedelsiz olarak yapılır.
+
+(Ek fıkra:RG-21/2/2026-33175) Doğal gaz dağıtım bölgesi dışında kalan ve doğrudan iletim hattına bağlı serbest tüketicilere gaz arzı sağlayan ilgili tesisler için;
+
+a) İl sınırları içerisinde faaliyette bulunan dağıtım şirketi/şirketlerinin söz konusu il sınırları içerisindeki tüm tesisleri devir alma şartı ile talepte bulunması,
+
+b) İletim şirketinin muvafakat vermesi,
+
+c) Dağıtım şirketi tarafından dağıtım bölgesinde mevcutta uygulanan/uygulanacak tarife yöntemlerinin aynen geçerli olacağı şartının kabul edilmesi,
+
+ç) Kurulun teknik ve ekonomik olarak talebi uygun bulması,
+
+hâlinde doğal gaz dağıtım bölgesi kapsamına alınarak lisans tadili yapılır. Bu tesislerin mülkiyet ve işletmesi, yatırımın serbest tüketici tarafından karşılanan kısmı bilabedel, iletim şirketi tarafından karşılanan kısmı ise bedeli mukabilinde dağıtım şirketine devredilir ve dağıtım şebekesi olarak kabul edilir.
+
+(Ek fıkra:RG-21/2/2026-33175) Aynı il sınırı içerisinde farklı dağıtım şirketlerinin dağıtım faaliyeti yapması durumunda, diğer dağıtım şirketlerinin de başvuruya konu tesislerin devrine ilişkin taleplerinin olup olmadığı sorulur. Başka bir talep olması halinde devre ilişkin değerlendirme, devre konu tesislere en yakın şebekesi olan dağıtım şirketine öncelik verilerek yapılır.
+
+Yönetmelik hükümlerinin uygulanması
+
+Madde 71-  Dağıtım şirketi, bu Yönetmelikte düzenlenmeyen hususlarda, ilgili mevzuata aykırı olmamak kaydıyla, vereceği dağıtım hizmetine ilişkin olarak Kurumun onayını alarak müşterilere yönelik açıklayıcı duyuru mahiyetinde sirküler yayımlayabilir.
+
+Yönetmelikte hüküm bulunmayan haller
+
+Madde 72- Bu Yönetmelikte hüküm bulunmayan hallerde Kurulun konuya ilişkin kararı çerçevesinde işlem yapılır.
+
+ 
+
+BEŞİNCİ BÖLÜM
+
+Geçici ve Son Hükümler
+
+Geçici madde 1- 4646 sayılı Kanunun yürürlüğe girdiği tarihten evvel alınmış bir hak, belge, izin ve yetkilendirmeye müsteniden doğal gaz dağıtım faaliyetinde bulunan şehir içi dağıtım tüzel kişileri, mevcut durum ve uygulamalarını 31/12/2002 tarihine kadar bu Yönetmeliğin ikinci ve üçüncü kısımlarında yer alan hükümlere uygun hale getirir. Kurul, gerektiği takdirde bu süreyi en fazla dört ay daha uzatabilir. (Ek son cümle:RG-02/05/2003-25096) Ancak sayaçların temini ve bağlantıya ilişkin mevcut uygulamalar 31/12/2003 tarihine kadar devam eder.
+
+Geçici madde 2- Doğal gaz altyapı bilgi sistemi ve/veya ISO 9001 kalite yönetim sistemi ve/veya ISO 14001 çevre yönetim sistemi bulunmayan mevcut şehir içi dağıtım tüzel kişileri, lisans aldıkları tarihten itibaren en geç on sekiz ay içinde bu sistemleri kurarak işletmekle yükümlüdür.
+
+Geçici madde 3- (Mülga:RG-09/12/2003-25311)
+
+Geçici madde 4- Mevcut şehir içi dağıtım tüzel kişileri, bu Yönetmeliğin 54 üncü madde kapsamındaki kaçak ve usulsüz doğal gaz kullanımına ilişkin, tespit, süre, tüketim miktarı hesaplama ve tahakkuk yöntemleri, 45 inci madde kapsamındaki sayaç açma kapama bedelleri ile 38 inci madde kapsamındaki güvence bedelleri ve bunların hesaplanmasına ilişkin usul ve esaslarını 31/12/2002 tarihine kadar hazırlayarak Kuruma sunar.
+
+Geçici Madde 5 — (Ek:RG-28/04/2003-25092)
+
+Dağıtım Şirketlerinin, aboneleri ile 1/5/2003 tarihinden önce imzaladığı sözleşmeler kapsamında tahsil ettiği güvence bedellerinin iadesi aynı sözleşme hükümlerine göre yapılır.
+
+Geçici Madde 6 — (Ek:RG-02/09/2003-25217)
+
+Mevcut dağıtım şirketleri ile 31/12/2003 tarihinden önce abonelik sözleşmesi imzalayan, devir ve nakil hakkını haiz abonelerin bu hakları devam eder. Bu abonelerin devir ve nakil işlemlerinden herhangi bir bedel alınamaz.
+
+Geçici Madde 7 — (Ek:RG-06/08/2004-25545)
+
+4646 Sayılı Kanunun yürürlüğe girdiği tarihten evvel alınmış kanuni bir hak, belge, izin veya yetkilendirmeye müsteniden doğal gaz dağıtım faaliyeti yapan şehir içi doğal gaz dağıtım tüzel kişilerince, 31/12/2003 tarihinden önce bağlantıyı oluşturan unsurlar için her ne ad altında ve tutarda olursa olsun bir bedel alınmış ise aynı bağımsız bölüm, bina veya tesis için bağlantı bedeli alınamaz. Bu hüküm abone bağlantı bedelinin unsurlarından olan sayaç ve sayaç bağlantı elemanları için de uygulanır.
+
+Geçici Madde 8 —(Ek:RG-06/08/2004-25545)  
+
+Dağıtım şirketleri, bu Yönetmeliğin 37 nci ve 48 inci maddeleri kapsamındaki mevcut uygulamalarını 1/10/2004 tarihine kadar bu Yönetmeliğe uygun hale getirirler.
+
+GEÇİCİ MADDE 9 – (Ek:RG-3/5/2012-28281)
+
+Dağıtım bölgelerinin genişlemesi kapsamında dağıtım şirketlerinden alınan teminat mektupları, ilgili dağıtım şirketlerinin Kuruma başvurması üzerine iade edilir.
+
+Geçici Madde 10 – (Ek:RG-9/6/2017- 30091)
+
+Bu Yönetmeliğin 40 ıncı maddesinin ikinci fıkrasında 24 saat olarak belirtilen süre ön ödemeli sayaçlar için 1/6/2018 tarihine kadar 48 saat olarak uygulanır.
+
+Geçici Madde 11-  (Ek:RG-14/5/2022-31835)
+
+Dağıtım şirketleri, bu maddeyi ihdas eden Yönetmelik hükümleri uyarınca altyapılarında ve/veya sistemlerinde yapılması gereken işlemleri bu maddenin yürürlüğe girdiği tarihten itibaren 6 (altı) ay içerisinde tamamlamakla yükümlüdür.
+
+Geçici Madde 12- (Ek:RG-21/2/2026-33175)
+
+Bu Yönetmeliğin 55 inci maddesinin birinci fıkrasının (ş), (t) ve (u) bentlerindeki yükümlülükler dağıtım şirketlerince yirmi dört ay içerisinde tamamlanır.
+
+Yürürlük
+
+Madde 73- Bu Yönetmelik yayımı tarihinden geçerli olmak üzere yürürlüğe girer.
+
+Yürütme
+
+Madde 74-  Bu Yönetmelik hükümlerini Başkan yürütür.
+
+ 
+
+______________
+
+ 
+
+(1)  Bu madde; 24/09/2005 tarihli ve 25946 sayılı Resmi Gazete’de yayımlanan Yönetmelik ile eklenmiş ve diğer maddeler buna göre teselsül ettirilmiştir.
+
+(2)  29/7/2018 tarihli ve 30493 sayılı Resmi Gazete’de yayımlanan değişiklik ile bu Yönetmeliğin 40 ıncı maddesine dördüncü fıkrasından sonra gelmek üzere fıkra eklenmiş ve diğer fıkra buna göre teselsül ettirilmiştir.
+
+(3) 21/2/2026 tarihli ve 33175 sayılı Resmî Gazete’de yayımlanan değişiklik ile Yönetmeliğin 39 uncu maddesine üçüncü fıkrasından sonra gelmek üzere fıkra eklenmiş ve diğer fıkralar buna göre teselsül ettirilmiştir.
+`;
+
+        // --- API Çağrısı ---
+        async function askRegulation(question) {
+            if (!API_KEY) {
+                return "Lütfen HTML dosyasının içindeki API_KEY değişkenine kendi Gemini API anahtarınızı ekleyin.";
+            }
+
+            const systemInstruction = `
+Sen, Doğal Gaz Piyasası Mevzuatı konusunda uzman, yardımsever ve profesyonel bir danışmansın. 
+Sana verilen "DOĞAL GAZ PİYASASI DAĞITIM VE MÜŞTERİ HİZMETLERİ YÖNETMELİĞİ" metnine tam hakimsin.
+
+Yanıt Stratejin:
+1. Bir uzman gibi konuş: Soruları sadece teknik bir metin okur gibi değil, konuyu bilen bir uzman gibi açıkla.
+2. Mevzuata sadık kal: Verdiğin tüm bilgiler mutlaka paylaşılan metinde yer almalı. Metinde olmayan bir bilgi hakkında yorum yapma.
+3. Madde referansı ver: Cevabının sonunda veya içinde ilgili Madde numarasını (örneğin: "Yönetmeliğin 36. maddesi uyarınca...") mutlaka belirt.
+4. İnsansı ve nazik ol: "Tabii ki yardımcı olayım", "Mevzuata göre durum şöyledir" gibi doğal geçişler kullan.
+5. Eğer cevap metinde yoksa: "Bu konu hakkında mevcut yönetmelik metninde spesifik bir hüküm bulunmamaktadır, ancak genel prosedürler için ilgili dağıtım şirketiyle görüşmenizi öneririm" şeklinde profesyonelce yanıtla.
+
+Mevzuat Metni:
+${REGULATION_TEXT}
+`;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        systemInstruction: {
+                            parts: [{ text: systemInstruction }]
+                        },
+                        contents: [{
+                            parts: [{ text: question }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    console.error("API Error:", data.error);
+                    return "API Hatası: " + data.error.message;
+                }
+                return data.candidates[0].content.parts[0].text;
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                return "Yapay zeka servisine bağlanırken bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.";
+            }
+        }
+
+        // --- Ana Uygulama Bileşeni ---
+        function App() {
+            const [messages, setMessages] = useState([
+                {
+                    id: '1',
+                    text: 'Merhaba! Ben Doğal Gaz Mevzuat Asistanıyım. Doğal gaz dağıtım ve müşteri hizmetleri yönetmeliği hakkındaki sorularınızı yanıtlayabilirim.',
+                    sender: 'bot',
+                    timestamp: new Date(),
+                },
+            ]);
+            const [input, setInput] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const messagesEndRef = useRef(null);
+
+            const scrollToBottom = () => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            };
+
+            useEffect(() => {
+                scrollToBottom();
+            }, [messages]);
+
+            const handleSend = async () => {
+                if (!input.trim() || isLoading) return;
+
+                const userMessage = {
+                    id: Date.now().toString(),
+                    text: input,
+                    sender: 'user',
+                    timestamp: new Date(),
+                };
+
+                setMessages((prev) => [...prev, userMessage]);
+                setInput('');
+                setIsLoading(true);
+
+                const botResponse = await askRegulation(input);
+
+                const botMessage = {
+                    id: (Date.now() + 1).toString(),
+                    text: botResponse,
+                    sender: 'bot',
+                    timestamp: new Date(),
+                };
+
+                setMessages((prev) => [...prev, botMessage]);
+                setIsLoading(false);
+            };
+
+            const suggestedQuestions = [
+                "Bağlantı bedeline kaç taksit yapılır?",
+                "Güvence bedeli taksitlendirilir mi?",
+                "Gaz kesildikten sonra ne zaman açılır?",
+                "Kaçak kullanım cezası nedir?"
+            ];
+
+            return (
+                <div className="flex flex-col h-screen bg-[#F0F4F8] font-sans text-[#1A202C]">
+                    {/* Header */}
+                    <header className="bg-white border-b border-blue-100 px-6 py-4 flex items-center justify-between shadow-sm sticky top-0 z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-blue-600 p-2 rounded-lg shadow-blue-200 shadow-lg text-white">
+                                <FlameIcon />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold text-blue-900 tracking-tight">Doğal Gaz Mevzuat Danışmanı</h1>
+                                <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest">Uzman Mevzuat Asistanı</p>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Main Chat Area */}
+                    <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 max-w-4xl mx-auto w-full scrollbar-thin scrollbar-thumb-blue-200">
+                        {messages.map((msg) => (
+                            <div
+                                key={msg.id}
+                                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                                style={{ animation: 'fadeIn 0.3s ease-out' }}
+                            >
+                                <div className={`flex gap-3 max-w-[85%] sm:max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}>
+                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
+                                        msg.sender === 'bot' ? 'bg-blue-600 text-white' : 'bg-white text-blue-600 border border-blue-100'
+                                    }`}>
+                                        {msg.sender === 'bot' ? <BotIcon /> : <UserIcon />}
+                                    </div>
+                                    <div className={`p-4 rounded-2xl shadow-md ${
+                                        msg.sender === 'bot' 
+                                            ? 'bg-white border border-blue-50 text-gray-800 rounded-tl-none' 
+                                            : 'bg-blue-600 text-white rounded-tr-none'
+                                    }`}>
+                                        <p className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap font-medium">{msg.text}</p>
+                                        <span className={`text-[10px] mt-2 block opacity-50 font-bold ${msg.sender === 'user' ? 'text-right' : ''}`}>
+                                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                        
+                        {isLoading && (
+                            <div className="flex justify-start">
+                                <div className="flex gap-3">
+                                    <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center animate-pulse shadow-md">
+                                        <BotIcon />
+                                    </div>
+                                    <div className="bg-white border border-blue-50 p-4 rounded-2xl rounded-tl-none shadow-md flex gap-1.5 items-center">
+                                        <span className="w-2 h-2 bg-blue-200 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                        <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                        <span className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                    </main>
+
+                    {/* Input Area */}
+                    <footer className="bg-white border-t border-blue-50 p-4 sm:p-6 sticky bottom-0">
+                        <div className="max-w-4xl mx-auto space-y-4">
+                            {/* Suggestions */}
+                            {messages.length < 5 && (
+                                <div className="flex flex-wrap gap-2 overflow-x-auto pb-1 no-scrollbar">
+                                    {suggestedQuestions.map((q, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setInput(q)}
+                                            className="text-xs bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 px-4 py-2 rounded-full border border-blue-100 transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap font-semibold shadow-sm"
+                                        >
+                                            {q} <ChevronRightIcon />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="relative flex items-center gap-3">
+                                <input
+                                    type="text"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                                    placeholder="Mevzuat hakkında uzman görüşü alın..."
+                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all pr-14 shadow-inner"
+                                />
+                                <button
+                                    onClick={handleSend}
+                                    disabled={!input.trim() || isLoading}
+                                    className={`absolute right-2 p-3 rounded-xl transition-all duration-300 ${
+                                        input.trim() && !isLoading 
+                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5' 
+                                            : 'text-gray-300 bg-gray-100 cursor-not-allowed'
+                                    }`}
+                                >
+                                    <SendIcon />
+                                </button>
+                            </div>
+                            
+                            <div className="text-center text-[11px] text-gray-400 font-semibold tracking-widest pt-1">
+                                ETÜRK
+                            </div>
+                        </div>
+                    </footer>
+                    <style>
+                        {`
+                        @keyframes fadeIn {
+                            from { opacity: 0; transform: translateY(10px) scale(0.95); }
+                            to { opacity: 1; transform: translateY(0) scale(1); }
+                        }
+                        `}
+                    </style>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
