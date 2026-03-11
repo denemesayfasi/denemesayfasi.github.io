@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ErolGo® Navigasyon Sistemi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        .hidden { display: none; }
+        .fade-out { animation: fadeOut 0.5s forwards; }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
+        .slide-up { animation: slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body class="bg-[#f8fafc]">
+
+    <!-- Splash Screen -->
+    <div id="splash" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#1e3a8a] text-white transition-all duration-700">
+        <div class="mb-6 flex h-32 w-32 items-center justify-center rounded-[2.5rem] bg-white text-[#1e3a8a] shadow-2xl">
+            <i data-lucide="navigation" style="width: 64px; height: 64px;"></i>
+        </div>
+        <h1 class="text-5xl font-black">ErolGo®</h1>
+        <p class="mt-4 tracking-[0.3em] font-bold opacity-70">HOŞGELDİNİZ</p>
+    </div>
+
+    <!-- Main Content -->
+    <main class="mx-auto max-w-3xl px-4 py-8">
+        <header class="mb-10 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1e3a8a] text-white shadow-lg">
+                    <i data-lucide="navigation"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800">ErolGo®</h2>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">NAVİGASYON SİSTEMİ</p>
+                </div>
+            </div>
+            <span class="text-[10px] font-black text-slate-300">Coding by ETÜRK</span>
+        </header>
+
+        <!-- Search Box -->
+        <section class="rounded-[2rem] bg-white p-6 shadow-xl ring-1 ring-slate-100 sm:p-8">
+            <div class="mb-6 flex items-center justify-between">
+                <h3 class="flex items-center gap-3 text-lg font-black">
+                    <i data-lucide="search" class="text-[#1e3a8a]"></i>
+                    Bir Bina ID Sorgulayın..
+                </h3>
+                <div id="loader" class="hidden">
+                    <i data-lucide="loader-2" class="animate-spin text-[#1e3a8a]"></i>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3 sm:flex-row">
+                <div class="relative flex-1">
+                    <input
+                        id="searchId"
+                        type="number"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="Bina ID giriniz..."
+                        class="w-full rounded-2xl bg-slate-50 px-5 py-4 font-mono text-xl font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-[#1e3a8a] sm:text-2xl"
+                    >
+                    <button id="voiceBtn" class="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-[#1e3a8a]">
+                        <i data-lucide="mic"></i>
+                    </button>
+                </div>
+                <button id="searchBtn" class="rounded-2xl bg-[#1e3a8a] py-4 px-8 font-black text-white shadow-lg active:scale-95">Sorgula</button>
+            </div>
+            <p id="errorMsg" class="mt-4 text-xs font-bold text-red-500 hidden"></p>
+        </section>
+
+        <!-- Result Area -->
+        <div id="resultArea" class="hidden slide-up mt-8 overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-slate-100">
+            <div class="bg-[#1e3a8a] p-6 text-white sm:p-8">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md">
+                            <i data-lucide="building-2"></i>
+                        </div>
+                        <div>
+                            <h4 id="resTitle" class="text-xl font-black">Bina Bilgisi</h4>
+                            <p id="resId" class="text-[10px] font-bold opacity-70"></p>
+                        </div>
+                    </div>
+                    <button id="closeBtn" class="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 sm:p-8">
+                <div class="mb-6">
+                    <p class="text-[10px] font-black text-[#1e3a8a] mb-2 uppercase tracking-widest">ADRES BİLGİLERİ</p>
+                    <p id="resAddress" class="text-lg font-bold text-slate-800 leading-relaxed"></p>
+                </div>
+                <a id="navBtn" href="#" target="_blank" class="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#1e3a8a] py-4 font-black text-white shadow-xl active:scale-95 mb-6">
+                    <i data-lucide="navigation"></i> Navigasyonu Başlat
+                </a>
+                <div id="mapContainer" class="relative h-[300px] rounded-[2rem] overflow-hidden border border-slate-100 shadow-inner">
+                    <iframe id="mapFrame" width="100%" height="100%" frameBorder="0"></iframe>
+                    <div class="absolute bottom-4 right-4 bg-black/60 px-4 py-2 rounded-full text-[10px] font-black text-white backdrop-blur-md">UYDU GÖRÜNÜMÜ</div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-16 border-t border-slate-100 pt-8 text-center">
+            <p class="text-[9px] font-black uppercase tracking-[0.4em] text-slate-300">
+                ErolGo® NAVİGASYON SİSTEMİ • 2026
+            </p>
+        </footer>
+    </main>
+
+    <script>
+        // Supabase REST API Config
+        const SB_URL = 'https://luyhfyhwqyzwdjpcfyyn.supabase.co/rest/v1/bina_liste';
+        const SB_KEY = 'sb_publishable_FftwyHK-9ZkFEp37Ejrv6A_ctj6mLFy';
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Elements
+        const splash = document.getElementById('splash');
+        const searchInput = document.getElementById('searchId');
+        const searchBtn = document.getElementById('searchBtn');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const loader = document.getElementById('loader');
+        const errorMsg = document.getElementById('errorMsg');
+        const resultArea = document.getElementById('resultArea');
+        const resTitle = document.getElementById('resTitle');
+        const resId = document.getElementById('resId');
+        const resAddress = document.getElementById('resAddress');
+        const navBtn = document.getElementById('navBtn');
+        const mapFrame = document.getElementById('mapFrame');
+        const closeBtn = document.getElementById('closeBtn');
+
+        // Splash Timer
+        setTimeout(() => {
+            splash.classList.add('fade-out');
+        }, 3000);
+
+        // TTS
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'tr-TR';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Unlock Audio on Interaction
+        const unlockAudio = () => {
+            speak('Erol Go\'ya Hoşgeldiniz');
+            window.removeEventListener('click', unlockAudio);
+            window.removeEventListener('touchstart', unlockAudio);
+        };
+        window.addEventListener('click', unlockAudio);
+        window.addEventListener('touchstart', unlockAudio);
+
+        // Formatting
+        function formatTitle(str) {
+            if (!str) return '';
+            return str.toLocaleLowerCase('tr-TR').split(' ').map(w => w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1)).join(' ');
+        }
+
+        // Search Function
+        async function handleSearch(id) {
+            const searchVal = id || searchInput.value;
+            if (!searchVal) return;
+
+            loader.classList.remove('hidden');
+            errorMsg.classList.add('hidden');
+            resultArea.classList.add('hidden');
+
+            try {
+                const response = await fetch(`${SB_URL}?BİNA%20ID=eq.${searchVal}&select=*`, {
+                    headers: {
+                        'apikey': SB_KEY,
+                        'Authorization': `Bearer ${SB_KEY}`
+                    }
+                });
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const item = data[0];
+                    resTitle.innerText = formatTitle(item['BİNA ADI'] || item['SİTE ADI'] || 'Bina Bilgisi');
+                    resId.innerText = `ID: ${item['BİNA ID']}`;
+                    
+                    const addrParts = [
+                        item.MAHALLE ? formatTitle(item.MAHALLE) : null,
+                        item['CADDE / SOKAK'] ? formatTitle(item['CADDE / SOKAK']) : null,
+                        item['KAPI NO'] ? `No: ${item['KAPI NO']}` : null,
+                        item['ESKİ KAPI NO'] && item['ESKİ KAPI NO'] !== 'NULL' ? `(Eski No: ${item['ESKİ KAPI NO']})` : null,
+                        item['SİTE ADI'] ? formatTitle(item['SİTE ADI']) : null,
+                        item['BLOK ADI'] ? formatTitle(item['BLOK ADI']) : null,
+                        item['BİNA ADI'] ? formatTitle(item['BİNA ADI']) : null,
+                        `${formatTitle(item.İLÇE)} / ${formatTitle(item.İL || 'Erzurum')}`
+                    ].filter(Boolean).join(', ');
+
+                    resAddress.innerText = addrParts;
+                    navBtn.href = item.LİNK || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.KOORDİNATLAR || '')}`;
+                    
+                    if (item.KOORDİNATLAR) {
+                        const coords = item.KOORDİNATLAR.trim().replace(/\s+/g, '');
+                        mapFrame.src = `https://maps.google.com/maps?ll=${coords}&q=${coords}&z=19&t=k&output=embed`;
+                    }
+
+                    resultArea.classList.remove('hidden');
+                    resultArea.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    errorMsg.innerText = "Bina bulunamadı.";
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorMsg.innerText = "Sistem hatası oluştu.";
+                errorMsg.classList.remove('hidden');
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        // Events
+        searchBtn.addEventListener('click', () => handleSearch());
+        searchInput.addEventListener('keydown', (e) => e.key === 'Enter' && handleSearch());
+        closeBtn.addEventListener('click', () => resultArea.classList.add('hidden'));
+
+        // Voice
+        voiceBtn.addEventListener('click', () => {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return alert("Ses tanıma desteklenmiyor.");
+            
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'tr-TR';
+            recognition.onstart = () => voiceBtn.classList.add('bg-red-500', 'text-white', 'animate-pulse');
+            recognition.onend = () => voiceBtn.classList.remove('bg-red-500', 'text-white', 'animate-pulse');
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                const numbers = transcript.replace(/\D/g, '');
+                if (numbers) {
+                    searchInput.value = numbers;
+                    handleSearch(numbers);
+                }
+            };
+            recognition.start();
+        });
+    </script>
+</body>
+</html>
