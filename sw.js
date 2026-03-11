@@ -1,7 +1,7 @@
-const CACHE_NAME = 'erolgo-v2';
+const CACHE_NAME = 'erolgo-v3';
 const urlsToCache = [
-  './yukle.html',
-  './manifest.json'
+  '/yukle.html',
+  '/manifest.json'
 ];
 
 self.addEventListener('install', event => {
