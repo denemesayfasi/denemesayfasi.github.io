@@ -15,8 +15,8 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": "./yukle.html",
-  "scope": "./",
+  "start_url": "/yukle.html",
+  "scope": "/",
   "display": "standalone",
   "theme_color": "#1e3a8a",
   "background_color": "#f8fafc",
