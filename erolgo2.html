@@ -16,6 +16,8 @@
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
         .slide-up { animation: slideUp 0.4s ease-out; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .filter-expand { transition: all 0.3s ease-in-out; max-height: 0; overflow: hidden; opacity: 0; }
+        .filter-expand.open { max-height: 500px; opacity: 1; margin-top: 1.5rem; }
     </style>
 </head>
 <body class="bg-[#f8fafc]">
@@ -73,6 +75,34 @@
                 <button id="searchBtn" class="rounded-2xl bg-[#1e3a8a] py-4 px-8 font-black text-white shadow-lg active:scale-95">Sorgula</button>
             </div>
             <p id="errorMsg" class="mt-4 text-xs font-bold text-red-500 hidden"></p>
+
+            <!-- Filter Section -->
+            <div class="mt-6 flex flex-col items-center">
+                <button id="filterToggle" class="flex items-center gap-2 text-sm font-bold text-[#1e3a8a] hover:opacity-70">
+                    <i data-lucide="filter" style="width:16px; height:16px;"></i>
+                    Adres ile Filtrele
+                    <i id="filterIcon" data-lucide="chevron-down" style="width:16px; height:16px;"></i>
+                </button>
+                
+                <div id="filterContent" class="filter-expand w-full">
+                    <div class="flex flex-col gap-3">
+                        <div class="relative">
+                            <input
+                                id="filterInput"
+                                type="text"
+                                placeholder="Mahalle, sokak veya bina adı yazın..."
+                                class="w-full rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-[#1e3a8a]"
+                            >
+                            <button id="filterBtn" class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-[#1e3a8a] p-2 text-white">
+                                <i id="filterSearchIcon" data-lucide="search" style="width:16px; height:16px;"></i>
+                            </button>
+                        </div>
+                        <div id="filterResults" class="hidden max-h-60 overflow-y-auto rounded-xl border border-slate-100 bg-white shadow-inner">
+                            <!-- Results will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- Result Area -->
@@ -137,6 +167,13 @@
         const navBtn = document.getElementById('navBtn');
         const mapFrame = document.getElementById('mapFrame');
         const closeBtn = document.getElementById('closeBtn');
+        
+        const filterToggle = document.getElementById('filterToggle');
+        const filterContent = document.getElementById('filterContent');
+        const filterInput = document.getElementById('filterInput');
+        const filterBtn = document.getElementById('filterBtn');
+        const filterResults = document.getElementById('filterResults');
+        const filterSearchIcon = document.getElementById('filterSearchIcon');
 
         // Splash Timer
         setTimeout(() => {
@@ -188,31 +225,7 @@
                 const data = await response.json();
 
                 if (data && data.length > 0) {
-                    const item = data[0];
-                    resTitle.innerText = formatTitle(item['BİNA ADI'] || item['SİTE ADI'] || 'Bina Bilgisi');
-                    resId.innerText = `ID: ${item['BİNA ID']}`;
-                    
-                    const addrParts = [
-                        item.MAHALLE ? formatTitle(item.MAHALLE) : null,
-                        item['CADDE / SOKAK'] ? formatTitle(item['CADDE / SOKAK']) : null,
-                        item['KAPI NO'] ? `No: ${item['KAPI NO']}` : null,
-                        item['ESKİ KAPI NO'] && item['ESKİ KAPI NO'] !== 'NULL' ? `(Eski No: ${item['ESKİ KAPI NO']})` : null,
-                        item['SİTE ADI'] ? formatTitle(item['SİTE ADI']) : null,
-                        item['BLOK ADI'] ? formatTitle(item['BLOK ADI']) : null,
-                        item['BİNA ADI'] ? formatTitle(item['BİNA ADI']) : null,
-                        `${formatTitle(item.İLÇE)} / ${formatTitle(item.İL || 'Erzurum')}`
-                    ].filter(Boolean).join(', ');
-
-                    resAddress.innerText = addrParts;
-                    navBtn.href = item.LİNK || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.KOORDİNATLAR || '')}`;
-                    
-                    if (item.KOORDİNATLAR) {
-                        const coords = item.KOORDİNATLAR.trim().replace(/\s+/g, '');
-                        mapFrame.src = `https://maps.google.com/maps?ll=${coords}&q=${coords}&z=19&t=k&output=embed`;
-                    }
-
-                    resultArea.classList.remove('hidden');
-                    resultArea.scrollIntoView({ behavior: 'smooth' });
+                    showResult(data[0]);
                 } else {
                     errorMsg.innerText = "Bina bulunamadı.";
                     errorMsg.classList.remove('hidden');
@@ -224,6 +237,96 @@
                 loader.classList.add('hidden');
             }
         }
+
+        function showResult(item) {
+            resTitle.innerText = formatTitle(item['BİNA ADI'] || item['SİTE ADI'] || 'Bina Bilgisi');
+            resId.innerText = `ID: ${item['BİNA ID']}`;
+            
+            const addrParts = [
+                item.MAHALLE ? formatTitle(item.MAHALLE) : null,
+                item['CADDE / SOKAK'] ? formatTitle(item['CADDE / SOKAK']) : null,
+                item['KAPI NO'] ? `No: ${item['KAPI NO']}` : null,
+                item['ESKİ KAPI NO'] && item['ESKİ KAPI NO'] !== 'NULL' ? `(Eski No: ${item['ESKİ KAPI NO']})` : null,
+                item['SİTE ADI'] ? formatTitle(item['SİTE ADI']) : null,
+                item['BLOK ADI'] ? formatTitle(item['BLOK ADI']) : null,
+                item['BİNA ADI'] ? formatTitle(item['BİNA ADI']) : null,
+                `${formatTitle(item.İLÇE)} / ${formatTitle(item.İL || 'Erzurum')}`
+            ].filter(Boolean).join(', ');
+
+            resAddress.innerText = addrParts;
+            navBtn.href = item.LİNK || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.KOORDİNATLAR || '')}`;
+            
+            if (item.KOORDİNATLAR) {
+                const coords = item.KOORDİNATLAR.trim().replace(/\s+/g, '');
+                mapFrame.src = `https://maps.google.com/maps?ll=${coords}&q=${coords}&z=19&t=k&output=embed`;
+            }
+
+            resultArea.classList.remove('hidden');
+            resultArea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Filter Logic
+        filterToggle.addEventListener('click', () => {
+            filterContent.classList.toggle('open');
+            const isOpen = filterContent.classList.contains('open');
+            filterToggle.innerHTML = `
+                <i data-lucide="filter" style="width:16px; height:16px;"></i>
+                ${isOpen ? 'Filtreyi Kapat' : 'Adres ile Filtrele'}
+                <i data-lucide="${isOpen ? 'chevron-up' : 'chevron-down'}" style="width:16px; height:16px;"></i>
+            `;
+            lucide.createIcons();
+        });
+
+        async function handleFilterSearch() {
+            const text = filterInput.value;
+            if (!text || text.length < 3) return;
+
+            filterSearchIcon.classList.add('animate-spin');
+            filterSearchIcon.setAttribute('data-lucide', 'loader-2');
+            lucide.createIcons();
+
+            try {
+                const query = `or=(MAHALLE.ilike.*${text}*,"CADDE / SOKAK".ilike.*${text}*,"BİNA ADI".ilike.*${text}*,"SİTE ADI".ilike.*${text}*)`;
+                const response = await fetch(`${SB_URL}?${query}&limit=10&select=*`, {
+                    headers: {
+                        'apikey': SB_KEY,
+                        'Authorization': `Bearer ${SB_KEY}`
+                    }
+                });
+                const data = await response.json();
+
+                filterResults.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        const btn = document.createElement('button');
+                        btn.className = 'flex w-full flex-col border-b border-slate-50 p-4 text-left transition-colors hover:bg-blue-50 last:border-0';
+                        btn.innerHTML = `
+                            <span class="text-sm font-black text-slate-800">${formatTitle(item['BİNA ADI'] || item['SİTE ADI'] || 'İsimsiz Bina')}</span>
+                            <span class="text-[10px] font-bold text-slate-400">${formatTitle(item.MAHALLE)}, ${formatTitle(item['CADDE / SOKAK'])} No: ${item['KAPI NO']}</span>
+                            <span class="mt-1 text-[9px] font-black text-[#1e3a8a]">ID: ${item['BİNA ID']}</span>
+                        `;
+                        btn.onclick = () => {
+                            showResult(item);
+                            filterContent.classList.remove('open');
+                        };
+                        filterResults.appendChild(btn);
+                    });
+                    filterResults.classList.remove('hidden');
+                } else {
+                    filterResults.innerHTML = '<p class="p-4 text-xs font-bold text-slate-400">Sonuç bulunamadı.</p>';
+                    filterResults.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                filterSearchIcon.classList.remove('animate-spin');
+                filterSearchIcon.setAttribute('data-lucide', 'search');
+                lucide.createIcons();
+            }
+        }
+
+        filterBtn.addEventListener('click', handleFilterSearch);
+        filterInput.addEventListener('keydown', (e) => e.key === 'Enter' && handleFilterSearch());
 
         // Events
         searchBtn.addEventListener('click', () => handleSearch());
