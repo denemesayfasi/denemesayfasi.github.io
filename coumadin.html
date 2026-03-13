@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coumadin Takip Proğramı</title>
+    <title>CoumadinTakip</title>
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#1A73E8">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Coumadin">
+    <meta name="apple-mobile-web-app-title" content="CoumadinTakip">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/822/822143.png">
     <link rel="manifest" href="manifest.json">
     
@@ -98,6 +98,14 @@
                 localStorage.setItem('c_alm', alarmTime);
                 localStorage.setItem('c_inr', JSON.stringify(inrHistory));
                 if (!isFirstTime) localStorage.setItem('c_setup', 'true');
+
+                // Send alarm time to Service Worker
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        type: 'SET_ALARM',
+                        time: alarmTime
+                    });
+                }
             }, [schedule, alarmTime, inrHistory, isFirstTime]);
 
             // Notification Check Logic
@@ -204,6 +212,7 @@
                         
                         <div className="mt-8 text-center">
                             <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em]">Coding by E.TÜRK</p>
+                            <p className="text-[9px] font-medium text-slate-400 mt-1 italic">Bu proğram Nuran TÜRK için yapılmıştır..</p>
                         </div>
                     </div>
                 );
@@ -213,7 +222,7 @@
                 <div className="min-h-screen pb-32 max-w-md mx-auto px-6 pt-8">
                     {/* Header */}
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-blue-900 tracking-tight">Coumadin Takip</h1>
+                        <h1 className="text-3xl font-bold text-blue-900 tracking-tight">CoumadinTakip</h1>
                         <p className="text-slate-400 text-sm font-medium">Haftalık Doz ve INR İzleme</p>
                     </div>
 
@@ -285,7 +294,7 @@
                                                 <p className="text-3xl font-black mt-1 tracking-tight">{inrHistory[0].value}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-slate-400 text-xs font-medium">{inrHistory[0].date}</p>
+                                                <p className="text-slate-400 text-xs font-medium">{inrHistory[0].date.split('-').reverse().join('.')}</p>
                                                 <p className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${inrHistory[0].value >= 2 && inrHistory[0].value <= 3 ? 'text-emerald-400' : 'text-orange-400'}`}>
                                                     {inrHistory[0].value >= 2 && inrHistory[0].value <= 3 ? 'Hedef Aralıkta' : 'Aralık Dışı'}
                                                 </p>
@@ -344,7 +353,7 @@
                                                     {item.value}
                                                 </div>
                                                 <div>
-                                                    <div className="font-bold text-blue-900">{item.date}</div>
+                                                    <div className="font-bold text-blue-900">{item.date.split('-').reverse().join('.')}</div>
                                                     <div className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">HEDEF: 2.0 - 3.0</div>
                                                 </div>
                                             </div>
@@ -583,6 +592,14 @@
             // Ensure the service worker takes control immediately
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 console.log('Service Worker kontrolü ele aldı.');
+                // Send current alarm time to new controller
+                const savedAlarm = localStorage.getItem('c_alm') || '21:00';
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        type: 'SET_ALARM',
+                        time: savedAlarm
+                    });
+                }
             });
         }
     </script>
