@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coumadin-v2';
+const CACHE_NAME = 'coumadin-v3';
 const ASSETS = [
   'coumadin.html',
   'manifest.json',
@@ -57,29 +57,40 @@ self.addEventListener('message', (event) => {
 });
 
 // Background check logic
-function checkAlarm() {
+async function checkAlarm() {
+  const alarmTime = await getSetting('alarmTime');
   if (!alarmTime) return;
 
   const now = new Date();
   const currentStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
   
+  const lastNotified = await getSetting('lastNotified');
+  
   if (currentStr === alarmTime && lastNotified !== currentStr) {
-    lastNotified = currentStr;
-    self.registration.showNotification('CoumadinTakip', {
+    await setSetting('lastNotified', currentStr);
+    
+    await self.registration.showNotification('CoumadinTakip', {
       body: 'İlacınızı içme vaktiniz geldi!',
       icon: 'https://cdn-icons-png.flaticon.com/512/822/822143.png',
       badge: 'https://cdn-icons-png.flaticon.com/512/822/822143.png',
-      vibrate: [200, 100, 200],
+      vibrate: [500, 110, 500, 110, 450, 110, 200, 110, 170, 40],
       tag: 'coumadin-alarm',
-      renotify: true
+      renotify: true,
+      requireInteraction: true
     });
   }
 }
 
-// Try to keep the SW alive or check when it wakes up
+// Periodic check
 setInterval(checkAlarm, 30000);
 
 self.addEventListener('sync', (event) => {
+  if (event.tag === 'check-alarm') {
+    event.waitUntil(checkAlarm());
+  }
+});
+
+self.addEventListener('periodicsync', (event) => {
   if (event.tag === 'check-alarm') {
     event.waitUntil(checkAlarm());
   }
