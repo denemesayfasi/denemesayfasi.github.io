@@ -137,12 +137,16 @@
 
             const requestNotificationPermission = (callback) => {
                 if (!('Notification' in window)) {
+                    alert('Bu tarayıcı bildirimleri desteklemiyor. Eğer iPhone kullanıyorsanız, lütfen uygulamayı "Ana Ekrana Ekle" yaparak kullanın.');
                     if (callback) callback();
                     return;
                 }
+                
                 Notification.requestPermission().then(permission => {
                     if (permission === 'granted') {
                         console.log('Bildirim izni alındı.');
+                    } else if (permission === 'denied') {
+                        alert('Bildirim izni reddedildi. Ayarlardan izin vermeniz gerekiyor.');
                     }
                     if (callback) callback();
                 });
@@ -396,6 +400,24 @@
                                 <input type="time" value={alarmTime} onChange={e => setAlarmTime(e.target.value)} className="bg-slate-50 p-2 rounded-xl outline-none font-bold text-blue-600 border border-slate-100" />
                             </div>
 
+                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-4">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bildirim Durumu</span>
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${
+                                        Notification.permission === 'granted' ? 'bg-emerald-100 text-emerald-600' : 
+                                        Notification.permission === 'denied' ? 'bg-red-100 text-red-600' : 'bg-orange-100 text-orange-600'
+                                    }`}>
+                                        {Notification.permission === 'granted' ? 'AKTİF' : 
+                                         Notification.permission === 'denied' ? 'ENGELENDİ' : 'İZİN BEKLENİYOR'}
+                                    </span>
+                                </div>
+                                {Notification.permission !== 'granted' && (
+                                    <p className="text-[9px] text-slate-400 mt-2 leading-tight">
+                                        Bildirim alabilmek için yukarıdaki butona basıp izin vermeniz gerekmektedir.
+                                    </p>
+                                )}
+                            </div>
+
                             <div className="space-y-3">
                                 <button 
                                     onClick={() => {
@@ -415,16 +437,24 @@
                                 {Notification.permission === 'granted' && (
                                     <button 
                                         onClick={async () => {
-                                            const title = 'Test Bildirimi';
-                                            const options = {
-                                                body: 'Uygulama bildirimleri başarıyla çalışıyor!',
-                                                icon: 'https://cdn-icons-png.flaticon.com/512/822/822143.png'
-                                            };
-                                            if ('serviceWorker' in navigator) {
-                                                const reg = await navigator.serviceWorker.ready;
-                                                reg.showNotification(title, options);
-                                            } else {
-                                                new Notification(title, options);
+                                            try {
+                                                const title = 'Test Bildirimi';
+                                                const options = {
+                                                    body: 'Uygulama bildirimleri başarıyla çalışıyor!',
+                                                    icon: 'https://cdn-icons-png.flaticon.com/512/822/822143.png',
+                                                    badge: 'https://cdn-icons-png.flaticon.com/512/822/822143.png',
+                                                    vibrate: [200, 100, 200]
+                                                };
+                                                
+                                                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                                                    const reg = await navigator.serviceWorker.ready;
+                                                    await reg.showNotification(title, options);
+                                                } else {
+                                                    new Notification(title, options);
+                                                }
+                                            } catch (err) {
+                                                console.error('Bildirim hatası:', err);
+                                                alert('Bildirim gönderilemedi: ' + err.message);
                                             }
                                         }}
                                         className="w-full bg-blue-50 text-blue-600 font-bold py-3 rounded-2xl border border-blue-100 text-xs active:scale-95 transition-transform"
@@ -533,8 +563,26 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('SW registered!', reg))
+                    .then(reg => {
+                        console.log('SW registered!', reg);
+                        // Check for updates
+                        reg.onupdatefound = () => {
+                            const installingWorker = reg.installing;
+                            installingWorker.onstatechange = () => {
+                                if (installingWorker.state === 'installed') {
+                                    if (navigator.serviceWorker.controller) {
+                                        console.log('Yeni sürüm mevcut, lütfen sayfayı yenileyin.');
+                                    }
+                                }
+                            };
+                        };
+                    })
                     .catch(err => console.log('SW registration failed:', err));
+            });
+            
+            // Ensure the service worker takes control immediately
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log('Service Worker kontrolü ele aldı.');
             });
         }
     </script>
