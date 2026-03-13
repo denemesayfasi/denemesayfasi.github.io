@@ -11,6 +11,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Coumadin">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/822/822143.png">
+    <link rel="manifest" href="manifest.json">
     
     <!-- Tailwind CSS v3 CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -416,7 +417,8 @@
                                 <span className="text-2xl">📊</span>
                                 <span className="text-[8px] font-black tracking-widest">INR</span>
                             </button>
-                            <button onClick={() => setView('settings')} className={`flex flex-col items-center gap-1 transition-all duration-300 ${view === 'settings' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}>\n                                <span className="text-2xl">⚙️</span>
+                            <button onClick={() => setView('settings')} className={`flex flex-col items-center gap-1 transition-all duration-300 ${view === 'settings' ? 'text-blue-600 scale-110' : 'text-slate-300'}`}>
+                                <span className="text-2xl">⚙️</span>
                                 <span className="text-[8px] font-black tracking-widest">AYARLAR</span>
                             </button>
                         </div>
@@ -469,6 +471,15 @@
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW registered!', reg))
+                    .catch(err => console.log('SW registration failed:', err));
+            });
+        }
     </script>
 </body>
 </html>
