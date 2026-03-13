@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coumadin Takip Proğramı</title>
+    <!-- Tailwind CSS v3 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React ve Babel CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #A8DADC;
+            --primary-dark: #457B9D;
+            --bg: #F1F4F4;
+            --card: #FFFFFF;
+            --text: #1D3557;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text);
+        }
+
+        .custom-shadow {
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .rounded-4xl {
+            border-radius: 32px;
+        }
+
+        /* Hide scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const DAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+
+        function App() {
+            const [view, setView] = useState('main');
+            const [schedule, setSchedule] = useState(() => {
+                const saved = localStorage.getItem('c_sch');
+                return saved ? JSON.parse(saved) : DAYS.reduce((acc, d) => ({ ...acc, [d]: 'Tam' }), {});
+            });
+            const [alarmTime, setAlarmTime] = useState(() => localStorage.getItem('c_alm') || '21:00');
+            const [inrHistory, setInrHistory] = useState(() => {
+                const saved = localStorage.getItem('c_inr');
+                return saved ? JSON.parse(saved) : [];
+            });
+            const [isFirstTime, setIsFirstTime] = useState(() => !localStorage.getItem('c_setup'));
+
+            // INR Form State
+            const [newValue, setNewValue] = useState('');
+            const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
+
+            useEffect(() => {
+                localStorage.setItem('c_sch', JSON.stringify(schedule));
+                localStorage.setItem('c_alm', alarmTime);
+                localStorage.setItem('c_inr', JSON.stringify(inrHistory));
+                if (!isFirstTime) localStorage.setItem('c_setup', 'true');
+            }, [schedule, alarmTime, inrHistory, isFirstTime]);
+
+            const today = new Intl.DateTimeFormat('tr-TR', { weekday: 'long' }).format(new Date());
+
+            // Setup View
+            if (isFirstTime) {
+                return (
+                    <div className="min-h-screen p-8 max-w-md mx-auto flex flex-col">
+                        <div className="mb-10">
+                            <h1 className="text-3xl font-bold text-slate-800">Hoş Geldiniz</h1>
+                            <p className="text-slate-400 mt-2">Lütfen haftalık Coumadin doz planınızı ayarlayarak başlayın.</p>
+                        </div>
+                        
+                        <div className="bg-white rounded-4xl p-6 custom-shadow mb-8 flex-1 overflow-y-auto no-scrollbar">
+                            <h3 className="font-bold text-lg mb-6 text-slate-700">Haftalık Plan</h3>
+                            {DAYS.map(day => (
+                                <div key={day} className="mb-6 last:mb-0">
+                                    <div className="text-sm font-semibold text-slate-500 mb-3">{day}</div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {['Tam', 'Yarım', 'İçilmeyecek'].map(type => (
+                                            <button 
+                                                key={type}
+                                                onClick={() => setSchedule(p => ({...p, [day]: type}))}
+                                                className={`py-3 text-[11px] font-bold rounded-2xl border transition-all duration-300 ${schedule[day] === type ? 'bg-[#A8DADC] text-white border-[#A8DADC] shadow-md' : 'bg-slate-50 text-slate-400 border-transparent'}`}
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div className="bg-white rounded-3xl p-6 custom-shadow mb-8 flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-orange-50 p-2 rounded-xl text-orange-500 text-xl">⏰</div>
+                                <span className="font-bold text-slate-700">Hatırlatıcı</span>
+                            </div>
+                            <input type="time" value={alarmTime} onChange={e => setAlarmTime(e.target.value)} className="bg-slate-50 p-2 rounded-xl outline-none font-bold text-slate-600" />
+                        </div>
+
+                        <button onClick={() => setIsFirstTime(false)} className="w-full bg-[#A8DADC] text-white py-5 rounded-3xl font-bold shadow-lg shadow-teal-100 active:scale-95 transition-transform">Kurulumu Tamamla</button>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen pb-32 max-w-md mx-auto px-6 pt-8">
+                    {/* Header */}
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-bold text-slate-800">Coumadin Takip</h1>
+                        <p className="text-slate-400 text-sm">Haftalık Doz ve INR Takibi</p>
+                    </div>
+
+                    {view === 'main' && (
+                        <div className="space-y-8">
+                            {/* Today Card */}
+                            <div className="bg-[#A8DADC] rounded-[40px] p-8 text-white relative overflow-hidden custom-shadow">
+                                <div className="relative z-10">
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div>
+                                            <div className="text-xs opacity-80 uppercase tracking-widest font-bold mb-1">Bugün: {today}</div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-end justify-between">
+                                        <div>
+                                            <div className="text-5xl font-black">{schedule[today]}</div>
+                                            <div className="text-sm opacity-80 font-medium mt-1">Doz Alınacak</div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-xs opacity-70 font-bold">SAAT</div>
+                                            <div className="text-xl font-bold">{alarmTime}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+                            </div>
+
+                            {/* Weekly Plan Section */}
+                            <div>
+                                <div className="flex justify-between items-center mb-5 px-2">
+                                    <h3 className="font-bold text-lg text-slate-800">Haftalık Plan</h3>
+                                    <span className="text-[#A8DADC] text-xs font-bold">Tümünü Gör</span>
+                                </div>
+                                <div className="space-y-4">
+                                    {DAYS.map(day => (
+                                        <div key={day} className={`bg-white p-5 rounded-3xl flex justify-between items-center custom-shadow border-2 ${day === today ? 'border-[#A8DADC]' : 'border-transparent'}`}>
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg ${day === today ? 'bg-[#A8DADC] text-white' : 'bg-slate-50 text-slate-300'}`}>
+                                                    {day === today ? '📍' : '🗓️'}
+                                                </div>
+                                                <div>
+                                                    <div className={`font-bold ${day === today ? 'text-slate-800' : 'text-slate-600'}`}>{day}</div>
+                                                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Haftalık Dozaj</div>
+                                                </div>
+                                            </div>
+                                            <div className={`px-4 py-2 rounded-2xl text-xs font-bold ${
+                                                schedule[day] === 'Tam' ? 'bg-red-50 text-red-500' :
+                                                schedule[day] === 'Yarım' ? 'bg-orange-50 text-orange-500' :
+                                                'bg-slate-50 text-slate-400'
+                                            }`}>
+                                                {schedule[day]}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {view === 'inr' && (
+                        <div className="space-y-8">
+                            <h2 className="text-2xl font-bold text-slate-800">INR Takibi</h2>
+                            
+                            <div className="bg-white rounded-[40px] p-8 space-y-6 custom-shadow">
+                                <h3 className="font-bold text-slate-700">Yeni Kayıt Ekle</h3>
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-400 uppercase ml-1">Ölçüm Değeri</label>
+                                        <input type="number" step="0.1" placeholder="2.5" value={newValue} onChange={e => setNewValue(e.target.value)} className="w-full bg-slate-50 p-4 rounded-2xl outline-none border-2 border-transparent focus:border-[#A8DADC] transition-all font-bold text-slate-700" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-400 uppercase ml-1">Tarih</label>
+                                        <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className="w-full bg-slate-50 p-4 rounded-2xl outline-none border-2 border-transparent font-bold text-slate-700" />
+                                    </div>
+                                </div>
+                                <button onClick={() => {
+                                    if(!newValue) return;
+                                    setInrHistory([{id: Date.now(), date: newDate, value: newValue}, ...inrHistory]);
+                                    setNewValue('');
+                                }} className="w-full bg-[#A8DADC] text-white py-4 rounded-2xl font-bold shadow-lg shadow-teal-50 active:scale-95 transition-transform">Kayıt Ekle</button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h3 className="font-bold text-slate-800 px-2">Geçmiş Ölçümler</h3>
+                                {inrHistory.map(item => (
+                                    <div key={item.id} className="bg-white p-5 rounded-3xl flex justify-between items-center custom-shadow">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-xl ${item.value >= 2 && item.value <= 3 ? 'bg-emerald-50 text-emerald-500' : 'bg-orange-50 text-orange-500'}`}>
+                                                {item.value}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-slate-800">{item.date}</div>
+                                                <div className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">HEDEF: 2.0 - 3.0</div>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => setInrHistory(inrHistory.filter(i => i.id !== item.id))} className="w-10 h-10 flex items-center justify-center text-slate-200 hover:text-red-400 transition-colors">🗑️</button>
+                                    </div>
+                                ))}
+                                {inrHistory.length === 0 && (
+                                    <div className="text-center py-16 text-slate-300 italic">Henüz bir ölçüm kaydı bulunmuyor.</div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {view === 'settings' && (
+                        <div className="space-y-8">
+                            <h2 className="text-2xl font-bold text-slate-800">Ayarlar</h2>
+
+                            <div className="bg-white rounded-[40px] overflow-hidden custom-shadow">
+                                <div className="p-6 bg-slate-50 border-b font-bold text-slate-700 flex items-center gap-3">
+                                    <span className="text-xl">📅</span> Doz Planını Güncelle
+                                </div>
+                                <div className="p-6">
+                                    {DAYS.map(day => (
+                                        <div key={day} className="mb-6 last:mb-0">
+                                            <div className="text-xs font-bold text-slate-400 mb-3 ml-1">{day}</div>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {['Tam', 'Yarım', 'İçilmeyecek'].map(type => (
+                                                    <button 
+                                                        key={type} 
+                                                        onClick={() => setSchedule(p => ({...p, [day]: type}))} 
+                                                        className={`py-3 text-[10px] font-bold rounded-2xl border transition-all ${schedule[day] === type ? 'bg-[#A8DADC] text-white border-[#A8DADC] shadow-md' : 'bg-slate-50 text-slate-400 border-transparent'}`}
+                                                    >
+                                                        {type}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-3xl p-6 flex justify-between items-center custom-shadow">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xl">⏰</span>
+                                    <span className="font-bold text-slate-700">Hatırlatıcı</span>
+                                </div>
+                                <input type="time" value={alarmTime} onChange={e => setAlarmTime(e.target.value)} className="bg-slate-50 p-2 rounded-xl outline-none font-bold text-slate-600" />
+                            </div>
+
+                            <div className="p-6 bg-red-50 rounded-[32px] border border-red-100 flex items-start gap-4">
+                                <span className="text-red-500 text-2xl">⚠️</span>
+                                <p className="text-[11px] text-red-700 leading-relaxed font-medium">
+                                    <strong>Önemli Uyarı:</strong> Bu uygulama sadece takip amaçlıdır. Tıbbi kararlarınızı mutlaka doktorunuzun kontrolünde veriniz.
+                                </p>
+                            </div>
+
+                            <button 
+                                onClick={() => {
+                                    if (confirm('Tüm verileri sıfırlamak istediğinize emin misiniz?')) {
+                                        localStorage.clear();
+                                        window.location.reload();
+                                    }
+                                }}
+                                className="w-full text-red-400 font-bold py-4 text-xs tracking-widest uppercase"
+                            >
+                                🗑️ Tüm Verileri Sıfırla
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Bottom Nav Bar */}
+                    <div className="fixed bottom-8 left-6 right-6 bg-white/80 backdrop-blur-xl h-20 flex justify-around items-center custom-shadow rounded-[32px] border border-white/50 z-50">
+                        <button onClick={() => setView('main')} className={`flex flex-col items-center gap-1 transition-all duration-300 ${view === 'main' ? 'text-[#A8DADC] scale-110' : 'text-slate-300'}`}>
+                            <span className="text-2xl">{view === 'main' ? '🏠' : '🏠'}</span>
+                            <span className="text-[8px] font-black tracking-widest">HOME</span>
+                        </button>
+                        <button onClick={() => setView('inr')} className={`flex flex-col items-center gap-1 transition-all duration-300 ${view === 'inr' ? 'text-[#A8DADC] scale-110' : 'text-slate-300'}`}>
+                            <span className="text-2xl">📊</span>
+                            <span className="text-[8px] font-black tracking-widest">INR</span>
+                        </button>
+                        <button onClick={() => setView('settings')} className={`flex flex-col items-center gap-1 transition-all duration-300 ${view === 'settings' ? 'text-[#A8DADC] scale-110' : 'text-slate-300'}`}>
+                            <span className="text-2xl">⚙️</span>
+                            <span className="text-[8px] font-black tracking-widest">AYARLAR</span>
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
