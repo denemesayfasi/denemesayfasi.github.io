@@ -575,6 +575,14 @@
                 navigator.serviceWorker.register('sw.js')
                     .then(reg => {
                         console.log('SW registered!', reg);
+                        
+                        // Periodic Sync registration
+                        if ('periodicSync' in reg) {
+                            reg.periodicSync.register('check-alarm', {
+                                minInterval: 60 * 1000 // 1 minute
+                            }).catch(err => console.log('Periodic sync failed:', err));
+                        }
+
                         // Check for updates
                         reg.onupdatefound = () => {
                             const installingWorker = reg.installing;
