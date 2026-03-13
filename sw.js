@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coumadin-v1';
+const CACHE_NAME = 'coumadin-v2';
 const ASSETS = [
   'coumadin.html',
   'manifest.json',
