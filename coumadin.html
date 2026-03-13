@@ -102,32 +102,49 @@
 
             // Notification Check Logic
             useEffect(() => {
-                const checkAlarm = () => {
+                const checkAlarm = async () => {
                     const now = new Date();
                     const currentStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
                     
                     if (currentStr === alarmTime && Notification.permission === 'granted') {
-                        // Only notify once per minute
                         const lastNotified = localStorage.getItem('last_notified');
                         if (lastNotified !== currentStr) {
-                            new Notification('Coumadin Hatırlatıcı', {
+                            const title = 'Coumadin Hatırlatıcı';
+                            const options = {
                                 body: 'İlacını içme vaktin geldi!',
-                                icon: 'https://cdn-icons-png.flaticon.com/512/822/822143.png'
-                            });
+                                icon: 'https://cdn-icons-png.flaticon.com/512/822/822143.png',
+                                badge: 'https://cdn-icons-png.flaticon.com/512/822/822143.png',
+                                vibrate: [200, 100, 200],
+                                tag: 'coumadin-alarm',
+                                renotify: true
+                            };
+
+                            if ('serviceWorker' in navigator) {
+                                const registration = await navigator.serviceWorker.ready;
+                                registration.showNotification(title, options);
+                            } else {
+                                new Notification(title, options);
+                            }
+                            
                             localStorage.setItem('last_notified', currentStr);
                         }
                     }
                 };
 
-                const interval = setInterval(checkAlarm, 30000); // Check every 30 seconds
+                const interval = setInterval(checkAlarm, 10000); // Check every 10 seconds for better precision
                 return () => clearInterval(interval);
             }, [alarmTime]);
 
-            const requestNotificationPermission = () => {
+            const requestNotificationPermission = (callback) => {
+                if (!('Notification' in window)) {
+                    if (callback) callback();
+                    return;
+                }
                 Notification.requestPermission().then(permission => {
                     if (permission === 'granted') {
-                        alert('Bildirimler başarıyla etkinleştirildi!');
+                        console.log('Bildirim izni alındı.');
                     }
+                    if (callback) callback();
                 });
             };
 
@@ -170,7 +187,16 @@
                             <input type="time" value={alarmTime} onChange={e => setAlarmTime(e.target.value)} className="bg-white p-2 rounded-xl outline-none font-bold text-slate-600 border border-slate-200" />
                         </div>
 
-                        <button onClick={() => setIsFirstTime(false)} className="w-full bg-blue-600 text-white py-5 rounded-3xl font-bold shadow-xl shadow-blue-100 active:scale-95 transition-transform">Başlat</button>
+                        <button 
+                            onClick={() => {
+                                requestNotificationPermission(() => {
+                                    setIsFirstTime(false);
+                                });
+                            }} 
+                            className="w-full bg-blue-600 text-white py-5 rounded-3xl font-bold shadow-xl shadow-blue-100 active:scale-95 transition-transform"
+                        >
+                            Başlat
+                        </button>
                         
                         <div className="mt-8 text-center">
                             <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em]">Coding by E.TÜRK</p>
@@ -370,12 +396,43 @@
                                 <input type="time" value={alarmTime} onChange={e => setAlarmTime(e.target.value)} className="bg-slate-50 p-2 rounded-xl outline-none font-bold text-blue-600 border border-slate-100" />
                             </div>
 
-                            <button 
-                                onClick={requestNotificationPermission}
-                                className="w-full bg-emerald-50 text-emerald-600 font-bold py-4 rounded-2xl border border-emerald-100 flex items-center justify-center gap-2 active:scale-95 transition-transform"
-                            >
-                                <span>🔔</span> Bildirimleri Etkinleştir
-                            </button>
+                            <div className="space-y-3">
+                                <button 
+                                    onClick={() => {
+                                        requestNotificationPermission(() => {
+                                            if (Notification.permission === 'granted') {
+                                                alert('Bildirimler başarıyla etkinleştirildi!');
+                                            } else {
+                                                alert('Bildirim izni reddedildi. Lütfen tarayıcı ayarlarından izin verin.');
+                                            }
+                                        });
+                                    }}
+                                    className="w-full bg-emerald-50 text-emerald-600 font-bold py-4 rounded-2xl border border-emerald-100 flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                                >
+                                    <span>🔔</span> Bildirimleri Etkinleştir
+                                </button>
+
+                                {Notification.permission === 'granted' && (
+                                    <button 
+                                        onClick={async () => {
+                                            const title = 'Test Bildirimi';
+                                            const options = {
+                                                body: 'Uygulama bildirimleri başarıyla çalışıyor!',
+                                                icon: 'https://cdn-icons-png.flaticon.com/512/822/822143.png'
+                                            };
+                                            if ('serviceWorker' in navigator) {
+                                                const reg = await navigator.serviceWorker.ready;
+                                                reg.showNotification(title, options);
+                                            } else {
+                                                new Notification(title, options);
+                                            }
+                                        }}
+                                        className="w-full bg-blue-50 text-blue-600 font-bold py-3 rounded-2xl border border-blue-100 text-xs active:scale-95 transition-transform"
+                                    >
+                                        Deneme Bildirimi Gönder
+                                    </button>
+                                )}
+                            </div>
 
                             <div className="p-6 bg-blue-50 rounded-[32px] border border-blue-100 flex items-start gap-4">
                                 <span className="text-blue-500 text-2xl">ℹ️</span>
