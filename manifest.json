@@ -1,6 +1,6 @@
 {
-  "name": "Coumadin Takip",
-  "short_name": "Coumadin",
+  "name": "CoumadinTakip",
+  "short_name": "CoumadinTakip",
   "description": "Coumadin Doz ve INR Takip Uygulaması",
   "start_url": "coumadin.html",
   "display": "standalone",
