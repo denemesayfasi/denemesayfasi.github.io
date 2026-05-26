@@ -21,9 +21,8 @@
     </style>
 </head>
 <body class="bg-[#f8fafc]">
-
     <!-- Splash Screen -->
-    <div id="splash" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#1e3a8a] text-white transition-all duration-700">
+    <div id="splash" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#1e3a8a] text-white transition-all duration-700 pointer-events-auto">
         <div class="mb-6 flex h-32 w-32 items-center justify-center rounded-[2.5rem] bg-white text-[#1e3a8a] shadow-2xl">
             <i data-lucide="navigation" style="width: 64px; height: 64px;"></i>
         </div>
@@ -45,7 +44,7 @@
             </div>
             <div class="flex flex-col items-end">
                 <span class="text-[10px] font-black text-slate-300">Coding by ETÜRK</span>
-                <button id="toggleMode" class="mt-2 flex items-center gap-1 text-[10px] font-black uppercase bg-slate-100 text-slate-500 px-3 py-1 rounded-full">
+                <button id="toggleMode" class="mt-2 flex items-center gap-1 text-[10px] font-black uppercase bg-slate-100 text-slate-500 px-3 py-1 rounded-full cursor-pointer">
                     <i data-lucide="route" style="width: 10px; height: 10px;"></i> Rota Planla
                 </button>
             </div>
@@ -69,20 +68,22 @@
                         <input
                             id="searchId"
                             type="text"
+                            inputmode="numeric"
+                            pattern="[0-9]*"
                             placeholder="Bina ID giriniz..."
-                            class="w-full rounded-2xl bg-slate-50 px-6 py-5 font-mono text-2xl font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-[#1e3a8a]"
+                            class="w-full rounded-2xl bg-slate-50 px-6 py-5 font-mono text-2xl font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-[#1e3a8a] z-10 relative"
                         >
-                        <button id="voiceBtn" class="absolute right-3 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#1e3a8a]">
+                        <button id="voiceBtn" class="absolute right-3 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#1e3a8a] z-20">
                             <i data-lucide="mic"></i>
                         </button>
                     </div>
-                    <button id="searchBtn" class="rounded-2xl bg-[#1e3a8a] py-5 px-10 font-black text-white shadow-lg shadow-blue-500/20 active:scale-95">Sorgula</button>
+                    <button id="searchBtn" class="rounded-2xl bg-[#1e3a8a] py-5 px-10 font-black text-white shadow-lg shadow-blue-500/20 active:scale-95 cursor-pointer z-10 relative">Sorgula</button>
                 </div>
                 <p id="errorMsg" class="mt-4 text-xs font-bold text-red-500 hidden bg-red-50 p-3 rounded-xl border border-red-100"></p>
 
                 <!-- Filter Section -->
                 <div class="mt-10 flex flex-col items-center">
-                    <button id="filterToggle" class="flex items-center gap-2 text-sm font-bold text-[#1e3a8a] bg-blue-50 px-5 py-2.5 rounded-full hover:opacity-70">
+                    <button id="filterToggle" class="flex items-center gap-2 text-sm font-bold text-[#1e3a8a] bg-blue-50 px-5 py-2.5 rounded-full hover:opacity-70 cursor-pointer">
                         <i data-lucide="filter" style="width:16px; height:16px;"></i>
                         Gelişmiş Adres Arama
                         <i id="filterIcon" data-lucide="chevron-down" style="width:16px; height:16px;"></i>
@@ -98,10 +99,10 @@
                                     class="w-full rounded-2xl bg-slate-50 pl-6 pr-24 py-4 text-base font-bold text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-[#1e3a8a]"
                                 >
                                 <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                                    <button id="filterVoiceBtn" class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+                                    <button id="filterVoiceBtn" class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-400 cursor-pointer">
                                         <i data-lucide="mic" style="width:18px; height:18px;"></i>
                                     </button>
-                                    <button id="filterBtn" class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1e3a8a] text-white">
+                                    <button id="filterBtn" class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1e3a8a] text-white cursor-pointer">
                                         <i id="filterSearchIcon" data-lucide="search" style="width:18px; height:18px;"></i>
                                     </button>
                                 </div>
@@ -127,7 +128,7 @@
                                 <p id="resIdDisplay" class="text-[11px] font-bold opacity-60 tracking-widest uppercase"></p>
                             </div>
                         </div>
-                        <button id="closeBtn" class="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
+                        <button id="closeBtn" class="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center cursor-pointer">
                             <i data-lucide="x"></i>
                         </button>
                     </div>
@@ -138,7 +139,7 @@
                         <p id="resAddress" class="text-xl font-bold text-slate-800 leading-relaxed"></p>
                     </div>
                     
-                    <a id="navBtn" href="#" target="_blank" class="flex w-full items-center justify-center gap-4 rounded-[1.5rem] bg-[#1e3a8a] py-6 font-black text-xl text-white shadow-2xl shadow-blue-500/30 active:scale-[0.98] transition-all mb-8">
+                    <a id="navBtn" href="#" target="_blank" class="flex w-full items-center justify-center gap-4 rounded-[1.5rem] bg-[#1e3a8a] py-6 font-black text-xl text-white shadow-2xl shadow-blue-500/30 active:scale-[0.98] transition-all mb-8 cursor-pointer">
                         <i data-lucide="navigation"></i> Navigasyonu Başlat
                     </a>
 
@@ -170,19 +171,19 @@
                     <div class="flex gap-2 route-row">
                         <div class="relative flex-1">
                             <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xs">#1</div>
-                            <input type="text" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
                         </div>
-                        <button class="remove-btn flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
+                        <button class="remove-btn flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500 cursor-pointer">
                             <i data-lucide="trash-2" style="width:20px; height:20px;"></i>
                         </button>
                     </div>
                 </div>
 
-                <button id="addStopBtn" class="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-black text-slate-400 hover:border-orange-200 hover:text-orange-500 transition-all">
+                <button id="addStopBtn" class="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-black text-slate-400 hover:border-orange-200 hover:text-orange-500 transition-all cursor-pointer">
                     <i data-lucide="plus" style="width:18px; height:18px;"></i> Yeni Durak Ekle
                 </button>
 
-                <button id="planRouteBtn" class="mt-8 flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 py-5 font-black text-white shadow-xl shadow-slate-900/20 active:scale-95 transition-all">
+                <button id="planRouteBtn" class="mt-8 flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 py-5 font-black text-white shadow-xl shadow-slate-900/20 active:scale-95 transition-all cursor-pointer">
                     <i data-lucide="navigation" style="width:20px; height:20px;"></i> Optimal Rotayı Oluştur
                 </button>
             </section>
@@ -190,7 +191,7 @@
             <div id="routeResultArea" class="hidden mt-8 space-y-4">
                 <div class="flex items-center justify-between px-2">
                     <h4 class="text-lg font-black text-slate-800">Optimize Edilmiş Sıralama</h4>
-                    <button id="clearRouteBtn" class="text-xs font-bold text-red-500 bg-red-50 px-3 py-1.5 rounded-full">Rotayı Temizle</button>
+                    <button id="clearRouteBtn" class="text-xs font-bold text-red-500 bg-red-50 px-3 py-1.5 rounded-full cursor-pointer">Rotayı Temizle</button>
                 </div>
                 <div id="optimizedList" class="space-y-4">
                     <!-- Optimized stops here -->
@@ -211,8 +212,9 @@
     </main>
 
     <script>
-        // Internal API Endpoint
-        const API_URL = '/api/bina';
+        // Supabase Direct Credentials (Required for GitHub static pages)
+        const SB_URL = "https://luyhfyhwqyzwdjpcfyyn.supabase.co/rest/v1/bina_liste";
+        const SB_KEY = "sb_secret_NLkQ4MQ-xDaAH3f6Z0mQRQ_eGrqkKGg"; // Use Provided Secret Key
 
         // Initialize Icons
         lucide.createIcons();
@@ -251,10 +253,29 @@
         const clearRouteBtn = document.getElementById('clearRouteBtn');
         const multiNavBtn = document.getElementById('multiNavBtn');
 
-        // Splash Timer
+        // Splash Timer - Improved to not block inputs
         setTimeout(() => {
-            splash.classList.add('fade-out');
+            if (splash) {
+                splash.classList.add('fade-out');
+                setTimeout(() => {
+                    splash.style.pointerEvents = 'none';
+                }, 600);
+            }
         }, 3000);
+
+        // Fetch Implementation
+        async function sbFetch(query) {
+            const response = await fetch(`${SB_URL}?${query}`, {
+                headers: {
+                    'apikey': SB_KEY,
+                    'Authorization': `Bearer ${SB_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            if (!response.ok) throw new Error("Supabase Bağlantı Hatası");
+            return response.json();
+        }
 
         // TTS
         function speak(text) {
@@ -282,17 +303,16 @@
                 item['SİTE ADI'] ? formatTitle(item['SİTE ADI']) : null,
                 item['BLOK ADI'] ? formatTitle(item['BLOK ADI']) : null,
                 item['BİNA ADI'] ? formatTitle(item['BİNA ADI']) : null,
-                `${formatTitle(item.İLÇE)} / ${formatTitle(item.İL || 'Erzurum')}`
+                `${formatTitle(item.İLÇE)} / Erzurum`
             ].filter(Boolean).join(', ');
         }
 
         // Supabase Fetch Helpers
         async function fetchById(id) {
             try {
-                const response = await fetch(`${API_URL}?BİNA%20ID=eq.${encodeURIComponent(id)}&select=*`);
-                if (!response.ok) throw new Error("API hatası");
-                const data = await response.json();
-                return data[0];
+                // Bina ID sütunu boşluk içerdiği için çift tırnak (%22) ile gönderilmelidir
+                const data = await sbFetch(`%22BİNA%20ID%22=eq.${encodeURIComponent(id)}&select=*`);
+                return data && data.length > 0 ? data[0] : null;
             } catch (err) {
                 console.error("FetchById Error:", err);
                 return null;
@@ -301,21 +321,27 @@
 
         // Search Function
         async function handleSearch(id) {
-            const searchVal = id || searchInput.value;
+            const searchVal = id || searchInput.value.trim();
             if (!searchVal) return;
 
             loader.classList.remove('hidden');
             errorMsg.classList.add('hidden');
             resultArea.classList.add('hidden');
 
-            const item = await fetchById(searchVal);
-            if (item) {
-                showResult(item);
-            } else {
-                errorMsg.innerText = "Bina bulunamadı. Lütfen ID'yi kontrol edin.";
+            try {
+                const item = await fetchById(searchVal);
+                if (item) {
+                    showResult(item);
+                } else {
+                    errorMsg.innerText = "Bina bulunamadı. Lütfen ID'yi kontrol edin.";
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorMsg.innerText = "Sorgulama sırasında hata oluştu.";
                 errorMsg.classList.remove('hidden');
+            } finally {
+                loader.classList.add('hidden');
             }
-            loader.classList.add('hidden');
         }
 
         function showResult(item) {
@@ -344,7 +370,7 @@
         });
 
         async function handleFilterSearch() {
-            const text = filterInput.value;
+            const text = filterInput.value.trim();
             if (!text || text.length < 2) return;
 
             filterSearchIcon.classList.add('animate-spin');
@@ -368,14 +394,13 @@
                 }
                 
                 const query = `or=(${conditions.join(',')})`;
-                const response = await fetch(`${API_URL}?${query}&limit=20&select=*`);
-                const data = await response.json();
+                const data = await sbFetch(`${query}&limit=20&select=*`);
 
                 filterResults.innerHTML = '';
                 if (data && data.length > 0) {
                     data.forEach(item => {
                         const btn = document.createElement('button');
-                        btn.className = 'flex w-full flex-col p-5 text-left transition-all hover:bg-slate-50 active:bg-blue-50';
+                        btn.className = 'flex w-full flex-col p-5 text-left transition-all hover:bg-slate-50 active:bg-blue-50 cursor-pointer';
                         btn.innerHTML = `
                             <span class="text-base font-black text-slate-800">${formatTitle(item['BİNA ADI'] || item['SİTE ADI'] || 'İsimsiz Yapı')}</span>
                             <span class="mt-1 text-xs font-bold text-slate-400">${formatTitle(item.MAHALLE)}, ${formatTitle(item['CADDE / SOKAK'])} No: ${item['KAPI NO']}</span>
@@ -397,6 +422,7 @@
                 }
             } catch (err) {
                 console.error(err);
+                alert("Arama sırasında bir hata oluştu. Lütfen bağlantınızı kontrol edin.");
             } finally {
                 filterSearchIcon.classList.remove('animate-spin');
                 filterSearchIcon.setAttribute('data-lucide', 'search');
@@ -428,12 +454,12 @@
                 searchMode.classList.remove('hidden');
                 routeMode.classList.add('hidden');
                 toggleMode.innerHTML = '<i data-lucide="route" style="width: 10px; height: 10px;"></i> Rota Planla';
-                toggleMode.className = 'mt-2 flex items-center gap-1 text-[10px] font-black uppercase bg-slate-100 text-slate-500 px-3 py-1 rounded-full';
+                toggleMode.className = 'mt-2 flex items-center gap-1 text-[10px] font-black uppercase bg-slate-100 text-slate-500 px-3 py-1 rounded-full cursor-pointer';
             } else {
                 searchMode.classList.add('hidden');
                 routeMode.classList.remove('hidden');
                 toggleMode.innerHTML = '<i data-lucide="x" style="width: 10px; height: 10px;"></i> Sorgu Modu';
-                toggleMode.className = 'mt-2 flex items-center gap-1 text-[10px] font-black uppercase bg-orange-500 text-white px-3 py-1 rounded-full';
+                toggleMode.className = 'mt-2 flex items-center gap-1 text-[10px] font-black uppercase bg-orange-500 text-white px-3 py-1 rounded-full cursor-pointer';
             }
             lucide.createIcons();
         });
@@ -445,9 +471,9 @@
             div.innerHTML = `
                 <div class="relative flex-1">
                     <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xs">#${index}</div>
-                    <input type="text" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
                 </div>
-                <button class="remove-btn flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
+                <button class="remove-btn flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500 cursor-pointer">
                     <i data-lucide="trash-2" style="width:20px; height:20px;"></i>
                 </button>
             `;
@@ -493,7 +519,6 @@
             lucide.createIcons();
 
             try {
-                // Get Location with timeout
                 const pos = await new Promise((res, rej) => {
                     navigator.geolocation.getCurrentPosition(res, rej, { 
                         enableHighAccuracy: true, 
@@ -505,7 +530,6 @@
                 const currentLat = pos.coords.latitude;
                 const currentLng = pos.coords.longitude;
 
-                // Fetch Data for all IDs
                 const results = [];
                 for (const id of ids) {
                     const item = await fetchById(id);
@@ -514,22 +538,15 @@
                             const coords = item.KOORDİNATLAR.split(',').map(n => parseFloat(n.trim()));
                             if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
                                 results.push({ ...item, lat: coords[0], lng: coords[1] });
-                            } else {
-                                console.warn(`ID ${id} için geçersiz koordinat formatı:`, item.KOORDİNATLAR);
                             }
-                        } else {
-                            console.warn(`ID ${id} için koordinat bilgisi bulunamadı.`);
                         }
-                    } else {
-                        console.warn(`ID ${id} bulunamadı.`);
                     }
                 }
 
                 if (results.length === 0) {
-                    throw new Error("Girdiğiniz ID'lere ait koordinat bilgisi bulunamadı. Rota oluşturulamıyor.");
+                    throw new Error("Girdiğiniz ID'lere ait koordinat bilgisi bulunamadı.");
                 }
 
-                // Optimize (Greedy Nearest Neighbor)
                 const optimized = [];
                 let currentPoint = { lat: currentLat, lng: currentLng };
                 let remaining = [...results];
@@ -552,12 +569,8 @@
 
                 renderRoute(optimized);
             } catch (err) {
-                console.error("Route Planning Error:", err);
-                let msg = "Rota planlanırken bir hata oluştu.";
-                if (err.code === 1) msg = "Konum izni reddedildi. Lütfen tarayıcı ayarlarından konum izni veriniz.";
-                else if (err.code === 3) msg = "Konum bilgisi alınamadı (Zaman aşımı).";
-                else if (err.message) msg = err.message;
-                alert(msg);
+                console.error(err);
+                alert(err.message || "Bir hata oluştu.");
             } finally {
                 planRouteBtn.disabled = false;
                 planRouteBtn.innerHTML = '<i data-lucide="navigation" style="width:20px; height:20px;"></i> Optimal Rotayı Oluştur';
@@ -585,10 +598,10 @@
                         <h5 class="text-base font-black text-slate-800 leading-tight">${formatTitle(stop['BİNA ADI'] || stop['SİTE ADI'] || 'İsimsiz')}</h5>
                         <p class="mt-1 text-xs font-bold text-slate-400 line-clamp-2">${getFullAddress(stop)}</p>
                         <div class="mt-4 flex gap-2">
-                            <a href="${stop.LİNK || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.KOORDİNATLAR || '')}`}" target="_blank" class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#1e3a8a] py-3 text-[10px] font-black text-white active:scale-95 transition-all">
+                            <a href="${stop.LİNK || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.KOORDİNATLAR || '')}`}" target="_blank" class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#1e3a8a] py-3 text-[10px] font-black text-white active:scale-95 transition-all cursor-pointer">
                                 <i data-lucide="navigation" style="width:12px; height:12px;"></i> Navigasyonu Başlat
                             </a>
-                            <button class="view-btn flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
+                            <button class="view-btn flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 text-slate-400 cursor-pointer">
                                 <i data-lucide="building-2" style="width:16px; height:16px;"></i>
                             </button>
                         </div>
@@ -652,27 +665,24 @@
             );
         };
 
-        const filterVoiceBtn = document.getElementById('filterVoiceBtn');
-        filterVoiceBtn.onclick = () => {
-            startVoiceRecognition(
-                (transcript) => {
-                    filterInput.value = transcript;
-                    handleFilterSearch();
-                },
-                (isListening) => {
-                    if (isListening) {
-                        filterVoiceBtn.classList.add('bg-red-500', 'text-white', 'animate-pulse');
-                        filterVoiceBtn.classList.remove('bg-slate-100', 'text-slate-400');
-                    } else {
-                        filterVoiceBtn.classList.remove('bg-red-500', 'text-white', 'animate-pulse');
-                        filterVoiceBtn.classList.add('bg-slate-100', 'text-slate-400');
+        const fvb = document.getElementById('filterVoiceBtn');
+        if (fvb) {
+            fvb.onclick = () => {
+                startVoiceRecognition(
+                    (transcript) => {
+                        filterInput.value = transcript;
+                        handleFilterSearch();
+                    },
+                    (isListening) => {
+                        if (isListening) {
+                            fvb.classList.add('bg-red-500', 'text-white', 'animate-pulse');
+                        } else {
+                            fvb.classList.remove('bg-red-500', 'text-white', 'animate-pulse');
+                        }
                     }
-                }
-            );
-        };
-
-        // Fix for Mobile/PC Fetch - Ensure keys are correctly used in headers
-        // Also handle potential case sensitivity in JSON keys
+                );
+            };
+        }
     </script>
 </body>
 </html>
