@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ErolGo® Navigasyon Sistemi v3.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        .hidden { display: none; }
+        .fade-out { animation: fadeOut 0.5s forwards; }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
+        .slide-up { animation: slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .filter-expand { transition: all 0.3s ease-in-out; max-height: 0; overflow: hidden; opacity: 0; }
+        .filter-expand.open { max-height: 1000px; opacity: 1; margin-top: 1.5rem; }
+    </style>
+</head>
+<body class="bg-[#f8fafc]">
+
+    <!-- Splash Screen -->
+    <div id="splash" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#1e3a8a] text-white transition-all duration-700">
+        <div class="mb-6 flex h-32 w-32 items-center justify-center rounded-[2.5rem] bg-white text-[#1e3a8a] shadow-2xl">
+            <i data-lucide="navigation" style="width: 64px; height: 64px;"></i>
+        </div>
+        <h1 class="text-5xl font-black">ErolGo®</h1>
+        <p class="mt-4 tracking-[0.3em] font-bold opacity-70">HOŞGELDİNİZ</p>
+    </div>
+
+    <!-- Main Content -->
+    <main class="mx-auto max-w-3xl px-4 py-8">
+        <header class="mb-10 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#1e3a8a] text-white shadow-lg">
+                    <i data-lucide="navigation"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800">ErolGo®</h2>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase">NAVİGASYON SİSTEMİ</p>
+                </div>
+            </div>
+            <div class="flex flex-col items-end">
+                <span class="text-[10px] font-black text-slate-300">Coding by ETÜRK</span>
+                <button id="toggleMode" class="mt-2 flex items-center gap-1 text-[10px] font-black uppercase bg-slate-100 text-slate-500 px-3 py-1 rounded-full">
+                    <i data-lucide="route" style="width: 10px; height: 10px;"></i> Rota Planla
+                </button>
+            </div>
+        </header>
+
+        <!-- Search Mode Section -->
+        <div id="searchMode">
+            <section class="rounded-[2.5rem] bg-white p-6 shadow-xl ring-1 ring-slate-100 sm:p-10">
+                <div class="mb-8 flex items-center justify-between">
+                    <h3 class="flex items-center gap-3 text-xl font-black text-slate-800">
+                        <i data-lucide="search" class="text-[#1e3a8a]"></i>
+                        Bina ID Sorgula
+                    </h3>
+                    <div id="loader" class="hidden">
+                        <i data-lucide="loader-2" class="animate-spin text-[#1e3a8a]"></i>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4 sm:flex-row">
+                    <div class="relative flex-1">
+                        <input
+                            id="searchId"
+                            type="number"
+                            inputmode="numeric"
+                            placeholder="Bina ID giriniz..."
+                            class="w-full rounded-2xl bg-slate-50 px-6 py-5 font-mono text-2xl font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-[#1e3a8a]"
+                        >
+                        <button id="voiceBtn" class="absolute right-3 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-[#1e3a8a]">
+                            <i data-lucide="mic"></i>
+                        </button>
+                    </div>
+                    <button id="searchBtn" class="rounded-2xl bg-[#1e3a8a] py-5 px-10 font-black text-white shadow-lg shadow-blue-500/20 active:scale-95">Sorgula</button>
+                </div>
+                <p id="errorMsg" class="mt-4 text-xs font-bold text-red-500 hidden bg-red-50 p-3 rounded-xl border border-red-100"></p>
+
+                <!-- Filter Section -->
+                <div class="mt-10 flex flex-col items-center">
+                    <button id="filterToggle" class="flex items-center gap-2 text-sm font-bold text-[#1e3a8a] bg-blue-50 px-5 py-2.5 rounded-full hover:opacity-70">
+                        <i data-lucide="filter" style="width:16px; height:16px;"></i>
+                        Gelişmiş Adres Arama
+                        <i id="filterIcon" data-lucide="chevron-down" style="width:16px; height:16px;"></i>
+                    </button>
+                    
+                    <div id="filterContent" class="filter-expand w-full">
+                        <div class="flex flex-col gap-4 mt-6">
+                            <div class="relative">
+                                <input
+                                    id="filterInput"
+                                    type="text"
+                                    placeholder="Mahalle, sokak, bina adı veya ilçe..."
+                                    class="w-full rounded-2xl bg-slate-50 pl-6 pr-24 py-4 text-base font-bold text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-[#1e3a8a]"
+                                >
+                                <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                    <button id="filterVoiceBtn" class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+                                        <i data-lucide="mic" style="width:18px; height:18px;"></i>
+                                    </button>
+                                    <button id="filterBtn" class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1e3a8a] text-white">
+                                        <i id="filterSearchIcon" data-lucide="search" style="width:18px; height:18px;"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="filterResults" class="hidden max-h-80 overflow-y-auto rounded-3xl border border-slate-100 bg-white shadow-inner divide-y divide-slate-50">
+                                <!-- Results will be injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Result Area -->
+            <div id="resultArea" class="hidden slide-up mt-8 overflow-hidden rounded-[2.5rem] bg-white shadow-2xl ring-1 ring-slate-100">
+                <div class="bg-[#1e3a8a] p-8 text-white">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md">
+                                <i data-lucide="building-2"></i>
+                            </div>
+                            <div>
+                                <h4 id="resTitle" class="text-2xl font-black">Bina Bilgisi</h4>
+                                <p id="resIdDisplay" class="text-[11px] font-bold opacity-60 tracking-widest uppercase"></p>
+                            </div>
+                        </div>
+                        <button id="closeBtn" class="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-8">
+                    <div class="mb-10">
+                        <p class="text-[11px] font-black text-[#1e3a8a] mb-3 uppercase tracking-[0.2em]">ADRES</p>
+                        <p id="resAddress" class="text-xl font-bold text-slate-800 leading-relaxed"></p>
+                    </div>
+                    
+                    <a id="navBtn" href="#" target="_blank" class="flex w-full items-center justify-center gap-4 rounded-[1.5rem] bg-[#1e3a8a] py-6 font-black text-xl text-white shadow-2xl shadow-blue-500/30 active:scale-[0.98] transition-all mb-8">
+                        <i data-lucide="navigation"></i> Navigasyonu Başlat
+                    </a>
+
+                    <div id="mapContainer" class="relative h-[350px] rounded-[2.5rem] overflow-hidden border-4 border-slate-50 shadow-inner group">
+                        <iframe id="mapFrame" width="100%" height="100%" frameBorder="0"></iframe>
+                        <div class="absolute top-4 left-4 bg-white/90 px-4 py-2 rounded-full text-[10px] font-black text-[#1e3a8a] shadow-sm backdrop-blur-sm">CANLI UYDU GÖRÜNÜMÜ</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Route Mode Section -->
+        <div id="routeMode" class="hidden">
+            <section class="rounded-[2.5rem] bg-white p-6 shadow-xl ring-1 ring-slate-100 sm:p-10">
+                <div class="mb-8 flex items-center justify-between">
+                    <h3 class="flex items-center gap-3 text-xl font-black text-slate-800">
+                        <i data-lucide="route" class="text-orange-500"></i>
+                        Akıllı Rota Planlama
+                    </h3>
+                    <span class="text-[10px] font-black text-slate-300 bg-slate-50 px-2 py-1 rounded-md uppercase">Konum Bazlı</span>
+                </div>
+                
+                <p class="mb-6 text-sm font-bold text-slate-400 leading-relaxed">
+                    Gidilecek bina ID'lerini ekleyin. Sistem, konumunuza göre en optimize sırayı oluşturacaktır.
+                </p>
+
+                <div id="routeInputs" class="flex flex-col gap-3">
+                    <!-- Dynamic inputs here -->
+                    <div class="flex gap-2 route-row">
+                        <div class="relative flex-1">
+                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xs">#1</div>
+                            <input type="number" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
+                        </div>
+                        <button class="remove-btn flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
+                            <i data-lucide="trash-2" style="width:20px; height:20px;"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button id="addStopBtn" class="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 py-4 text-sm font-black text-slate-400 hover:border-orange-200 hover:text-orange-500 transition-all">
+                    <i data-lucide="plus" style="width:18px; height:18px;"></i> Yeni Durak Ekle
+                </button>
+
+                <button id="planRouteBtn" class="mt-8 flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 py-5 font-black text-white shadow-xl shadow-slate-900/20 active:scale-95 transition-all">
+                    <i data-lucide="navigation" style="width:20px; height:20px;"></i> Optimal Rotayı Oluştur
+                </button>
+            </section>
+
+            <div id="routeResultArea" class="hidden mt-8 space-y-4">
+                <div class="flex items-center justify-between px-2">
+                    <h4 class="text-lg font-black text-slate-800">Optimize Edilmiş Sıralama</h4>
+                    <button id="clearRouteBtn" class="text-xs font-bold text-red-500 bg-red-50 px-3 py-1.5 rounded-full">Rotayı Temizle</button>
+                </div>
+                <div id="optimizedList" class="space-y-4">
+                    <!-- Optimized stops here -->
+                </div>
+                <div class="mt-8 flex justify-center">
+                    <a id="multiNavBtn" href="#" target="_blank" class="inline-flex items-center gap-3 rounded-full bg-slate-100 px-8 py-4 text-xs font-black text-slate-600 hover:bg-slate-200 transition-all border border-slate-200">
+                        <i data-lucide="map-pin"></i> Tüm Rota Haritasını Aç <i data-lucide="arrow-right" style="width:16px; height:16px;"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-16 border-t border-slate-100 pt-10 text-center">
+            <p class="text-[10px] font-black uppercase tracking-[0.5em] text-slate-300">
+                ErolGo® NAVİGASYON • 2026 ETÜRK
+            </p>
+        </footer>
+    </main>
+
+    <script>
+        // Internal API Endpoint
+        const API_URL = '/api/bina';
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Elements
+        const splash = document.getElementById('splash');
+        const searchInput = document.getElementById('searchId');
+        const searchBtn = document.getElementById('searchBtn');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const loader = document.getElementById('loader');
+        const errorMsg = document.getElementById('errorMsg');
+        const resultArea = document.getElementById('resultArea');
+        const resTitle = document.getElementById('resTitle');
+        const resIdDisplay = document.getElementById('resIdDisplay');
+        const resAddress = document.getElementById('resAddress');
+        const navBtn = document.getElementById('navBtn');
+        const mapFrame = document.getElementById('mapFrame');
+        const closeBtn = document.getElementById('closeBtn');
+        
+        const filterToggle = document.getElementById('filterToggle');
+        const filterContent = document.getElementById('filterContent');
+        const filterInput = document.getElementById('filterInput');
+        const filterBtn = document.getElementById('filterBtn');
+        const filterResults = document.getElementById('filterResults');
+        const filterSearchIcon = document.getElementById('filterSearchIcon');
+
+        const toggleMode = document.getElementById('toggleMode');
+        const searchMode = document.getElementById('searchMode');
+        const routeMode = document.getElementById('routeMode');
+
+        const routeInputs = document.getElementById('routeInputs');
+        const addStopBtn = document.getElementById('addStopBtn');
+        const planRouteBtn = document.getElementById('planRouteBtn');
+        const routeResultArea = document.getElementById('routeResultArea');
+        const optimizedList = document.getElementById('optimizedList');
+        const clearRouteBtn = document.getElementById('clearRouteBtn');
+        const multiNavBtn = document.getElementById('multiNavBtn');
+
+        // Splash Timer
+        setTimeout(() => {
+            splash.classList.add('fade-out');
+        }, 3000);
+
+        // TTS
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'tr-TR';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Formatting
+        function formatTitle(str) {
+            if (!str || str === 'NULL') return '';
+            return str.toLocaleLowerCase('tr-TR').split(' ').map(w => w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1)).join(' ');
+        }
+
+        function getFullAddress(item) {
+            return [
+                item.MAHALLE ? formatTitle(item.MAHALLE) : null,
+                item['CADDE / SOKAK'] ? formatTitle(item['CADDE / SOKAK']) : null,
+                item['KAPI NO'] ? `No: ${item['KAPI NO']}` : null,
+                item['ESKİ KAPI NO'] && item['ESKİ KAPI NO'] !== 'NULL' ? `(Eski No: ${item['ESKİ KAPI NO']})` : null,
+                item['SİTE ADI'] ? formatTitle(item['SİTE ADI']) : null,
+                item['BLOK ADI'] ? formatTitle(item['BLOK ADI']) : null,
+                item['BİNA ADI'] ? formatTitle(item['BİNA ADI']) : null,
+                `${formatTitle(item.İLÇE)} / ${formatTitle(item.İL || 'Erzurum')}`
+            ].filter(Boolean).join(', ');
+        }
+
+        // Supabase Fetch Helpers
+        async function fetchById(id) {
+            try {
+                const response = await fetch(`${API_URL}?BİNA%20ID=eq.${id}&select=*`);
+                const data = await response.json();
+                return data[0];
+            } catch (err) {
+                console.error(err);
+                return null;
+            }
+        }
+
+        // Search Function
+        async function handleSearch(id) {
+            const searchVal = id || searchInput.value;
+            if (!searchVal) return;
+
+            loader.classList.remove('hidden');
+            errorMsg.classList.add('hidden');
+            resultArea.classList.add('hidden');
+
+            const item = await fetchById(searchVal);
+            if (item) {
+                showResult(item);
+            } else {
+                errorMsg.innerText = "Bina bulunamadı. Lütfen ID'yi kontrol edin.";
+                errorMsg.classList.remove('hidden');
+            }
+            loader.classList.add('hidden');
+        }
+
+        function showResult(item) {
+            resTitle.innerText = formatTitle(item['BİNA ADI'] || item['SİTE ADI'] || 'Bina Bilgisi');
+            resIdDisplay.innerText = `KAYIT ID: ${item['BİNA ID']}`;
+            resAddress.innerText = getFullAddress(item);
+            
+            navBtn.href = item.LİNK || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.KOORDİNATLAR || '')}`;
+            
+            if (item.KOORDİNATLAR) {
+                const coords = item.KOORDİNATLAR.trim().replace(/\s+/g, '');
+                mapFrame.src = `https://maps.google.com/maps?ll=${coords}&q=${coords}&z=19&t=k&output=embed`;
+            }
+
+            resultArea.classList.remove('hidden');
+            resultArea.scrollIntoView({ behavior: 'smooth' });
+            speak(resTitle.innerText);
+        }
+
+        // Filter Toggle
+        filterToggle.addEventListener('click', () => {
+            filterContent.classList.toggle('open');
+            const isOpen = filterContent.classList.contains('open');
+            filterIcon.setAttribute('data-lucide', isOpen ? 'chevron-up' : 'chevron-down');
+            lucide.createIcons();
+        });
+
+        async function handleFilterSearch() {
+            const text = filterInput.value;
+            if (!text || text.length < 2) return;
+
+            filterSearchIcon.classList.add('animate-spin');
+            filterSearchIcon.setAttribute('data-lucide', 'loader-2');
+            lucide.createIcons();
+
+            try {
+                const isNumber = /^\d+$/.test(text);
+                const encodedText = encodeURIComponent(`%${text}%`);
+                const conditions = [
+                    `MAHALLE.ilike.${encodedText}`,
+                    `"CADDE / SOKAK".ilike.${encodedText}`,
+                    `"BİNA ADI".ilike.${encodedText}`,
+                    `"SİTE ADI".ilike.${encodedText}`,
+                    `"İLÇE".ilike.${encodedText}`,
+                    `"KAPI NO".ilike.${encodedText}`
+                ];
+                
+                if (isNumber) {
+                    conditions.push(`"BİNA ID".eq.${text}`);
+                }
+                
+                const query = `or=(${conditions.join(',')})`;
+                const response = await fetch(`${API_URL}?${query}&limit=20&select=*`);
+                const data = await response.json();
+
+                filterResults.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        const btn = document.createElement('button');
+                        btn.className = 'flex w-full flex-col p-5 text-left transition-all hover:bg-slate-50 active:bg-blue-50';
+                        btn.innerHTML = `
+                            <span class="text-base font-black text-slate-800">${formatTitle(item['BİNA ADI'] || item['SİTE ADI'] || 'İsimsiz Yapı')}</span>
+                            <span class="mt-1 text-xs font-bold text-slate-400">${formatTitle(item.MAHALLE)}, ${formatTitle(item['CADDE / SOKAK'])} No: ${item['KAPI NO']}</span>
+                            <div class="mt-2 flex items-center justify-between">
+                                <span class="text-[10px] font-black text-[#1e3a8a] bg-blue-50 px-2 py-0.5 rounded-md">ID: ${item['BİNA ID']}</span>
+                                <span class="text-[10px] font-bold text-slate-300">${formatTitle(item.İLÇE)}</span>
+                            </div>
+                        `;
+                        btn.onclick = () => {
+                            showResult(item);
+                            filterContent.classList.remove('open');
+                        };
+                        filterResults.appendChild(btn);
+                    });
+                    filterResults.classList.remove('hidden');
+                } else {
+                    filterResults.innerHTML = '<p class="p-8 text-center text-xs font-bold text-slate-400">Sonuç bulunamadı.</p>';
+                    filterResults.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                filterSearchIcon.classList.remove('animate-spin');
+                filterSearchIcon.setAttribute('data-lucide', 'search');
+                lucide.createIcons();
+            }
+        }
+
+        filterBtn.addEventListener('click', handleFilterSearch);
+        
+        let filterTimeout;
+        filterInput.addEventListener('input', () => {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(() => {
+                if (filterInput.value.length >= 2) {
+                    handleFilterSearch();
+                } else {
+                    filterResults.innerHTML = '';
+                    filterResults.classList.add('hidden');
+                }
+            }, 500);
+        });
+
+        filterInput.addEventListener('keydown', (e) => e.key === 'Enter' && handleFilterSearch());
+
+        // Mode Switching
+        toggleMode.addEventListener('click', () => {
+            const isRoute = searchMode.classList.contains('hidden');
+            if (isRoute) {
+                searchMode.classList.remove('hidden');
+                routeMode.classList.add('hidden');
+                toggleMode.innerHTML = '<i data-lucide="route" style="width: 10px; height: 10px;"></i> Rota Planla';
+                toggleMode.className = 'mt-2 flex items-center gap-1 text-[10px] font-black uppercase bg-slate-100 text-slate-500 px-3 py-1 rounded-full';
+            } else {
+                searchMode.classList.add('hidden');
+                routeMode.classList.remove('hidden');
+                toggleMode.innerHTML = '<i data-lucide="x" style="width: 10px; height: 10px;"></i> Sorgu Modu';
+                toggleMode.className = 'mt-2 flex items-center gap-1 text-[10px] font-black uppercase bg-orange-500 text-white px-3 py-1 rounded-full';
+            }
+            lucide.createIcons();
+        });
+
+        // Route Logic
+        function createRouteInput(index) {
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 route-row slide-up';
+            div.innerHTML = `
+                <div class="relative flex-1">
+                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xs">#${index}</div>
+                    <input type="number" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
+                </div>
+                <button class="remove-btn flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
+                    <i data-lucide="trash-2" style="width:20px; height:20px;"></i>
+                </button>
+            `;
+            const remBtn = div.querySelector('.remove-btn');
+            remBtn.onclick = () => {
+                div.remove();
+                reindexRouteInputs();
+            };
+            return div;
+        }
+
+        function reindexRouteInputs() {
+            document.querySelectorAll('.route-row').forEach((row, idx) => {
+                row.querySelector('.absolute').innerText = `#${idx + 1}`;
+            });
+        }
+
+        addStopBtn.onclick = () => {
+            const idx = document.querySelectorAll('.route-row').length + 1;
+            routeInputs.appendChild(createRouteInput(idx));
+            lucide.createIcons();
+        };
+
+        // Distance and Optimization
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        planRouteBtn.onclick = async () => {
+            const inputs = document.querySelectorAll('.route-row input');
+            const ids = Array.from(inputs).map(i => i.value).filter(v => v !== '');
+            if (ids.length === 0) return alert("Lütfen en az bir ID girin.");
+
+            planRouteBtn.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> Optimize Ediliyor...';
+            lucide.createIcons();
+
+            try {
+                // Get Location
+                const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
+                const currentLat = pos.coords.latitude;
+                const currentLng = pos.coords.longitude;
+
+                // Fetch Data
+                const results = [];
+                for (const id of ids) {
+                    const item = await fetchById(id);
+                    if (item && item.KOORDİNATLAR) {
+                        const [lat, lng] = item.KOORDİNATLAR.split(',').map(n => parseFloat(n.trim()));
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            results.push({ ...item, lat, lng });
+                        }
+                    }
+                }
+
+                if (results.length === 0) throw new Error("Koordinatlı bina bulunamadı.");
+
+                // Optimize (Greedy)
+                const optimized = [];
+                let currentPoint = { lat: currentLat, lng: currentLng };
+                let remaining = [...results];
+
+                while (remaining.length > 0) {
+                    let nearestIdx = 0;
+                    let minDist = Infinity;
+                    remaining.forEach((item, idx) => {
+                        const dist = calculateDistance(currentPoint.lat, currentPoint.lng, item.lat, item.lng);
+                        if (dist < minDist) {
+                            minDist = dist;
+                            nearestIdx = idx;
+                        }
+                    });
+                    const next = remaining.splice(nearestIdx, 1)[0];
+                    next.distFromPrev = minDist;
+                    optimized.push(next);
+                    currentPoint = { lat: next.lat, lng: next.lng };
+                }
+
+                renderRoute(optimized);
+            } catch (err) {
+                alert(err.message || "Konum izni reddedildi veya bir hata oluştu.");
+            } finally {
+                planRouteBtn.innerHTML = '<i data-lucide="navigation" style="width:20px; height:20px;"></i> Optimal Rotayı Oluştur';
+                lucide.createIcons();
+            }
+        };
+
+        function renderRoute(stops) {
+            optimizedList.innerHTML = '';
+            stops.forEach((stop, idx) => {
+                const div = document.createElement('div');
+                div.className = 'relative flex items-start gap-4 rounded-3xl bg-white p-6 shadow-lg ring-1 ring-slate-100 slide-up';
+                div.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white font-black text-sm z-10">${idx + 1}</div>
+                        ${idx < stops.length - 1 ? '<div class="w-0.5 grow bg-slate-100 my-2"></div>' : ''}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[9px] font-black text-orange-500 uppercase bg-orange-50 px-2 py-0.5 rounded tracking-tighter">
+                                ${idx === 0 ? 'İlk Durak' : `${stop.distFromPrev.toFixed(2)} km sonra`}
+                            </span>
+                            <span class="text-[10px] font-black text-slate-300">ID: ${stop['BİNA ID']}</span>
+                        </div>
+                        <h5 class="text-base font-black text-slate-800 leading-tight">${formatTitle(stop['BİNA ADI'] || stop['SİTE ADI'] || 'İsimsiz')}</h5>
+                        <p class="mt-1 text-xs font-bold text-slate-400 line-clamp-2">${getFullAddress(stop)}</p>
+                        <div class="mt-4 flex gap-2">
+                            <a href="${stop.LİNK || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.KOORDİNATLAR || '')}`}" target="_blank" class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#1e3a8a] py-3 text-[10px] font-black text-white active:scale-95 transition-all">
+                                <i data-lucide="navigation" style="width:12px; height:12px;"></i> Navigasyonu Başlat
+                            </a>
+                            <button class="view-btn flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
+                                <i data-lucide="building-2" style="width:16px; height:16px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                div.querySelector('.view-btn').onclick = () => {
+                    toggleMode.click();
+                    showResult(stop);
+                };
+                optimizedList.appendChild(div);
+            });
+
+            multiNavBtn.href = `https://www.google.com/maps/dir/${stops.map(s => encodeURIComponent(s.KOORDİNATLAR || '')).join('/')}`;
+            routeResultArea.classList.remove('hidden');
+            routeResultArea.scrollIntoView({ behavior: 'smooth' });
+            speak("Rota başarıyla planlandı.");
+            lucide.createIcons();
+        }
+
+        clearRouteBtn.onclick = () => {
+            routeResultArea.classList.add('hidden');
+            optimizedList.innerHTML = '';
+        };
+
+        // Shared Events
+        searchBtn.onclick = () => handleSearch();
+        searchInput.onkeydown = (e) => e.key === 'Enter' && handleSearch();
+        closeBtn.onclick = () => resultArea.classList.add('hidden');
+
+        // Voice
+        function startVoiceRecognition(onResult, onStateChange) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return alert("Ses tanıma desteklenmiyor.");
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'tr-TR';
+            recognition.onstart = () => onStateChange(true);
+            recognition.onend = () => onStateChange(false);
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                onResult(transcript);
+            };
+            recognition.start();
+        }
+
+        voiceBtn.onclick = () => {
+            startVoiceRecognition(
+                (transcript) => {
+                    const numbers = transcript.replace(/\D/g, '');
+                    if (numbers) {
+                        searchInput.value = numbers;
+                        handleSearch(numbers);
+                    }
+                },
+                (isListening) => {
+                    if (isListening) {
+                        voiceBtn.classList.add('bg-red-500', 'text-white', 'animate-pulse');
+                    } else {
+                        voiceBtn.classList.remove('bg-red-500', 'text-white', 'animate-pulse');
+                    }
+                }
+            );
+        };
+
+        const filterVoiceBtn = document.getElementById('filterVoiceBtn');
+        filterVoiceBtn.onclick = () => {
+            startVoiceRecognition(
+                (transcript) => {
+                    filterInput.value = transcript;
+                    handleFilterSearch();
+                },
+                (isListening) => {
+                    if (isListening) {
+                        filterVoiceBtn.classList.add('bg-red-500', 'text-white', 'animate-pulse');
+                        filterVoiceBtn.classList.remove('bg-slate-100', 'text-slate-400');
+                    } else {
+                        filterVoiceBtn.classList.remove('bg-red-500', 'text-white', 'animate-pulse');
+                        filterVoiceBtn.classList.add('bg-slate-100', 'text-slate-400');
+                    }
+                }
+            );
+        };
+
+        // Fix for Mobile/PC Fetch - Ensure keys are correctly used in headers
+        // Also handle potential case sensitivity in JSON keys
+    </script>
+</body>
+</html>
