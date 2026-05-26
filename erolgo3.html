@@ -68,8 +68,9 @@
                     <div class="relative flex-1">
                         <input
                             id="searchId"
-                            type="number"
+                            type="text"
                             inputmode="numeric"
+                            pattern="[0-9]*"
                             placeholder="Bina ID giriniz..."
                             class="w-full rounded-2xl bg-slate-50 px-6 py-5 font-mono text-2xl font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-[#1e3a8a]"
                         >
@@ -171,7 +172,7 @@
                     <div class="flex gap-2 route-row">
                         <div class="relative flex-1">
                             <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xs">#1</div>
-                            <input type="number" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
                         </div>
                         <button class="remove-btn flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
                             <i data-lucide="trash-2" style="width:20px; height:20px;"></i>
@@ -445,7 +446,7 @@
             div.innerHTML = `
                 <div class="relative flex-1">
                     <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xs">#${index}</div>
-                    <input type="number" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
                 </div>
                 <button class="remove-btn flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
                     <i data-lucide="trash-2" style="width:20px; height:20px;"></i>
