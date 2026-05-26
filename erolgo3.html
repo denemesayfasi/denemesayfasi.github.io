@@ -69,8 +69,6 @@
                         <input
                             id="searchId"
                             type="text"
-                            inputmode="numeric"
-                            pattern="[0-9]*"
                             placeholder="Bina ID giriniz..."
                             class="w-full rounded-2xl bg-slate-50 px-6 py-5 font-mono text-2xl font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-[#1e3a8a]"
                         >
@@ -172,7 +170,7 @@
                     <div class="flex gap-2 route-row">
                         <div class="relative flex-1">
                             <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xs">#1</div>
-                            <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
+                            <input type="text" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
                         </div>
                         <button class="remove-btn flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
                             <i data-lucide="trash-2" style="width:20px; height:20px;"></i>
@@ -291,11 +289,12 @@
         // Supabase Fetch Helpers
         async function fetchById(id) {
             try {
-                const response = await fetch(`${API_URL}?BİNA%20ID=eq.${id}&select=*`);
+                const response = await fetch(`${API_URL}?BİNA%20ID=eq.${encodeURIComponent(id)}&select=*`);
+                if (!response.ok) throw new Error("API hatası");
                 const data = await response.json();
                 return data[0];
             } catch (err) {
-                console.error(err);
+                console.error("FetchById Error:", err);
                 return null;
             }
         }
@@ -446,7 +445,7 @@
             div.innerHTML = `
                 <div class="relative flex-1">
                     <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-black text-xs">#${index}</div>
-                    <input type="text" inputmode="numeric" pattern="[0-9]*" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
+                    <input type="text" placeholder="ID" class="w-full rounded-2xl bg-slate-50 pl-10 pr-4 py-4 font-mono text-lg font-black text-[#1e3a8a] outline-none ring-2 ring-transparent focus:bg-white focus:ring-orange-500">
                 </div>
                 <button class="remove-btn flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
                     <i data-lucide="trash-2" style="width:20px; height:20px;"></i>
@@ -486,33 +485,51 @@
 
         planRouteBtn.onclick = async () => {
             const inputs = document.querySelectorAll('.route-row input');
-            const ids = Array.from(inputs).map(i => i.value).filter(v => v !== '');
-            if (ids.length === 0) return alert("Lütfen en az bir ID girin.");
+            const ids = Array.from(inputs).map(i => i.value.trim()).filter(v => v !== '');
+            if (ids.length === 0) return alert("Lütfen en az bir geçerli Bina ID girin.");
 
+            planRouteBtn.disabled = true;
             planRouteBtn.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> Optimize Ediliyor...';
             lucide.createIcons();
 
             try {
-                // Get Location
-                const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
+                // Get Location with timeout
+                const pos = await new Promise((res, rej) => {
+                    navigator.geolocation.getCurrentPosition(res, rej, { 
+                        enableHighAccuracy: true, 
+                        timeout: 10000, 
+                        maximumAge: 0 
+                    });
+                });
+                
                 const currentLat = pos.coords.latitude;
                 const currentLng = pos.coords.longitude;
 
-                // Fetch Data
+                // Fetch Data for all IDs
                 const results = [];
                 for (const id of ids) {
                     const item = await fetchById(id);
-                    if (item && item.KOORDİNATLAR) {
-                        const [lat, lng] = item.KOORDİNATLAR.split(',').map(n => parseFloat(n.trim()));
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            results.push({ ...item, lat, lng });
+                    if (item) {
+                        if (item.KOORDİNATLAR) {
+                            const coords = item.KOORDİNATLAR.split(',').map(n => parseFloat(n.trim()));
+                            if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+                                results.push({ ...item, lat: coords[0], lng: coords[1] });
+                            } else {
+                                console.warn(`ID ${id} için geçersiz koordinat formatı:`, item.KOORDİNATLAR);
+                            }
+                        } else {
+                            console.warn(`ID ${id} için koordinat bilgisi bulunamadı.`);
                         }
+                    } else {
+                        console.warn(`ID ${id} bulunamadı.`);
                     }
                 }
 
-                if (results.length === 0) throw new Error("Koordinatlı bina bulunamadı.");
+                if (results.length === 0) {
+                    throw new Error("Girdiğiniz ID'lere ait koordinat bilgisi bulunamadı. Rota oluşturulamıyor.");
+                }
 
-                // Optimize (Greedy)
+                // Optimize (Greedy Nearest Neighbor)
                 const optimized = [];
                 let currentPoint = { lat: currentLat, lng: currentLng };
                 let remaining = [...results];
@@ -535,8 +552,14 @@
 
                 renderRoute(optimized);
             } catch (err) {
-                alert(err.message || "Konum izni reddedildi veya bir hata oluştu.");
+                console.error("Route Planning Error:", err);
+                let msg = "Rota planlanırken bir hata oluştu.";
+                if (err.code === 1) msg = "Konum izni reddedildi. Lütfen tarayıcı ayarlarından konum izni veriniz.";
+                else if (err.code === 3) msg = "Konum bilgisi alınamadı (Zaman aşımı).";
+                else if (err.message) msg = err.message;
+                alert(msg);
             } finally {
+                planRouteBtn.disabled = false;
                 planRouteBtn.innerHTML = '<i data-lucide="navigation" style="width:20px; height:20px;"></i> Optimal Rotayı Oluştur';
                 lucide.createIcons();
             }
